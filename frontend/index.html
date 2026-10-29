@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>亚马逊投流关键词优化工具 · 工程版</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="errbar"></div>
+<header>
+  <h1>亚马逊投流关键词优化工具 <span class="ver">前后端工程版 v0.1</span></h1>
+  <p>上传广告报表 → 后端规则引擎分析 → 规则 + 专家 AI 双引擎挖掘 → 导出可执行优化清单　|　FastAPI + 原生 SPA</p>
+</header>
+<main>
+
+<section class="card">
+  <h2><span class="step">1</span>导入数据：亚马逊广告「搜索词报告」CSV（支持多文件合并）</h2>
+  <div id="drop" class="drop">点击选择或拖拽 CSV / TXT 报表文件到此处<br><span class="small">中英文表头 · UTF-8/GBK 自适应 · 多文件合并；路径：卖家后台 → 广告 → 报表 → 商品推广搜索词报告（建议近 30–60 天）</span></div>
+  <input type="file" id="fileInput" multiple accept=".csv,.txt" style="display:none">
+  <div class="chips" id="fileList"></div>
+  <p class="hint">没有报表？点「载入示例数据」体验，或把 <code>亚马逊搜索词报告-示例.csv</code> 拖进来。</p>
+  <button class="btn ghost" id="btnDemo">▶ 载入示例数据（后端内置）</button>
+  <button class="btn ghost" id="btnSelfTest" title="调用后端 /api/selftest，运行 R-T0 回归测试集">🧪 自检（后端回归测试集）</button>
+  <div id="selfTestOut" style="display:none;margin-top:10px"></div>
+</section>
+
+<section class="card">
+  <h2><span class="step">2</span>优化参数（按利润率调整）</h2>
+  <div class="grid">
+    <div class="field"><label>目标 ACOS（%）</label><input type="number" id="inTarget" value="25"></div>
+    <div class="field"><label>预期转化率（%）</label><input type="number" id="inEcvr" value="10"></div>
+    <div class="field"><label>最少判断点击数</label><input type="number" id="inMinClicks" value="8"></div>
+    <div class="field"><label>客单价（留空=自动）</label><input type="number" id="inAov" placeholder="自动"></div>
+    <div class="field"><label>单次提价上限（%）</label><input type="number" id="inUpCap" value="30"></div>
+    <div class="field"><label>单次降价上限（%）</label><input type="number" id="inDownCap" value="50"></div>
+    <div class="field"><label>最低出价</label><input type="number" id="inFloor" value="0.05"></div>
+    <div class="field"><label>低曝光阈值（展示量）</label><input type="number" id="inImpFloor" value="500"></div>
+  </div>
+  <button class="btn ghost" id="btnRecalc" style="margin-top:8px">↻ 按新参数重新分析（调后端 API）</button>
+</section>
+
+<section class="card">
+  <h2><span class="step">3</span>AI 挖掘：无需 API Key（专家导入 / 可选在线）</h2>
+  <div class="grid">
+    <div class="field"><label>接入方式</label>
+      <select id="aiMode">
+        <option value="expert">专家导入（推荐，无需 Key）</option>
+        <option value="proxy">本机在线代理（后端转发）</option>
+        <option value="direct">直连大模型 API（需 Key）</option>
+        <option value="off">关闭（仅规则挖掘）</option>
+      </select>
+    </div>
+    <div class="field"><label>在线模式：接口地址</label><input type="text" id="aiBaseUrl" value="https://open.bigmodel.cn/api/paas/v4/chat/completions"></div>
+    <div class="field"><label>在线模式：模型</label><input type="text" id="aiModel" value="glm-4-flash"></div>
+    <div class="field"><label>在线模式：API Key（不落盘）</label><input type="password" id="aiKey" placeholder="sk-..."></div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>产品 / 品类信息（供专家或模型参考）</label>
+    <textarea id="aiDesc" rows="2" placeholder="例：无线充电器，适用 iPhone 15 与 Samsung S24，主打 MagSafe 磁吸、15W 快充"></textarea>
+  </div>
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <button class="btn" id="btnExportKw">⬇ 导出优秀关键词（喂给专家）</button>
+    <label class="btn ghost" for="aiImportFile" style="cursor:pointer">⬆ 导入专家结果 JSON</label>
+    <input type="file" id="aiImportFile" accept=".json" style="display:none">
+    <button class="btn" id="btnAI">✦ 在线 AI 挖掘（需 Key/代理）</button>
+  </div>
+  <div id="aiStatus" class="status"></div>
+  <p class="hint">推荐流程：在 AutoClaw 中把「优秀关键词清单」发给 <b>亚马逊数据挖掘专家</b> Agent → 拿回 JSON → 在此导入合并（无需任何 Key）。在线模式为可选项。</p>
+</section>
+
+<section id="secResult" style="display:none">
+  <div class="kpis" id="kpiRow"></div>
+  <div class="tabs" id="tabRow">
+    <button class="tabbtn on" data-tab="pane-overview">总览</button>
+    <button class="tabbtn" data-tab="pane-actions">优化动作</button>
+    <button class="tabbtn" data-tab="pane-st">搜索词分级</button>
+    <button class="tabbtn" data-tab="pane-roots">词根挖掘</button>
+    <button class="tabbtn" data-tab="pane-new">新词候选</button>
+    <button class="tabbtn" data-tab="pane-conflict">互搏检测</button>
+    <button class="tabbtn" data-tab="pane-ai">AI 挖掘</button>
+    <button class="tabbtn" data-tab="pane-export">导出中心</button>
+  </div>
+  <div id="pane-overview" class="pane on">
+    <div class="card"><h2>搜索词分级分布</h2><div id="distHost"></div><div id="distNote" class="hint"></div></div>
+  </div>
+  <div id="pane-actions" class="pane"><div class="card"><div id="tblActions"></div></div></div>
+  <div id="pane-st" class="pane"><div class="card"><div id="tblSt"></div></div></div>
+  <div id="pane-roots" class="pane"><div class="card"><div id="tblRoots"></div></div></div>
+  <div id="pane-new" class="pane"><div class="card"><div id="tblNew"></div></div></div>
+  <div id="pane-conflict" class="pane"><div class="card"><div id="tblConflict"></div><p class="hint">同一搜索词出现在多个广告组 → 保留最优位置，其余精准否定。</p></div></div>
+  <div id="pane-ai" class="pane">
+    <div class="card"><h2>AI 扩词（专家/模型）</h2><div id="aiExp"></div></div>
+    <div class="card"><h2>意图聚类 → 广告组结构建议</h2><div id="aiIntent"></div></div>
+    <div class="card"><h2>专家洞察</h2><div id="aiInsight"></div></div>
+    <div class="card"><h2>否定预判（与规则引擎交叉验证）</h2><div id="aiNeg"></div></div>
+  </div>
+  <div id="pane-export" class="pane">
+    <div class="card"><h2>一键导出（CSV，带 BOM）</h2>
+      <div class="expgrid">
+        <div class="expcard"><b>① 调价清单</b><br><button class="btn mini" data-exp="actions" style="margin-top:8px">导出 CSV</button></div>
+        <div class="expcard"><b>② 否定词清单</b><br><button class="btn mini" data-exp="negatives" style="margin-top:8px">导出 CSV</button></div>
+        <div class="expcard"><b>③ 新增关键词清单</b><br><button class="btn mini" data-exp="newwords" style="margin-top:8px">导出 CSV</button></div>
+        <div class="expcard"><b>④ 词根挖掘表</b><br><button class="btn mini" data-exp="roots" style="margin-top:8px">导出 CSV</button></div>
+        <div class="expcard"><b>⑤ 搜索词明细</b><br><button class="btn mini" data-exp="stdetail" style="margin-top:8px">导出 CSV</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>前后端工程版 · 后端 FastAPI（引擎与测试下沉）· 前端 SPA · 建议均为算法生成，应用前请人工复核</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>

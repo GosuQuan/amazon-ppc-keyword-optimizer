@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>使用手册 · 亚马逊投流关键词优化工具</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#1f2937;--sub:#6b7280;--line:#e5e7eb;--pri:#2563eb;--ok:#047857;--bad:#b91c1c}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.7}
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb 60%,#0ea5e9);color:#fff;padding:34px 28px}
+header h1{margin:0 0 6px;font-size:24px}
+header p{margin:2px 0;opacity:.93;font-size:13.5px}
+main{max-width:960px;margin:0 auto;padding:22px 20px 70px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+h2{font-size:17px;margin:0 0 12px;padding-left:10px;border-left:4px solid var(--pri)}
+h3{font-size:14.5px;margin:16px 0 6px;color:#1e3a8a}
+p{margin:6px 0}
+.sub{color:var(--sub);font-size:12.5px}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}
+th{background:#f8fafc;text-align:left;padding:7px 10px;border:1px solid var(--line)}
+td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+code{background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-size:12.5px}
+.badge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;white-space:nowrap}
+.b-exc{background:#ecfdf5;color:#047857}.b-good{background:#eff6ff;color:#1d4ed8}.b-bad{background:#fee2e2;color:#991b1b}
+ol,ul{margin:6px 0;padding-left:22px}
+li{margin:4px 0}
+figure{margin:10px 0}
+figcaption{color:var(--sub);font-size:12.5px;text-align:center;margin-top:6px}
+.svgwrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto}
+.kstep{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--pri);color:#fff;font-size:12px;margin-right:8px}
+.tip{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:8px 12px;font-size:13px;margin:8px 0}
+.warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px 12px;font-size:13px;margin:8px 0}
+footer{text-align:center;color:var(--sub);font-size:12px;padding:16px}
+@media print{body{background:#fff}section{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <h1>亚马逊投流关键词优化工具 · 使用手册</h1>
+  <p>版本 v1.0-P0 · 2026-10-29 · 适用平台：Windows（浏览器打开，无需安装）</p>
+  <p>一句话定位：把亚马逊「搜索词报告」变成一份可直接执行的优化清单——调价、否定、收割、新词，条条带理由。</p>
+</header>
+<main>
+
+<section>
+<h2>0 · 这是一款什么工具</h2>
+<p>面向中国跨境亚马逊卖家的<b>本地广告优化工具</b>：上传商品推广「搜索词报告」CSV 后，自动完成关键词分级、调价测算、否定词识别、优质搜索词收割、词根挖掘与互搏检测，并输出可直接在广告后台应用的清单。</p>
+<ul>
+<li><b>规则引擎 + AI 双引擎</b>：规则层全部可解释（每条建议附触发数据）；AI 层做语义扩词、意图聚类与否定预判。</li>
+<li><b>数据不出本机</b>：纯前端计算，报表不上传任何服务器；AI 仅接收关键词文本。</li>
+<li><b>免费起步</b>：规则功能无限制使用，无账号、无订阅。</li>
+</ul>
+</section>
+
+<section>
+<h2>1 · 快速开始（30 秒上手）</h2>
+<ol>
+<li><span class="kstep">1</span>双击 <code>启动工具.bat</code>（或直接双击 <code>亚马逊投流关键词优化工具.html</code>）——浏览器自动打开工具页；</li>
+<li><span class="kstep">2</span>没有报表？点 <code>▶ 载入示例数据（Demo）</code> 体验完整流程；有报表就把卖家后台导出的 CSV 拖进虚线框；</li>
+<li><span class="kstep">3</span>在「② 优化参数」确认目标 ACOS（默认 25%）→ 点「↻ 按新参数重新计算」→ 逐页查看结果 → 到「导出中心」下载清单。</li>
+</ol>
+<div class="tip">报表位置：卖家平台 → 广告 → 报表 → 商品推广 → 搜索词报告，建议导出<b>近 30–60 天</b>。支持多文件合并（多店铺/多站点分别导出后一起拖入）。</div>
+<p class="sub">工程/验收提示：页面提供 <code>🧪 自检（回归测试集）</code> 按钮，内置 31 条断言（解析、7 级分级、6 类调价动作、否定/收割/互搏边界），点击即可验证当前引擎状态。</p>
+</section>
+
+<section>
+<h2>2 · 工作原理（数据流）</h2>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2563eb"/></marker></defs>
+  <g font-size="12" text-anchor="middle">
+    <rect x="12" y="40" width="120" height="56" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="72" y="63" fill="#1e3a8a">搜索词报告 CSV</text><text x="72" y="82" fill="#6b7280">多文件 / 中英表头</text>
+    <rect x="168" y="40" width="120" height="56" rx="8" fill="#fff" stroke="#e5e7eb"/><text x="228" y="63" fill="#1f2937">解析与聚合</text><text x="228" y="82" fill="#6b7280">关键词级 + 搜索词级</text>
+    <rect x="324" y="40" width="120" height="56" rx="8" fill="#fff" stroke="#e5e7eb"/><text x="384" y="63" fill="#1f2937">分级引擎（7 级）</text><text x="384" y="82" fill="#6b7280">目标 ACOS + 允许预算</text>
+    <rect x="480" y="24" width="128" height="42" rx="8" fill="#ecfdf5" stroke="#059669"/><text x="544" y="50" fill="#047857">规则挖掘</text>
+    <rect x="480" y="76" width="128" height="42" rx="8" fill="#f5f3ff" stroke="#7c3aed"/><text x="544" y="102" fill="#6d28d9">AI 挖掘（可选）</text>
+    <rect x="640" y="40" width="108" height="56" rx="8" fill="#fff7ed" stroke="#ea580c"/><text x="694" y="63" fill="#9a3412">优化清单导出</text><text x="694" y="82" fill="#6b7280">CSV / 复核后应用</text>
+  </g>
+  <g stroke="#2563eb" stroke-width="1.6" fill="none">
+    <line x1="132" y1="68" x2="164" y2="68" marker-end="url(#ar)"/>
+    <line x1="288" y1="68" x2="320" y2="68" marker-end="url(#ar)"/>
+    <line x1="444" y1="60" x2="476" y2="48" marker-end="url(#ar)"/>
+    <line x1="444" y1="76" x2="476" y2="94" marker-end="url(#ar)"/>
+    <line x1="608" y1="48" x2="636" y2="62" marker-end="url(#ar)"/>
+    <line x1="608" y1="96" x2="636" y2="82" marker-end="url(#ar)"/>
+  </g>
+  <text x="380" y="150" text-anchor="middle" font-size="12" fill="#6b7280">双层挖掘结果合并去重 → 调价 / 否定 / 收割 / 新词 四类清单 → 人工复核 → 广告后台应用</text>
+  <text x="380" y="178" text-anchor="middle" font-size="11" fill="#b91c1c">数据边界：报表仅在本机浏览器内计算；AI 模式下仅上传关键词文本，不上传花费与销售额</text>
+</svg>
+</div>
+<figcaption>图 2-1　产品数据流：从报表到可执行清单</figcaption>
+</figure>
+</section>
+
+<section>
+<h2>3 · 界面导览（原型图）</h2>
+<p class="sub">以下为界面原型示意（与实际功能一一对应）；红色圆点为操作说明锚点。</p>
+
+<h3>3.1 启动页：数据导入</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 320" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="724" height="304" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <rect x="8" y="8" width="724" height="34" rx="10" fill="#2563eb"/><text x="24" y="30" fill="#fff" font-size="13">亚马逊投流关键词优化工具</text>
+  <rect x="24" y="56" width="420" height="120" rx="8" fill="#fafbff" stroke="#c7d2fe" stroke-dasharray="5,4"/>
+  <text x="234" y="105" text-anchor="middle" fill="#6b7280" font-size="12">点击选择或拖拽 CSV / TXT 报表文件到此处</text>
+  <text x="234" y="124" text-anchor="middle" fill="#94a3b8" font-size="11">支持中英文表头 · UTF-8 / GBK 自动识别 · 多文件合并</text>
+  <rect x="24" y="190" width="150" height="30" rx="6" fill="#2563eb"/><text x="99" y="210" text-anchor="middle" fill="#fff" font-size="12">▶ 载入示例数据（Demo）</text>
+  <rect x="184" y="190" width="170" height="30" rx="6" fill="#fff" stroke="#93c5fd"/><text x="269" y="210" text-anchor="middle" fill="#2563eb" font-size="12">🧪 自检（回归测试集）</text>
+  <rect x="24" y="236" width="220" height="22" rx="11" fill="#eef2ff"/><text x="134" y="251" text-anchor="middle" fill="#3730a3" font-size="11">示例报表.csv：63 行</text>
+  <rect x="254" y="236" width="190" height="22" rx="11" fill="#eef2ff"/><text x="349" y="251" text-anchor="middle" fill="#3730a3" font-size="11">无线充-30天.csv：1,204 行</text>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="452" cy="100" r="11"/><text x="452" y="105" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="352" cy="205" r="11"/><text x="352" y="210" text-anchor="middle" fill="#fff">2</text>
+    <circle cx="490" y="251" r="0"/>
+    <circle cx="392" cy="247" r="11"/><text x="392" y="252" text-anchor="middle" fill="#fff">3</text>
+  </g>
+  <g font-size="12" fill="#334155">
+    <text x="472" y="92">把报表拖入虚线框（可多选）；</text>
+    <text x="472" y="110">或点击选择文件。解析错误会</text>
+    <text x="472" y="128">按文件标注行数与原因</text>
+    <text x="366" y="176">无报表时先体验内置示例</text>
+    <text x="470" y="250">「自检」一键回归 31 条断言，</text>
+    <text x="470" y="268">验证引擎行为正常</text>
+  </g>
+  <line x1="448" y1="104" x2="464" y2="98" stroke="#dc2626" stroke-dasharray="3,3"/>
+  <line x1="300" y1="196" x2="360" y2="182" stroke="#dc2626" stroke-dasharray="3,3"/>
+</svg>
+</div>
+<figcaption>图 3-1　启动页原型：① 导入报表 ② 示例数据 ③ 引擎自检</figcaption>
+</figure>
+
+<h3>3.2 优化参数 与 AI 配置</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 330" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="724" height="314" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <rect x="24" y="24" width="336" height="270" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="40" y="48" font-size="13" fill="#1f2937">② 优化参数</text>
+  <g font-size="11" fill="#6b7280">
+    <text x="40" y="76">目标 ACOS（%）</text><text x="40" y="106">预期转化率（%）</text><text x="40" y="136">最少判断点击数</text><text x="40" y="166">客单价（自动）</text>
+    <text x="210" y="76">单次提价上限（%）</text><text x="210" y="106">单次降价上限（%）</text><text x="210" y="136">最低出价</text><text x="210" y="166">低曝光阈值</text>
+  </g>
+  <g fill="#fff" stroke="#e5e7eb">
+    <rect x="40" y="82" width="80" height="20" rx="4"/><rect x="40" y="112" width="80" height="20" rx="4"/><rect x="40" y="142" width="80" height="20" rx="4"/><rect x="40" y="172" width="80" height="20" rx="4"/>
+    <rect x="210" y="82" width="80" height="20" rx="4"/><rect x="210" y="112" width="80" height="20" rx="4"/><rect x="210" y="142" width="80" height="20" rx="4"/><rect x="210" y="172" width="80" height="20" rx="4"/>
+  </g>
+  <g font-size="11" fill="#1f2937"><text x="48" y="96">25</text><text x="48" y="126">10</text><text x="48" y="156">8</text><text x="48" y="186" fill="#94a3b8">自动</text>
+  <text x="218" y="96">30</text><text x="218" y="126">50</text><text x="218" y="156">0.05</text><text x="218" y="186">500</text></g>
+  <rect x="40" y="210" width="300" height="44" rx="6" fill="#f8fafc"/>
+  <text x="52" y="228" font-size="10.5" fill="#6b7280">盈利出价上限 = 目标ACOS × 客单价 × 关键词转化率</text>
+  <text x="52" y="245" font-size="10.5" fill="#b91c1c">报表无真实出价：当前出价 = 最高历史 CPC × 1.15（估）</text>
+  <rect x="40" y="262" width="120" height="26" rx="6" fill="#fff" stroke="#93c5fd"/><text x="100" y="279" text-anchor="middle" fill="#2563eb" font-size="11.5">↻ 重新计算</text>
+  <rect x="384" y="24" width="332" height="270" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="400" y="48" font-size="13" fill="#1f2937">③ AI 模型挖掘（可选）</text>
+  <g font-size="11" fill="#6b7280"><text x="400" y="76">接入方式</text><text x="400" y="104">代理地址</text><text x="400" y="132">接口地址（直连）</text><text x="400" y="160">模型</text><text x="400" y="188">API Key</text></g>
+  <g fill="#fff" stroke="#e5e7eb">
+    <rect x="400" y="82" width="150" height="20" rx="4"/><rect x="400" y="110" width="300" height="20" rx="4"/><rect x="400" y="138" width="300" height="20" rx="4"/><rect x="400" y="166" width="150" height="20" rx="4"/><rect x="400" y="194" width="150" height="20" rx="4"/>
+  </g>
+  <g font-size="10.5" fill="#1f2937"><text x="406" y="96">本机代理（推荐）</text><text x="406" y="124">http://127.0.0.1:8787/chat</text><text x="406" y="152">open.bigmodel.cn/…/chat/completions</text><text x="406" y="180">glm-4-flash</text><text x="406" y="208" fill="#94a3b8">sk-…（不落盘）</text></g>
+  <rect x="400" y="222" width="300" height="34" rx="6" fill="#f8fafc"/>
+  <text x="410" y="243" font-size="10.5" fill="#6b7280">产品/品类信息：保温杯，适用 iPhone 15…（帮助扩词更准）</text>
+  <rect x="400" y="262" width="130" height="26" rx="6" fill="#7c3aed"/><text x="465" y="279" text-anchor="middle" fill="#fff" font-size="11.5">✦ 开始 AI 挖掘</text>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="130" cy="60" r="11"/><text x="130" y="65" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="372" cy="270" r="11"/><text x="372" y="275" text-anchor="middle" fill="#fff">2</text>
+    <circle cx="560" cy="270" r="11"/><text x="560" y="275" text-anchor="middle" fill="#fff">3</text>
+  </g>
+  <g font-size="12" fill="#334155">
+    <text x="24" y="318">① 目标 ACOS 按毛利率设定；客单价建议手填更准；参数保存在本机浏览器，刷新不丢</text>
+    <text x="398" y="318">② 规则功能不需要 AI；③ AI 需本机代理或自填 Key，仅上传关键词文本</text>
+  </g>
+</svg>
+</div>
+<figcaption>图 3-2　参数与 AI 配置原型</figcaption>
+</figure>
+
+<h3>3.3 结果总览：KPI 与分级分布</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 300" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="724" height="284" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <g font-size="10.5">
+    <g fill="#fff" stroke="#e5e7eb">
+      <rect x="24" y="24" width="86" height="46" rx="8"/><rect x="116" y="24" width="86" height="46" rx="8"/><rect x="208" y="24" width="86" height="46" rx="8"/><rect x="300" y="24" width="86" height="46" rx="8"/>
+      <rect x="392" y="24" width="86" height="46" rx="8"/><rect x="484" y="24" width="86" height="46" rx="8"/><rect x="576" y="24" width="76" height="46" rx="8"/><rect x="658" y="24" width="60" height="46" rx="8"/>
+    </g>
+    <g fill="#6b7280"><text x="32" y="40">数据行数</text><text x="124" y="40">曝光</text><text x="216" y="40">点击</text><text x="308" y="40">花费</text><text x="400" y="40">销售额</text><text x="492" y="40">订单</text><text x="584" y="40">整体ACOS</text><text x="666" y="40">词/搜索词</text></g>
+    <g fill="#1f2937" font-weight="bold" font-size="13"><text x="32" y="62">1,204</text><text x="124" y="62">92,410</text><text x="216" y="62">1,873</text><text x="308" y="62">1,412.60</text><text x="400" y="62">4,209.30</text><text x="492" y="62">132</text><text x="584" y="62">33.6%</text><text x="666" y="62">586/210</text></g>
+  </g>
+  <g font-size="11.5">
+    <rect x="24" y="84" width="76" height="24" rx="12" fill="#2563eb"/><text x="62" y="100" text-anchor="middle" fill="#fff">总览</text>
+    <rect x="106" y="84" width="86" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="149" y="100" text-anchor="middle" fill="#6b7280">优化动作</text>
+    <rect x="198" y="84" width="92" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="244" y="100" text-anchor="middle" fill="#6b7280">搜索词分级</text>
+    <rect x="296" y="84" width="86" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="339" y="100" text-anchor="middle" fill="#6b7280">词根挖掘</text>
+    <rect x="388" y="84" width="86" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="431" y="100" text-anchor="middle" fill="#6b7280">新词候选</text>
+    <rect x="480" y="84" width="86" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="523" y="100" text-anchor="middle" fill="#6b7280">互搏检测</text>
+    <rect x="572" y="84" width="76" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="610" y="100" text-anchor="middle" fill="#6b7280">AI 挖掘</text>
+    <rect x="654" y="84" width="64" height="24" rx="12" fill="#fff" stroke="#e5e7eb"/><text x="686" y="100" text-anchor="middle" fill="#6b7280">导出</text>
+  </g>
+  <rect x="24" y="122" width="692" height="150" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="40" y="144" font-size="12" fill="#1f2937">搜索词分级分布</text>
+  <g font-size="11">
+    <rect x="24" y="156" width="692" height="22" fill="#f8fafc"/>
+    <text x="34" y="171" fill="#334155">级别</text><text x="120" y="171" fill="#334155">搜索词数</text><text x="230" y="171" fill="#334155">点击</text><text x="330" y="171" fill="#334155">花费</text><text x="430" y="171" fill="#334155">销售额</text><text x="540" y="171" fill="#334155">ACOS</text>
+    <text x="34" y="193" fill="#047857" font-weight="bold">优秀</text><text x="120" y="193">9</text><text x="230" y="193">164</text><text x="330" y="193">75.87</text><text x="430" y="193">629.79</text><text x="540" y="193">12.0%</text>
+    <text x="34" y="215" fill="#b91c1c" font-weight="bold">无效</text><text x="120" y="215">21</text><text x="230" y="215">596</text><text x="330" y="215">377.11</text><text x="430" y="215">0.00</text><text x="540" y="215">—</text>
+    <text x="34" y="237" fill="#1d4ed8" font-weight="bold">良好</text><text x="120" y="237">13</text><text x="230" y="237">188</text><text x="330" y="237">151.90</text><text x="430" y="237">606.44</text><text x="540" y="237">25.0%</text>
+    <text x="34" y="259" fill="#c2410c" font-weight="bold">亏损</text><text x="120" y="259">8</text><text x="230" y="259">151</text><text x="330" y="259">117.71</text><text x="430" y="259">224.92</text><text x="540" y="259">52.3%</text>
+  </g>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="700" cy="36" r="11"/><text x="700" y="41" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="666" cy="96" r="11"/><text x="666" y="101" text-anchor="middle" fill="#fff">2</text>
+    <circle cx="700" cy="132" r="11"/><text x="700" y="137" text-anchor="middle" fill="#fff">3</text>
+  </g>
+  <g font-size="12" fill="#334155">
+    <text x="24" y="288">① 8 张 KPI 卡快速体检　② 八个结果标签页　③ 分级分布定位预算流向</text>
+  </g>
+</svg>
+</div>
+<figcaption>图 3-3　结果总览原型</figcaption>
+</figure>
+
+<h3>3.4 优化动作表（核心输出）</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 300" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="724" height="284" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <rect x="24" y="24" width="180" height="24" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="34" y="40" font-size="11" fill="#94a3b8">搜索过滤…</text>
+  <text x="230" y="40" font-size="11" fill="#6b7280">共 24 条</text>
+  <rect x="640" y="22" width="90" height="26" rx="6" fill="#fff" stroke="#93c5fd"/><text x="685" y="39" text-anchor="middle" fill="#2563eb" font-size="11">导出本表 CSV</text>
+  <rect x="24" y="60" width="692" height="212" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <g font-size="10.5" fill="#334155">
+    <rect x="24" y="60" width="692" height="24" fill="#f8fafc"/>
+    <text x="32" y="76">优先级</text><text x="80" y="76">级别</text><text x="122" y="76">建议动作</text><text x="216" y="76">关键词</text><text x="330" y="76">调整</text><text x="382" y="76">建议出价</text><text x="456" y="76">花费</text><text x="506" y="76">ACOS</text><text x="560" y="76">理由</text>
+    <text x="32" y="98" fill="#b91c1c" font-weight="bold">P0</text><text x="80" y="98"><tspan fill="#991b1b">无效</tspan></text><text x="122" y="98">降价并否定</text><text x="216" y="98">phone case clear</text><text x="330" y="98" fill="#b91c1c">-50%</text><text x="382" y="98">0.58</text><text x="456" y="98">38.40</text><text x="506" y="98">—</text><text x="560" y="98" fill="#6b7280">点击22次0订单…</text>
+    <text x="32" y="120" fill="#b91c1c" font-weight="bold">P0</text><text x="80" y="120"><tspan fill="#b91c1c">亏损</tspan></text><text x="122" y="120">降价</text><text x="216" y="120">coffee mug</text><text x="330" y="120" fill="#b91c1c">-50%</text><text x="382" y="120">0.25</text><text x="456" y="120">29.90</text><text x="506" y="120">61.2%</text><text x="560" y="120" fill="#6b7280">ACOS 2.4×目标…</text>
+    <text x="32" y="142" fill="#c2410c" font-weight="bold">P1</text><text x="80" y="142"><tspan fill="#047857">优秀</tspan></text><text x="122" y="142">提价抢量</text><text x="216" y="142">tumbler with handle</text><text x="330" y="142" fill="#047857">+30%</text><text x="382" y="142">0.90</text><text x="456" y="142">6.00</text><text x="506" y="142">10.0%</text><text x="560" y="142" fill="#6b7280">优于目标，盈利上限…</text>
+    <text x="32" y="164" fill="#1d4ed8" font-weight="bold">P2</text><text x="80" y="164"><tspan fill="#1d4ed8">良好</tspan></text><text x="122" y="164">维持</text><text x="216" y="164">good a</text><text x="330" y="164">0%</text><text x="382" y="164">—</text><text x="456" y="164">8.00</text><text x="506" y="164">20.0%</text><text x="560" y="164" fill="#6b7280">ACOS 达标…</text>
+    <text x="32" y="186" fill="#475569" font-weight="bold">P3</text><text x="80" y="186"><tspan fill="#475569">观察</tspan></text><text x="122" y="186">维持观察</text><text x="216" y="186">obs a</text><text x="330" y="186">0%</text><text x="382" y="186">—</text><text x="456" y="186">3.00</text><text x="506" y="186">—</text><text x="560" y="186" fill="#6b7280">点击7次未达阈值8…</text>
+  </g>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="702" cy="70" r="11"/><text x="702" y="75" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="702" y="134" r="11"/><text x="702" y="139" text-anchor="middle" fill="#fff">2</text>
+  </g>
+  <g font-size="12" fill="#334155">
+    <text x="24" y="288">① 按 P0→P3 与花费排序：先处理最烧钱的　② 每条建议都带触发数据与理由；「建议出价」为估算值需核对</text>
+  </g>
+</svg>
+</div>
+<figcaption>图 3-4　优化动作表原型（P0 最先处理）</figcaption>
+</figure>
+
+<h3>3.5 词根挖掘 与 新词候选</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 290" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="356" height="274" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <text x="24" y="34" font-size="13" fill="#1f2937">词根挖掘</text>
+  <g font-size="10.5" fill="#334155">
+    <rect x="24" y="46" width="324" height="22" fill="#f8fafc"/>
+    <text x="32" y="61">类型</text><text x="80" y="61">词根</text><text x="160" y="61">词数</text><text x="212" y="61">花费</text><text x="264" y="61">销售额</text>
+    <text x="32" y="83" fill="#047857" font-weight="bold">盈利</text><text x="80" y="83">tumbler</text><text x="160" y="83">14</text><text x="212" y="83">96.20</text><text x="264" y="83">388.44</text>
+    <text x="32" y="105" fill="#047857" font-weight="bold">加分</text><text x="80" y="105">handle</text><text x="160" y="105">9</text><text x="212" y="105">61.80</text><text x="264" y="105">297.40</text>
+    <text x="32" y="127" fill="#991b1b" font-weight="bold">亏损</text><text x="80" y="127">bottle</text><text x="160" y="127">11</text><text x="212" y="127">148.30</text><text x="264" y="127">0.00</text>
+    <text x="32" y="149" fill="#c2410c" font-weight="bold">减分</text><text x="80" y="149">case</text><text x="160" y="149">5</text><text x="212" y="149">41.10</text><text x="264" y="149">0.00</text>
+  </g>
+  <text x="24" y="180" font-size="11" fill="#6b7280">建议列：盈利→扩词/加精准；亏损→词组否定；</text>
+  <text x="24" y="198" font-size="11" fill="#6b7280">加分→组合扩展；减分→关注</text>
+  <rect x="24" y="214" width="324" height="52" rx="6" fill="#fff7ed"/>
+  <text x="36" y="234" font-size="10.5" fill="#9a3412">亏损词根否定前会检查影响面：</text>
+  <text x="36" y="252" font-size="10.5" fill="#9a3412">命中现有优质词时不出否定，改为冲突提示</text>
+  <rect x="380" y="8" width="352" height="274" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <text x="396" y="34" font-size="13" fill="#1f2937">新词候选</text>
+  <g font-size="10.5" fill="#334155">
+    <rect x="396" y="46" width="320" height="22" fill="#f8fafc"/>
+    <text x="404" y="61">来源</text><text x="470" y="61">建议关键词</text><text x="600" y="61">支持数据</text>
+    <text x="404" y="83"><tspan fill="#1d4ed8">收割</tspan></text><text x="470" y="83">coffee tumbler 40 oz</text><text x="600" y="83">ACOS 9%·订单3</text>
+    <text x="404" y="105"><tspan fill="#1d4ed8">收割</tspan></text><text x="470" y="105">insulated tumbler 20oz</text><text x="600" y="105">ACOS 12%·订单2</text>
+    <text x="404" y="127"><tspan fill="#6d28d9">AI扩词</tspan></text><text x="470" y="127">tumbler with handle 40oz</text><text x="600" y="127">语义相关·长尾</text>
+    <text x="404" y="149"><tspan fill="#3730a3">组合</tspan></text><text x="470" y="149">handle 40oz</text><text x="600" y="149">来自2个优秀词</text>
+  </g>
+  <text x="396" y="180" font-size="11" fill="#6b7280">收割=广泛/词组/自动里已验证的优质搜索词；</text>
+  <text x="396" y="198" font-size="11" fill="#6b7280">组合=优秀词相邻二元组；AI=模型语义扩展（带查重）</text>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="352" cy="120" r="11"/><text x="352" y="125" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="716" cy="120" r="11"/><text x="716" y="125" text-anchor="middle" fill="#fff">2</text>
+  </g>
+  <g font-size="12" fill="#334155"><text x="24" y="274">① 词根=词与相邻二元组的盈亏归因　② 新词按来源标注置信度，AI 结果与规则交叉验证</text></g>
+</svg>
+</div>
+<figcaption>图 3-5　词根挖掘与新词候选原型</figcaption>
+</figure>
+
+<h3>3.6 互搏检测 与 导出中心</h3>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 740 290" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <rect x="8" y="8" width="356" height="274" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <text x="24" y="34" font-size="13" fill="#1f2937">互搏检测（同词多组投放）</text>
+  <g font-size="10.5" fill="#334155">
+    <rect x="24" y="52" width="180" height="58" rx="6" fill="#ecfdf5" stroke="#059669"/>
+    <text x="36" y="72" fill="#047857" font-weight="bold">最优位置（保留）</text>
+    <text x="36" y="90">精准组 · 订单2 · ACOS 10%</text>
+    <rect x="24" y="120" width="180" height="58" rx="6" fill="#fef2f2" stroke="#dc2626"/>
+    <text x="36" y="140" fill="#b91c1c" font-weight="bold">输家（建议否定）</text>
+    <text x="36" y="158">词组组 · 0订单 · 花费13.00</text>
+    <line x1="114" y1="110" x2="114" y2="120" stroke="#6b7280" stroke-width="1.2"/>
+  </g>
+  <text x="24" y="200" font-size="11" fill="#6b7280">同一搜索词被自己多个广告组竞价，</text>
+  <text x="24" y="218" font-size="11" fill="#6b7280">集中到最优位置，其余精准否定止损</text>
+  <rect x="380" y="8" width="352" height="274" rx="10" fill="#fff" stroke="#e5e7eb"/>
+  <text x="396" y="34" font-size="13" fill="#1f2937">导出中心（CSV，带 BOM，Excel 直开）</text>
+  <g font-size="11.5" fill="#334155">
+    <rect x="396" y="50" width="320" height="34" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="408" y="72">① 调价清单 —— 出价、幅度、理由</text>
+    <rect x="396" y="92" width="320" height="34" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="408" y="114">② 否定词清单 —— 精准/词组 + 来源</text>
+    <rect x="396" y="134" width="320" height="34" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="408" y="156">③ 新增关键词清单 —— 收割/组合/AI</text>
+    <rect x="396" y="176" width="320" height="34" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="408" y="198">④ 词根挖掘表 —— 盈利/亏损/加分/减分</text>
+    <rect x="396" y="218" width="320" height="34" rx="6" fill="#fff" stroke="#e5e7eb"/><text x="408" y="240">⑤ 搜索词明细 —— 分级后全量数据</text>
+  </g>
+  <g fill="#dc2626" font-size="13" font-weight="bold">
+    <circle cx="352" cy="150" r="11"/><text x="352" y="155" text-anchor="middle" fill="#fff">1</text>
+    <circle cx="716" cy="60" r="11"/><text x="716" y="65" text-anchor="middle" fill="#fff">2</text>
+  </g>
+  <g font-size="12" fill="#334155"><text x="380" y="274">② 每类清单均可独立导出；导出前请人工复核（P0 后续将支持勾选导出与批量表格式）</text></g>
+</svg>
+</div>
+<figcaption>图 3-6　互搏检测与导出中心原型</figcaption>
+</figure>
+</section>
+
+<section>
+<h2>4 · 日常优化 SOP（每 7–14 天一个周期）</h2>
+<figure>
+<div class="svgwrap">
+<svg viewBox="0 0 760 120" xmlns="http://www.w3.org/2000/svg" font-family="Microsoft YaHei,sans-serif">
+  <defs><marker id="a2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#94a3b8"/></marker></defs>
+  <g font-size="11.5" text-anchor="middle">
+    <rect x="10" y="30" width="126" height="52" rx="8" fill="#eff6ff" stroke="#2563eb"/><text x="73" y="52" fill="#1e3a8a">① 启动工具.bat</text><text x="73" y="70" fill="#6b7280">双击即开</text>
+    <rect x="158" y="30" width="126" height="52" rx="8" fill="#fff" stroke="#e5e7eb"/><text x="221" y="52" fill="#1f2937">② 导入最新报表</text><text x="221" y="70" fill="#6b7280">近30–60天</text>
+    <rect x="306" y="30" width="126" height="52" rx="8" fill="#fff" stroke="#e5e7eb"/><text x="369" y="52" fill="#1f2937">③ 核对参数</text><text x="369" y="70" fill="#6b7280">目标ACOS/客单价</text>
+    <rect x="454" y="30" width="126" height="52" rx="8" fill="#fff" stroke="#e5e7eb"/><text x="517" y="52" fill="#1f2937">④ 审阅 P0 动作</text><text x="517" y="70" fill="#6b7280">止损优先，其次抢量</text>
+    <rect x="602" y="30" width="146" height="52" rx="8" fill="#fff7ed" stroke="#ea580c"/><text x="675" y="52" fill="#9a3412">⑤ 导出清单→复核</text><text x="675" y="70" fill="#6b7280">广告后台应用</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.5" fill="none">
+    <line x1="136" y1="56" x2="154" y2="56" marker-end="url(#a2)"/><line x1="284" y1="56" x2="302" y2="56" marker-end="url(#a2)"/>
+    <line x1="432" y1="56" x2="450" y2="56" marker-end="url(#a2)"/><line x1="580" y1="56" x2="598" y2="56" marker-end="url(#a2)"/>
+  </g>
+  <text x="380" y="108" text-anchor="middle" font-size="11" fill="#6b7280">每个周期只动一次出价，给算法 5–7 天学习期；下一周期用新报表复盘上一轮动作</text>
+</svg>
+</div>
+<figcaption>图 4-1　周期化优化 SOP</figcaption>
+</figure>
+<div class="warn"><b>节奏提醒</b>：不要每天反复调价。亚马逊广告有归因延迟（通常 1–3 天）与学习期，建议 7–14 天一个动作周期，避免「今天降明天升」的震荡。</div>
+</section>
+
+<section>
+<h2>5 · 规则说明（引擎如何思考）</h2>
+<h3>5.1 关键词/搜索词七级分级</h3>
+<table>
+<tr><th>级别</th><th>判定条件（有订单）</th><th>无订单词的判定</th><th>默认策略</th></tr>
+<tr><td><span class="badge b-exc">优秀</span></td><td>ACOS ≤ 0.6×目标</td><td rowspan="4" colspan="1">—</td><td>提价抢量（≤上限），收割其搜索词</td></tr>
+<tr><td><span class="badge b-good">良好</span></td><td>0.6×目标 &lt; ACOS ≤ 目标</td><td>小幅提价或维持</td></tr>
+<tr><td>偏高</td><td>目标 &lt; ACOS ≤ 1.5×目标</td><td>小幅降价至盈利出价上限</td></tr>
+<tr><td>亏损</td><td>ACOS &gt; 1.5×目标</td><td>降价；无法盈利则暂停</td></tr>
+<tr><td><span class="badge b-bad">无效</span></td><td colspan="2">点击 ≥ 阈值 且 花费 ≥ 2×客单价×目标ACOS，或 ≥ 2×允许花费</td><td>广泛/词组/自动 → 降价+否定；精准 → 暂停</td></tr>
+<tr><td>观察</td><td colspan="2">点击 &lt; 最少判断点击数 且未超允许花费</td><td>不动，继续积累数据</td></tr>
+<tr><td>潜力</td><td colspan="2">其余无订单情形</td><td>不动，再给曝光机会</td></tr>
+</table>
+<p class="sub">允许花费 = 点击 × 预期转化率 × 目标ACOS × 客单价（例：10 次点击 × 10% × 25% × $25 = $6.25）</p>
+<h3>5.2 调价模型</h3>
+<p><b>盈利出价上限 = 目标ACOS × 客单价 × 关键词转化率</b>。优秀词提价但不越过上限；偏高/亏损词降价至上限；上限低于最低出价时直接建议暂停。</p>
+<div class="warn"><b>出价说明</b>：搜索词报表不含真实出价，工具以「最高历史 CPC × 1.15」估算当前出价并在界面标注（估）。P0 后续版本支持导入关键词报表/批量表获取真实出价（见路线图）。</div>
+<h3>5.3 否定、收割与互搏</h3>
+<ul>
+<li><b>精准否定</b>：无效搜索词（点击≥阈值且超支）在广泛/词组/自动投放中阻断；精准投放的无效词走「暂停」而非否定。</li>
+<li><b>词组否定</b>：亏损词根（≥3 个无效词共享、零销售额、花费达 3 单目标广告费）→ 词组级止损；生成前自动检查影响面，命中现有优质词即不否定并提示冲突。</li>
+<li><b>收割</b>：广泛/词组/自动中 ACOS 达标的搜索词 → 建议加入精准投放；已是精准词的提示核对出价。</li>
+<li><b>互搏</b>：同一搜索词投在多个组 → 保留最优位置，输家位置精准否定，避免自竞价抬价。</li>
+</ul>
+</section>
+
+<section>
+<h2>6 · AI 功能使用指南</h2>
+<table>
+<tr><th>接入方式</th><th>前置条件</th><th>适用场景</th></tr>
+<tr><td>本机代理（推荐）</td><td>运行 <code>python ai_proxy.py</code>，从 http://127.0.0.1:8787/tool 打开页面</td><td>本机使用，解决浏览器跨域；Key 可由启动参数传入</td></tr>
+<tr><td>直连大模型 API</td><td>自填 OpenAI 兼容接口地址 + API Key + 模型名</td><td>接口支持浏览器直连时（如部分开放平台）</td></tr>
+<tr><td>关闭</td><td>无</td><td>只用规则挖掘，离线可用</td></tr>
+</table>
+<ol>
+<li>先完成规则分析（导入报表或载入示例）；</li>
+<li>在「③ AI 模型挖掘」选择接入方式，填写<b>产品/品类信息</b>（越具体扩词越准）；</li>
+<li>点「✦ 开始 AI 挖掘」→ 得到三类结果：<b>AI 扩词</b>（长尾/场景/人群/规格，含查重）、<b>意图聚类</b>（广告组结构建议）、<b>否定预判</b>（与规则交叉验证标注置信度）；</li>
+<li>AI 扩词并入「新词候选」与「新增关键词清单」导出；AI 否定预判中与规则一致的标为高置信。</li>
+</ol>
+<div class="tip"><b>隐私边界</b>：AI 只接收关键词文本与品类描述，<b>不发送</b>花费、销售额、订单等经营数据；API Key 默认不落盘。</div>
+</section>
+
+<section>
+<h2>7 · 常见问题 FAQ</h2>
+<table>
+<tr><th style="width:40%">问题</th><th>解答</th></tr>
+<tr><td>上传后提示「无法识别表头」？</td><td>确认导出的是「搜索词报告」且为 CSV/TXT；若用 Excel 另存过，请选 CSV UTF-8。工具兼容中英/双语表头与 GBK 编码。</td></tr>
+<tr><td>建议出价能直接用吗？</td><td>估算值仅供方向参考（界面标「估」）。建议先在 1–2 个广告组试运行，验证 5–7 天后再扩大。</td></tr>
+<tr><td>为什么有些 0 订单词没有否定？</td><td>点击未达「最少判断点击数」（默认 8）的词进「观察」，数据不足不下结论，避免误杀潜力词。</td></tr>
+<tr><td>词组否定会不会误伤好词？</td><td>引擎在生成前检查影响面：该词根若命中任何优秀/良好搜索词即不出否定，改为冲突提示。</td></tr>
+<tr><td>ACOS 多少算健康？</td><td>取决于毛利率。工具默认 25%，请按「毛利率 - 其他费用占比」设定，宁可保守。</td></tr>
+<tr><td>多店铺/多站点怎么用？</td><td>分别导出报表后一起拖入即可合并分析；注意币种不同时不要混算客单价。</td></tr>
+<tr><td>数据会被上传吗？</td><td>不会。规则功能全部在浏览器本地计算；AI 模式仅发送关键词文本。</td></tr>
+<tr><td>自检按钮是做什么的？</td><td>内置 31 条回归断言（R-T0 测试集），点击验证当前引擎行为与测试边界一致，全绿为正常。</td></tr>
+</table>
+</section>
+
+<section>
+<h2>8 · 边界与免责</h2>
+<ul>
+<li>本工具为<b>决策辅助</b>：所有建议基于你上传报表的统计规律，应用前须人工复核；对直接应用建议造成的广告损失不承担责任。</li>
+<li>报表为聚合期数据（无小时级/分钟级粒度），不做分时调价建议；出价为估算值（真实出价接入在路线图中）。</li>
+<li>AI 生成内容可能不准确，仅供关键词研究参考；AI 否定预判与规则冲突时以规则为准。</li>
+<li>请遵守亚马逊广告政策与当地法律法规；工具本身不采集、不上传你的任何经营数据。</li>
+</ul>
+</section>
+
+</main>
+<footer>亚马逊投流关键词优化工具 · 使用手册 v1.0-P0 · 与《白皮书》《落地需求拆解与测试边界》配套阅读</footer>
+</body>
+</html>
