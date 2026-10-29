@@ -14,6 +14,9 @@ function canon(s) { return String(s == null ? '' : s).toLowerCase().replace(/[\s
 function toast(msg, err) { const b = $('#errbar'); if (!err) { b.style.display = 'none'; return; } b.textContent = '⚠ ' + msg; b.style.display = 'block'; setTimeout(() => { b.style.display = 'none'; }, 8000); }
 window.__errors = []; window.addEventListener('error', e => { window.__errors.push(String(e.message)); toast('脚本错误：' + e.message, true); });
 
+import { authFetch, ensureAuth, initAuthUI, currentUser } from './auth.js';
+await ensureAuth(); initAuthUI();
+
 const state = { result: null, ai: { expansions: [], intents: [], negatives: [], insights: [], done: false } };
 let P = {};
 
@@ -34,7 +37,7 @@ async function analyzeWithFiles(files) {
   for (const f of files) fd.append('files', f, f.name);
   Object.entries({ target: p.target, ecvr: p.ecvr, minClicks: p.minClicks, aov: p.aovOverride, upCap: p.upCap, downCap: p.downCap, floor: p.floor, impFloor: p.impFloor })
     .forEach(([k, v]) => fd.append(k, String(v)));
-  const r = await fetch('/api/analyze', { method: 'POST', body: fd });
+  const r = await authFetch('/api/analyze', { method: 'POST', body: fd });
   const d = await r.json();
   if (!r.ok) { renderFileList(d.files || [], d.error); toast(d.error || '分析失败', true); return; }
   applyResult(d);
@@ -42,7 +45,7 @@ async function analyzeWithFiles(files) {
 async function analyzeDemo() {
   const p = readParams();
   const qs = new URLSearchParams({ target: p.target, ecvr: p.ecvr, minClicks: p.minClicks, aov: p.aovOverride });
-  const r = await fetch('/api/demo?' + qs.toString());
+  const r = await authFetch('/api/demo?' + qs.toString());
   applyResult(await r.json());
 }
 function applyResult(d) {
@@ -222,7 +225,7 @@ async function runAiOnline() {
   try {
     const body = { messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.3 };
     if (mode === 'direct') { body.base_url = $('#aiBaseUrl').value.trim(); body.model = $('#aiModel').value.trim(); body.api_key = $('#aiKey').value.trim(); if (!body.api_key) throw new Error('直连模式需要填写 API Key'); }
-    const r = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await authFetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error ? JSON.stringify(j.error) : 'HTTP ' + r.status);
     const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
@@ -265,7 +268,7 @@ async function runSelfTestBtn() {
   const host = $('#selfTestOut'); host.style.display = 'block';
   host.innerHTML = '<div class="tbar"><b>正在运行后端自检…</b></div>';
   try {
-    const r = await fetch('/api/selftest', { method: 'POST' });
+    const r = await authFetch('/api/selftest', { method: 'POST' });
     const d = await r.json();
     host.innerHTML = `<div class="tbar"><b>自检结果：${d.passed} / ${d.total} 通过</b>${d.passed === d.total ? '<span class="badge b-exc">全部通过</span>' : '<span class="badge b-bad">存在失败</span>'}</div>` +
       `<div class="twrap" style="max-height:300px"><table><tbody>` + d.results.map(r => `<tr><td class="${r.passed ? 'st-pass' : 'st-fail'}" style="width:30px">${r.passed ? '✓' : '✗'}</td><td>${esc(r.name)}</td><td class="small reason">${esc(r.msg || '')}</td></tr>`).join('') + '</tbody></table></div>';

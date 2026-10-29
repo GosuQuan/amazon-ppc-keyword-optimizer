@@ -8,9 +8,39 @@
 </head>
 <body>
 <div id="errbar"></div>
+<div id="authGate" style="display:none;position:fixed;inset:0;background:rgba(11,18,32,.78);z-index:1000;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+    <h2 style="margin:0 0 4px;font-size:20px">亚马逊投流关键词优化工具</h2>
+    <p style="margin:0 0 14px" class="small">在线演示 · 注册后可体验全部分析功能（免费）</p>
+    <div class="tabs" style="margin-bottom:12px">
+      <button id="tabLogin" class="tabbtn on" type="button">登录</button>
+      <button id="tabReg" class="tabbtn" type="button">注册</button>
+    </div>
+    <div id="paneLogin">
+      <div class="field"><label>邮箱或手机号</label><input id="loginAccount" placeholder="you@example.com 或 13800000000"></div>
+      <div class="field" style="margin-top:8px"><label>密码</label><input id="loginPassword" type="password" placeholder="密码"></div>
+      <div id="authMsgLogin" class="status"></div>
+      <button id="btnLogin" class="btn" style="width:100%;margin-top:10px">登录</button>
+    </div>
+    <div id="paneReg" style="display:none">
+      <div class="field"><label>注册方式</label>
+        <select id="regType"><option value="email">邮箱注册</option><option value="phone">手机号注册</option></select>
+      </div>
+      <div class="field" style="margin-top:8px"><label>邮箱 / 手机号</label><input id="regTarget" placeholder="you@example.com"></div>
+      <div class="field" style="margin-top:8px"><label>验证码</label>
+        <div style="display:flex;gap:8px"><input id="regCode" placeholder="6 位验证码"><button id="btnSendCode" class="btn ghost" type="button" style="white-space:nowrap">获取验证码</button></div>
+      </div>
+      <div class="field" style="margin-top:8px"><label>密码（至少 6 位）</label><input id="regPassword" type="password"></div>
+      <div id="authMsgReg" class="status"></div>
+      <button id="btnRegister" class="btn" style="width:100%;margin-top:10px">注册并登录</button>
+    </div>
+    <p class="hint" style="margin-top:12px">演示环境：验证码直接显示在页面上（正式版接入短信/邮件）；请勿使用重要密码。注册即表示同意演示用途的数据处理方式。</p>
+  </div>
+</div>
 <header>
-  <h1>亚马逊投流关键词优化工具 <span class="ver">前后端工程版 v0.1</span></h1>
+  <h1>亚马逊投流关键词优化工具 <span class="ver">前后端工程版 v0.2 · 在线演示</span></h1>
   <p>上传广告报表 → 后端规则引擎分析 → 规则 + 专家 AI 双引擎挖掘 → 导出可执行优化清单　|　FastAPI + 原生 SPA</p>
+  <div id="userChip" style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
 </header>
 <main>
 

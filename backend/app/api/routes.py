@@ -5,9 +5,10 @@ import urllib.request
 import urllib.error
 from typing import List, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
+from .. import auth as AU
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -23,15 +24,78 @@ AI_DEFAULT_MODEL = "glm-4-flash"
 
 @router.get("/health")
 def health():
-    return {"ok": True, "service": "amazon-ppc-optimizer", "version": "0.1.0"}
+    return {"ok": True, "service": "amazon-ppc-optimizer", "version": "0.2.0"}
+
+
+# ---------- 用户体系 ----------
+def require_user(request: Request) -> dict:
+    authz = request.headers.get("Authorization", "")
+    token = authz[7:] if authz.startswith("Bearer ") else ""
+    uid = AU.verify_token(token) if token else None
+    user = AU.get_user(uid) if uid else None
+    if not user:
+        raise HTTPException(401, "未登录或登录已过期")
+    return user
+
+
+auth_router = APIRouter(prefix="/auth")
+
+
+@auth_router.post("/send-code")
+def send_code(body: dict, request: Request):
+    if not AU.rate_ok("code:" + (request.client.host if request.client else "?")):
+        raise HTTPException(429, "验证码请求过于频繁，请一小时后再试")
+    tt = body.get("target_type")
+    t = AU.validate_target(tt, body.get("target"))
+    if not t:
+        raise HTTPException(422, "邮箱或手机号格式不正确")
+    code = AU.issue_code(t)
+    return {"ok": True, "demo": True, "code": code,
+            "note": "演示环境：验证码直接返回；正式环境将通过短信/邮件下发"}
+
+
+@auth_router.post("/register")
+def register(body: dict, request: Request):
+    if not AU.rate_ok("reg:" + (request.client.host if request.client else "?")):
+        raise HTTPException(429, "注册请求过于频繁，请一小时后再试")
+    tt = body.get("target_type")
+    t = AU.validate_target(tt, body.get("target"))
+    if not t:
+        raise HTTPException(422, "邮箱或手机号格式不正确")
+    if not AU.check_code(t, str(body.get("code") or "")):
+        raise HTTPException(422, "验证码错误或已过期")
+    if AU.find_by_account(t):
+        raise HTTPException(409, "该账号已注册，请直接登录")
+    try:
+        user = AU.create_user(tt, t, str(body.get("password") or ""))
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return {"token": AU.make_token(user["uid"]), "user": user}
+
+
+@auth_router.post("/login")
+def login(body: dict):
+    row = AU.find_by_account(str(body.get("account") or ""))
+    if not row or not AU.verify_password(row, str(body.get("password") or "")):
+        raise HTTPException(401, "账号或密码错误")
+    return {"token": AU.make_token(row["id"]), "user": AU.get_user(row["id"])}
+
+
+@auth_router.get("/me")
+def me(request: Request):
+    return require_user(request)
+
+
+router.include_router(auth_router)
 
 
 @router.post("/analyze")
-async def analyze(files: List[UploadFile] = File(...),
+async def analyze(request: Request, files: List[UploadFile] = File(...),
                   target: Optional[float] = Form(None), ecvr: Optional[float] = Form(None),
                   min_clicks: Optional[float] = Form(None), aov: Optional[float] = Form(None),
                   up_cap: Optional[float] = Form(None), down_cap: Optional[float] = Form(None),
                   floor: Optional[float] = Form(None), imp_floor: Optional[float] = Form(None)):
+    require_user(request)
     params = {"target": target, "ecvr": ecvr, "minClicks": min_clicks, "aovOverride": aov,
               "upCap": up_cap, "downCap": down_cap, "floor": floor, "impFloor": imp_floor}
     records: List[dict] = []
@@ -54,8 +118,9 @@ async def analyze(files: List[UploadFile] = File(...),
 
 
 @router.get("/demo")
-def demo(target: Optional[float] = None, ecvr: Optional[float] = None,
+def demo(request: Request, target: Optional[float] = None, ecvr: Optional[float] = None,
          min_clicks: Optional[float] = None, aov: Optional[float] = None):
+    require_user(request)
     params = {"target": target, "ecvr": ecvr, "minClicks": min_clicks, "aovOverride": aov}
     records = demo_records()
     result = sanitize(run_analysis(records, params))
@@ -64,7 +129,8 @@ def demo(target: Optional[float] = None, ecvr: Optional[float] = None,
 
 
 @router.post("/export/{kind}")
-async def export_csv(kind: str, payload: dict):
+def export_csv(kind: str, request: Request, payload: dict):
+    require_user(request)
     result = payload.get("result")
     if not result:
         raise HTTPException(422, "缺少 result 数据")
@@ -84,7 +150,8 @@ async def export_csv(kind: str, payload: dict):
 
 
 @router.post("/selftest")
-def selftest():
+def selftest(request: Request):
+    require_user(request)
     return ST.run_selftest()
 
 
@@ -103,7 +170,10 @@ def _bearer_for(body: dict) -> Optional[str]:
 
 
 @router.post("/ai/chat")
-def ai_chat(body: dict):
+def ai_chat(request: Request, body: dict):
+    user = require_user(request)
+    if not AU.consume_ai_credit(user["uid"]):
+        raise HTTPException(403, "专家 AI 额度已用完（免费层含 20 次），升级或联系获取更多额度")
     upstream = str(body.get("base_url") or AI_DEFAULT_UPSTREAM).strip()
     payload = {"model": str(body.get("model") or AI_DEFAULT_MODEL),
                "messages": body.get("messages") or [],
