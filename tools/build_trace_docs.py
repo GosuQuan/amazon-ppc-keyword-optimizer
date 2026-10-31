@@ -44,7 +44,7 @@ def build(source, target):
     document.save(target)
     reopened = Document(target)
     text = '\n'.join(paragraph.text for paragraph in reopened.paragraphs)
-    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示')):
+    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示', '积分余额预览')):
         raise SystemExit('document missing expected heading: ' + target.name)
     print(target)
 
@@ -59,3 +59,6 @@ build(claim, ARCHIVE / '2026-11-01-列表可核对花费.docx')
 hint = ARCHIVE / '2026-11-01-工作台积分提示.md'
 hint.write_text('# 2026-11-01 工作台积分提示\n\n' + (DOCS / '工作台积分提示测试边界.md').read_text(encoding='utf-8') + '\n原型页面截图仍待浏览器扩展确认后补入。\n', encoding='utf-8')
 build(hint, ARCHIVE / '2026-11-01-工作台积分提示.docx')
+preview = ARCHIVE / '2026-11-01-积分余额预览.md'
+preview.write_text('# 2026-11-01 积分余额预览\n\n生成方案前比较当前整数余额和所需积分。不够时提示不足，够时显示扣后余额。余额或价格不是整数时不编造。未做浏览器截图，未调用真实模型。\n', encoding='utf-8')
+build(preview, ARCHIVE / '2026-11-01-积分余额预览.docx')

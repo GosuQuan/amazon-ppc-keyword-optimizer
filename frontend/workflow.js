@@ -61,9 +61,16 @@
     return new Error(`请求失败（HTTP ${response.status}）${details ? '\n' + details : '，服务端未返回具体原因。'}`);
   }
   if (!sessionStorage.getItem('ppc_token')) location.replace('/login.html');
-  fetch('/api/auth/pricing').then((response) => response.json()).then((pricing) => {
+  Promise.all([
+    fetch('/api/auth/pricing').then((response) => response.json()),
+    fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } }).then((response) => response.json()),
+  ]).then(([pricing, account]) => {
     $('point-cost').textContent = window.pointCostText(pricing);
-  }).catch(() => { $('point-cost').textContent = '积分规则暂时无法读取。'; });
+    $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
+  }).catch(() => {
+    $('point-cost').textContent = '积分规则暂时无法读取。';
+    $('point-balance').textContent = '当前积分暂时无法读取。';
+  });
   $('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   request('/api/auth/me').then((account) => {
     if (account && account.email) {
