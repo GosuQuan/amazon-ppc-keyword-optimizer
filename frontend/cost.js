@@ -16,7 +16,7 @@
     }
     try {
       const response = await fetch('/api/cost/review', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') },
         body: JSON.stringify({ minutes, note }),
       });
       const data = await response.json();

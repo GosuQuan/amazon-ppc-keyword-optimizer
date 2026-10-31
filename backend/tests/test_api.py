@@ -56,7 +56,7 @@ def test_static_frontend_served():
 
 def test_workflow_page_and_api_are_mounted(monkeypatch, tmp_path):
     monkeypatch.setenv("PPC_DB_PATH", str(tmp_path / "workflow.sqlite3"))
-    listed = client.get("/api/workflow/plans")
+    listed = client.get("/api/workflow/plans", headers={"Authorization": "Bearer invalid"})
     assert listed.status_code == 401
     page = client.get("/workflow.html")
     assert page.status_code == 200

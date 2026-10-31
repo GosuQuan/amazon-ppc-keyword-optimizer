@@ -50,6 +50,17 @@ def test_message_temperature_and_errors_do_not_reuse_cache(monkeypatch):
     assert len(calls) == 4
 
 
+def test_cache_is_not_shared_between_users(monkeypatch):
+    calls = []
+    install(monkeypatch, lambda request, **kwargs: calls.append(1) or Upstream('{"choices":[{"message":{"content":"ok"}}]}'))
+    body = {'messages': [{'content': 'same'}]}
+    assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'miss'
+    other = client.post('/api/auth/register', json={'email': 'other@example.com', 'password': 'password1'})
+    second = client.post('/api/ai/chat', json=body, headers={'Authorization': 'Bearer ' + other.json()['token']})
+    assert second.headers['x-ppc-cache'] == 'miss'
+    assert len(calls) == 2
+
+
 def test_disabled_cache_and_rejected_endpoint(monkeypatch):
     calls = []
     monkeypatch.setenv('AI_CACHE_SECONDS', '0')

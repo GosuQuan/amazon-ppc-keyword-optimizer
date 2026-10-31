@@ -31,9 +31,10 @@ def _ttl():
         return 600
 
 
-def _key(upstream, payload):
+def _key(upstream, payload, user_id):
     parts = urlsplit(upstream)
     canonical = {
+        'user_id': int(user_id),
         'host': parts.hostname,
         'path': parts.path,
         'model': payload.get('model'),
@@ -46,12 +47,12 @@ def _key(upstream, payload):
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def get(upstream, payload):
+def get(upstream, payload, user_id):
     global _hits
     ttl = _ttl()
     if ttl == 0:
         return None
-    key = _key(upstream, payload)
+    key = _key(upstream, payload, user_id)
     now = time.monotonic()
     with _lock:
         item = _entries.get(key)
@@ -65,11 +66,11 @@ def get(upstream, payload):
         return json.loads(json.dumps(item[1]))
 
 
-def put(upstream, payload, result):
+def put(upstream, payload, result, user_id):
     ttl = _ttl()
     if ttl == 0 or not isinstance(result, dict):
         return
-    key = _key(upstream, payload)
+    key = _key(upstream, payload, user_id)
     with _lock:
         _entries[key] = (time.monotonic() + ttl, json.loads(json.dumps(result)))
         _entries.move_to_end(key)

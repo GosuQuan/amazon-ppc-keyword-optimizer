@@ -16,7 +16,7 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch('/api/ai/usage', { signal: controller.signal });
+      const response = await fetch('/api/ai/usage', { signal: controller.signal, headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!data.summary || !Array.isArray(data.records)) throw new Error('账本格式无效');

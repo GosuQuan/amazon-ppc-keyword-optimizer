@@ -18,8 +18,12 @@ def database():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             minutes INTEGER NOT NULL,
             note TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            user_id INTEGER NOT NULL DEFAULT 0
         )''')
+        columns = {row['name'] for row in connection.execute('PRAGMA table_info(review_time)')}
+        if 'user_id' not in columns:
+            connection.execute('ALTER TABLE review_time ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0')
         yield connection
         connection.commit()
     except Exception:
@@ -29,24 +33,24 @@ def database():
         connection.close()
 
 
-def record_review(minutes, note):
+def record_review(minutes, note, user_id):
     if type(minutes) is not int or isinstance(minutes, bool) or not 1 <= minutes <= 1440:
         raise ValueError('审核耗时须为 1 到 1440 的整数分钟')
     text = str(note or '').strip()
     if len(text) > 200:
         raise ValueError('备注不能超过 200 字')
     with database() as connection:
-        connection.execute('INSERT INTO review_time (minutes, note, created_at) VALUES (?, ?, ?)',
-                           (minutes, text, datetime.now(timezone.utc).isoformat()))
-    return summary({})
+        connection.execute('INSERT INTO review_time (minutes, note, created_at, user_id) VALUES (?, ?, ?, ?)',
+                           (minutes, text, datetime.now(timezone.utc).isoformat(), int(user_id)))
+    return summary({}, user_id)
 
 
-def summary(model):
+def summary(model, user_id):
     model = model or {}
     with database() as connection:
-        total = connection.execute('SELECT COUNT(*), COALESCE(SUM(minutes), 0) FROM review_time').fetchone()
+        total = connection.execute('SELECT COUNT(*), COALESCE(SUM(minutes), 0) FROM review_time WHERE user_id=?', (int(user_id),)).fetchone()
         rows = [dict(row) for row in connection.execute(
-            'SELECT id, minutes, note, created_at FROM review_time ORDER BY id DESC LIMIT 20')]
+            'SELECT id, minutes, note, created_at FROM review_time WHERE user_id=? ORDER BY id DESC LIMIT 20', (int(user_id),))]
     return {
         'model_calls': model.get('calls', 0),
         'known_total_tokens': model.get('total_tokens'),

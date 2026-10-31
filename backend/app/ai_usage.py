@@ -23,8 +23,11 @@ def database():
             provider TEXT, model TEXT NOT NULL, status INTEGER,
             success INTEGER NOT NULL, duration_ms INTEGER NOT NULL,
             prompt_tokens TEXT, completion_tokens TEXT, total_tokens TEXT,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL, user_id INTEGER NOT NULL DEFAULT 0
         )''')
+        columns = {row['name'] for row in connection.execute('PRAGMA table_info(ai_usage)')}
+        if 'user_id' not in columns:
+            connection.execute('ALTER TABLE ai_usage ADD COLUMN user_id INTEGER NOT NULL DEFAULT 0')
         yield connection
         connection.commit()
     except Exception:
@@ -34,7 +37,7 @@ def database():
         connection.close()
 
 
-def record_call(*, upstream, model, status, success, duration_ms, usage=None):
+def record_call(*, upstream, model, status, success, duration_ms, usage=None, user_id):
     usage = usage if isinstance(usage, dict) else {}
     tokens = []
     for field in TOKEN_FIELDS:
@@ -43,24 +46,24 @@ def record_call(*, upstream, model, status, success, duration_ms, usage=None):
     with database() as connection:
         connection.execute('''INSERT INTO ai_usage
             (provider, model, status, success, duration_ms,
-             prompt_tokens, completion_tokens, total_tokens, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+             prompt_tokens, completion_tokens, total_tokens, created_at, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (urlsplit(upstream).hostname, model[:256], status, int(success),
-             max(0, int(duration_ms)), *tokens, datetime.now(timezone.utc).isoformat()))
+             max(0, int(duration_ms)), *tokens, datetime.now(timezone.utc).isoformat(), int(user_id)))
 
 
-def get_usage():
+def get_usage(user_id):
     with database() as connection:
         # One read snapshot keeps summary and recent entries consistent.
         connection.execute('BEGIN')
         records = [dict(row) for row in connection.execute(
-            'SELECT * FROM ai_usage ORDER BY id DESC LIMIT 50')]
+            'SELECT * FROM ai_usage WHERE user_id=? ORDER BY id DESC LIMIT 50', (int(user_id),))]
         summary = dict(calls=0, successes=0, failures=0, cost=None)
         known_fields = ('prompt_known_calls', 'completion_known_calls', 'usage_known_calls')
         for token, known in zip(TOKEN_FIELDS, known_fields):
             summary[token] = None
             summary[known] = 0
-        for row in connection.execute('SELECT success, prompt_tokens, completion_tokens, total_tokens FROM ai_usage'):
+        for row in connection.execute('SELECT success, prompt_tokens, completion_tokens, total_tokens FROM ai_usage WHERE user_id=?', (int(user_id),)):
             summary['calls'] += 1
             summary['successes' if row['success'] else 'failures'] += 1
             for token, known in zip(TOKEN_FIELDS, known_fields):
@@ -68,6 +71,7 @@ def get_usage():
                     summary[token] = (summary[token] or 0) + int(row[token])
                     summary[known] += 1
     for record in records:
+        record.pop('user_id', None)
         record['success'] = bool(record['success'])
         record['cost'] = None
         for field in TOKEN_FIELDS:

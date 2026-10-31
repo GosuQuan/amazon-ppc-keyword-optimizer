@@ -131,7 +131,7 @@ def test_recent_fifty_and_full_summary(monkeypatch):
     from app import ai_usage
     for index in range(55):
         ai_usage.record_call(upstream='https://provider.example/secret-path?q=SECRET_QUERY', model='m' * 300,
-                             status=200, success=True, duration_ms=1,
+                             status=200, success=True, duration_ms=1, user_id=1,
                              usage={'total_tokens': 2} if index % 2 == 0 else None)
     usage = client.get('/api/ai/usage').json()
     assert usage['summary']['calls'] == 55

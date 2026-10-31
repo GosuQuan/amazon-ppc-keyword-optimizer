@@ -7,10 +7,11 @@ import urllib.request
 import urllib.error
 from typing import List, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .. import ai_cache, ai_usage, cost_ledger
+from ..auth import bind_user
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -106,7 +107,7 @@ def _bearer_for(body: dict) -> Optional[str]:
 
 
 @router.post("/ai/chat")
-def ai_chat(body: dict):
+def ai_chat(body: dict, user: int = Depends(bind_user)):
     configured = str(os.environ.get("AI_BASE_URL") or AI_DEFAULT_UPSTREAM).strip()
     upstream = str(body.get("base_url") or configured).strip()
     if upstream.rstrip('/') != configured.rstrip('/') and not str(body.get("api_key") or '').strip():
@@ -119,7 +120,7 @@ def ai_chat(body: dict):
         payload["thinking"] = {"type": "enabled"}
     if "max_tokens" in body:
         payload["max_tokens"] = body["max_tokens"]
-    cached = ai_cache.get(upstream, payload)
+    cached = ai_cache.get(upstream, payload, user)
     if cached is not None:
         response = JSONResponse(cached)
         response.headers['X-PPC-Cache'] = 'hit'
@@ -144,7 +145,7 @@ def ai_chat(body: dict):
             response = JSONResponse(result)
             success = status is not None and 200 <= status < 300
             if success:
-                ai_cache.put(upstream, payload, result)
+                ai_cache.put(upstream, payload, result, user)
                 response.headers['X-PPC-Cache'] = 'miss'
             return response
     except urllib.error.HTTPError as e:
@@ -166,26 +167,26 @@ def ai_chat(body: dict):
         try:
             ai_usage.record_call(upstream=upstream, model=model, status=status,
                                  success=success, duration_ms=(time.perf_counter() - started) * 1000,
-                                 usage=usage)
+                                 usage=usage, user_id=user)
         except Exception:  # noqa: BLE001
             logging.getLogger(__name__).error('AI usage ledger write failed')
 
 
 @router.get('/ai/usage')
-def get_ai_usage():
-    data = ai_usage.get_usage()
+def get_ai_usage(user: int = Depends(bind_user)):
+    data = ai_usage.get_usage(user)
     data['summary']['cache_hits'] = ai_cache.hits()
     return data
 
 
 @router.get('/cost')
-def get_cost():
-    return cost_ledger.summary(ai_usage.get_usage()['summary'])
+def get_cost(user: int = Depends(bind_user)):
+    return cost_ledger.summary(ai_usage.get_usage(user)['summary'], user)
 
 
 @router.post('/cost/review')
-def add_review(body: dict):
+def add_review(body: dict, user: int = Depends(bind_user)):
     try:
-        return cost_ledger.record_review(body.get('minutes'), body.get('note'))
+        return cost_ledger.record_review(body.get('minutes'), body.get('note'), user)
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
