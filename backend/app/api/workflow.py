@@ -85,7 +85,9 @@ def list_plans(user: int = Depends(bind_user)):
                           'metrics': plan['metrics'], 'action_count': len(plan['actions']),
                           'approved_count': sum(action['status'] == 'approved' for action in plan['actions']),
                           'export_ready': readiness['ready'], 'export_blocked': len(readiness['blocked']),
-                          'already_exported': readiness['already_exported']})
+                          'already_exported': readiness['already_exported'],
+                          'claimable_observed_spend': plan.get('claimable_observed_spend'),
+                          'counts_as_savings': False})
     return summaries
 
 

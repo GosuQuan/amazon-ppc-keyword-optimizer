@@ -61,7 +61,11 @@ def test_full_loop_persistence_and_idempotent_export(client):
     plan = response.json()
     url = '/api/workflow/plans/' + plan['id']
     assert plan['metrics']['spend'] == 60
-    assert client.get('/api/workflow/plans').json()[0]['export_ready'] is False
+    listed = client.get('/api/workflow/plans').json()[0]
+    assert listed['export_ready'] is False
+    assert listed['claimable_observed_spend'] == plan['claimable_observed_spend']
+    assert listed['counts_as_savings'] is False
+    assert listed['metrics']['spend'] == plan['metrics']['spend']
     assert client.post(url + '/export').status_code == 422
     action = next(a for a in plan['actions'] if a['kind'] == 'bid')
     assert action['current_bid'] == 2

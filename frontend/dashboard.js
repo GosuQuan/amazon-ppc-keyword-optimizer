@@ -30,7 +30,8 @@
       const row = document.createElement('p');
       const link = document.createElement('a');
       link.href = window.planLink(plan.id);
-      link.textContent = `${plan.context?.asin || plan.id} · ${plan.export_ready ? '可导出' : '待审核'}`;
+      const claim = typeof plan.claimable_observed_spend === 'number' ? ` · 可核对历史花费 ${plan.claimable_observed_spend}` : '';
+      link.textContent = `${plan.context?.asin || plan.id} · ${plan.export_ready ? '可导出' : '待审核'}${claim}`;
       row.append(link);
       root.append(row);
     });
