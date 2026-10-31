@@ -75,6 +75,8 @@
       $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
       state.pointBalance = Number.isInteger(account.points) ? account.points : null;
       state.serviceCosts = pricing && pricing.serviceCosts || null;
+      const label = window.accountLabel(account);
+      if (label) $('logout').textContent = label;
       syncDisabled();
     }).catch(() => {
       $('point-cost').textContent = '积分规则暂时无法读取。';
@@ -84,11 +86,8 @@
   refreshPointPreview();
   $('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   request('/api/auth/me').then((account) => {
-    if (account && account.email) {
-      const points = Number.isInteger(account.points) ? account.points : account.aiCredits;
-      const planName = account.plan === 'enterprise' ? '企业' : '个人';
-      $('logout').textContent = `${account.email} · ${planName} · 剩余 ${points} 积分 · 退出`;
-    }
+    const label = window.accountLabel(account);
+    if (label) $('logout').textContent = label;
   }).catch(() => {});
   async function request(url, options = {}) {
     const controller = new AbortController();

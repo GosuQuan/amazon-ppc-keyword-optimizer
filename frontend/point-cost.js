@@ -14,6 +14,13 @@ function pointBalancePreview(pricing, balance) {
   if (balance < cost) return `当前 ${balance} 积分，不足以生成方案（需要 ${cost}）。`;
   return `当前 ${balance} 积分，生成方案后剩余 ${balance - cost}。积分不是人民币。`;
 }
+function accountLabel(account) {
+  if (!account || typeof account.email !== 'string' || !account.email.trim()) return '';
+  const points = Number.isInteger(account.points) ? account.points : account.aiCredits;
+  const pointText = Number.isInteger(points) ? `剩余 ${points} 积分` : '积分未知';
+  const planName = account.plan === 'enterprise' ? '企业' : '个人';
+  return `${account.email.trim()} · ${planName} · ${pointText} · 退出`;
+}
 function rechargeNotice(billing) {
   if (!billing || typeof billing.demoRecharge !== 'boolean') return '充值状态暂时无法读取。';
   if (billing.demoRecharge) return '当前是演示充值，不会产生真实扣款。同一档位只能入账一次。';
@@ -28,4 +35,5 @@ window.pointCostText = pointCostText;
 window.canAfford = canAfford;
 window.pointBalancePreview = pointBalancePreview;
 window.rechargeNotice = rechargeNotice;
-if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview, canAfford, rechargeNotice };
+window.accountLabel = accountLabel;
+if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview, canAfford, rechargeNotice, accountLabel };
