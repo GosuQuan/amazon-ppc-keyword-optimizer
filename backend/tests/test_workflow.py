@@ -126,6 +126,21 @@ def test_overlap_spend_is_not_counted_twice(client):
     assert not any(action['kind'] == 'negative' and action['keyword'] == 'red shoe' and '重复覆盖' in action['reason'] for action in plan['actions'])
 
 
+def test_daily_placement_rows_sum_and_same_day_conflict_fails(client):
+    headers = ['Date', 'Campaign', 'Placement', 'Clicks', 'Spend', '7 Day Total Sales', '7 Day Total Orders (#)', 'Currency']
+    daily = table_csv(headers, [
+        ['2026-01-01', 'Camp', 'Top of Search', '1', '20', '0', '0', 'USD'],
+        ['2026-01-02', 'Camp', 'Top of Search', '2', '30', '0', '0', 'USD']])
+    plan = create(client, placements=daily).json()
+    assert plan['reports']['placements']['metrics']['spend'] == 50
+    assert plan['metrics']['spend'] == 60
+    assert plan['evidence']['companion_spend_excluded'] == 50
+    conflict = table_csv(headers, [
+        ['2026-01-01', 'Camp', 'Top of Search', '1', '20', '0', '0', 'USD'],
+        ['2026-01-01', 'Camp', 'Top of Search', '1', '99', '0', '0', 'USD']])
+    assert create(client, placements=conflict).status_code == 422
+
+
 def test_unscoped_root_is_advisory_and_not_claimable(client):
     rows = [['2026-01-01', 'B001', 'USD', 'Camp', 'Group', 'shoe', 'Broad', term, '10', '10', '0', '0']
             for term in ('cheap shoe', 'cheap hat', 'cheap bag')]

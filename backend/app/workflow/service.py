@@ -266,7 +266,8 @@ def numeric_rows(rows, columns, label):
         for field in ('spend', 'sales', 'orders', 'clicks', 'impressions'):
             if field in columns:
                 row[field] = metric(row[field], field)
-        identity = tuple(norm(row.get(field, '')) for field in ('campaign', 'ad_group', 'placement', 'asin'))
+        period = (row.get('date') or '', row.get('start') or '', row.get('end') or '')
+        identity = tuple(norm(row.get(field, '')) for field in ('campaign', 'ad_group', 'placement', 'asin')) + period
         if identity in keys:
             fail(label + '存在同范围指标冲突')
         keys.add(identity)
