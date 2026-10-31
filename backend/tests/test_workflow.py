@@ -59,6 +59,8 @@ def test_full_loop_persistence_and_idempotent_export(client):
     assert action['current_bid'] == 2
     assert action['proposed_bid'] < 2
     assert action['exportable']
+    assert action['evidence_basis'] == 'observed_history'
+    assert action['forecast'] is None
     plan = client.patch(url + '/actions/' + action['id'], json={'status': 'approved'}).json()
     assert plan['export_readiness']['ready'] is True
     assert plan['export_readiness']['template_validated'] is False

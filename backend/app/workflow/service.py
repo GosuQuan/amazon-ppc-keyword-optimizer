@@ -509,7 +509,8 @@ def make_action(kind, keyword, campaign, group, match, bid, proposed, reason, pr
         blocked.append('Keyword 匹配类型不可更新')
     return {'id': uuid4().hex, 'kind': kind, 'keyword': keyword, 'campaign': campaign, 'ad_group': group,
             'match_type': match, 'current_bid': bid, 'proposed_bid': proposed, 'reason': reason,
-            'evidence': evidence, 'priority': priority, 'status': 'pending', 'exportable': not blocked,
+            'evidence': evidence, 'evidence_basis': 'observed_history', 'forecast': None,
+            'priority': priority, 'status': 'pending', 'exportable': not blocked,
             'blocking_reasons': blocked, 'entity_ids': {k: source.get(k) for k in ('campaign_id', 'ad_group_id', 'keyword_id')}}
 
 

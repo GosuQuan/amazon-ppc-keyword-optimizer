@@ -178,7 +178,8 @@
       addDetail(details, '当前出价', money(action.current_bid));
       addDetail(details, action.current_bid == null ? '建议出价（缺少真实出价，不可执行）' : '建议出价（按真实出价计算）', money(action.proposed_bid));
       addDetail(details, '调整理由', action.reason);
-      addDetail(details, '数据依据', action.evidence);
+      addDetail(details, '已发生数据', action.evidence);
+      addDetail(details, '预测增量', action.forecast == null ? '无。历史订单和花费不代表预计新增销售。' : action.forecast);
       card.append(top, details);
       const reasons = blockers(action);
       if (action.exportable !== true || reasons.length) {
