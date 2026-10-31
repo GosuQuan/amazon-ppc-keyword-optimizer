@@ -179,7 +179,10 @@ function newWordRows() {
   const R = state.result, rows = [];
   for (const h of R.harvest) rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   for (const c of R.combos) rows.push({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
-  for (const e of state.ai.expansions) rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason + (e.competitorBrand ? '（含竞品品牌，不建议作为自有新词）' : e.exists ? '（已有精准词，注意去重）' : e.coveredByGood ? '（已包含在优质词中，不必单独新增）' : '') });
+  for (const e of state.ai.expansions) {
+    if (e.competitorBrand || e.coveredByGood) continue;
+    rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason + (e.exists ? '（已有精准词，注意去重）' : '') });
+  }
   return rows;
 }
 

@@ -19,7 +19,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(source + '\nrenderAI = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson };', context);
+  vm.runInContext(source + '\nrenderAI = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -161,6 +161,15 @@ test('a competitor brand negative stays a candidate unless it covers a good term
   assert.match(a.state.ai.negatives[0].cross, /竞品品牌/);
   assert.match(a.state.ai.negatives[1].cross, /冲突/);
   assert.match(a.state.ai.negatives[2].cross, /人工复核/);
+});
+
+test('brand and covered expansions stay out of the new-word list', () => {
+  const a = app();
+  a.state.result.harvest = [];
+  a.state.result.combos = [];
+  a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
+  a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung' }, { word: 'cell phone' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
 });
 
 test('an expansion with a competitor brand is flagged', () => {
