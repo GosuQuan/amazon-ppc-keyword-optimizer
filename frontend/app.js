@@ -273,6 +273,7 @@ function mergeAiJson(j) {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
     if (waste.has(w) || loss.has(w)) cross = '与规则一致（高置信）';
     else if (good.has(w) || negativeContainedInGood(w, good)) cross = '⚠ 与优质数据冲突，不建议否定';
+    else if (expansionHasCompetitorBrand(w)) cross = '竞品品牌，可作为否定候选，仍需确认不会误伤自有词';
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };

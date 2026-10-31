@@ -153,6 +153,15 @@ for (const text of ['```json\n[{"expansions":[]}]\n```', '```json\n{"expansions"
   });
 }
 
+test('a competitor brand negative stays a candidate unless it covers a good term', () => {
+  const a = app();
+  a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
+  a.mergeAiJson({ expansions: [], negativeHints: [{ word: 'samsung galaxy' }, { word: 'cell phone' }, { word: 'desk lamp' }], intents: [], insights: [] });
+  assert.match(a.state.ai.negatives[0].cross, /竞品品牌/);
+  assert.match(a.state.ai.negatives[1].cross, /冲突/);
+  assert.match(a.state.ai.negatives[2].cross, /人工复核/);
+});
+
 test('an expansion with a competitor brand is flagged', () => {
   const a = app();
   a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung galaxy tab' }, { word: 'foldable phone stand for desk' }], negativeHints: [], intents: [], insights: [] });
