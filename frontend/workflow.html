@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>广告优化闭环 · 工作台</title>
+  <link rel="stylesheet" href="/workflow.css">
+  <script src="/workflow.js" defer></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/workflow.html">PPC <span>优化工作台</span></a><a href="/">返回旧工具 ↗</a></header>
+<main>
+  <div class="intro"><div><p class="eyebrow">广告优化闭环 / MVP</p><h1>从搜索词报告，到有依据的下一步</h1><p>看清表现，审核动作，记录执行，再用下一周期数据验证效果。</p></div><span class="badge">人工审核 · 手动执行</span></div>
+  <ol class="steps" aria-label="优化流程"><li>01 导入报告</li><li>02 分析与审核</li><li>03 导出草稿</li><li>04 记录执行</li><li>05 周期复盘</li></ol>
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+  <div class="layout">
+    <aside class="history panel"><div class="section-head"><h2>历史方案</h2><button id="refresh-history" class="quiet" type="button">刷新</button></div><p class="muted">选择方案可重新加载完整进度。</p><div id="history-list" class="history-list"><p class="muted">正在加载…</p></div></aside>
+    <div class="workspace">
+      <section class="panel" aria-labelledby="import-title"><div class="section-head"><div><p class="eyebrow">01 / 建立上下文</p><h2 id="import-title">导入商品广告报告</h2></div><span class="badge">单个 ASIN</span></div>
+        <p class="callout">商品由你显式填写的 ASIN 确定。请先在广告后台把搜索词报告筛选为该商品，再上传；本 MVP 不会自动识别或筛选其他商品。</p>
+        <p><button type="button" id="load-demo" class="primary">载入示例报表并查看调用过程</button></p>
+        <ol id="demo-trace" class="demo-trace"></ol>
+        <form id="import-form"><fieldset><legend class="sr-only">上下文与文件</legend><div class="form-grid">
+          <label>账户<input name="account" required maxlength="200" placeholder="例如：品牌主账户"></label>
+          <label>站点<input name="marketplace" required maxlength="80" placeholder="例如：US / 美国"></label>
+          <label>币种<input name="currency" required maxlength="12" placeholder="例如：USD"></label>
+          <label>商品 ASIN<input name="asin" required maxlength="100" placeholder="请输入该商品 ASIN"></label>
+          <label>目标 ACOS（%）<input name="target_acos" type="number" required min="0.01" step="0.01" value="25"></label>
+          <label>每日预算<input name="daily_budget" type="number" required min="0.01" step="0.01" placeholder="账户币种金额"></label>
+          <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告</small></label>
+          <label class="file-field">批量广告报告 · 可选 CSV / TSV<input name="bulk" type="file" accept=".csv,.tsv"><small>用于匹配广告实体及可执行动作</small></label>
+          <label class="file-field">推广商品报告 · 可选 CSV<input name="advertised_products" type="file" accept=".csv"><small>只用于确认广告组里的 ASIN，花费不并入搜索词</small></label>
+          <label class="file-field">广告位报告 · 可选 CSV<input name="placements" type="file" accept=".csv"><small>按活动单独展示，不生成调价动作</small></label>
+        </div><button type="submit" class="primary">生成优化方案 →</button></fieldset></form>
+      </section>
+      <section id="empty-plan" class="panel empty"><h2>让每次调整都有记录</h2><p>导入报告生成新方案，或从左侧打开历史方案。</p></section>
+      <div id="plan-content" hidden>
+        <section class="panel" aria-labelledby="analysis-title"><div class="section-head"><div><p class="eyebrow">02 / 分析看板</p><h2 id="analysis-title">当前方案</h2></div><button id="reload-plan" type="button" class="quiet">重新获取</button></div><p id="plan-meta" class="muted"></p><div id="context-summary" class="context-summary"></div><div id="metrics" class="metrics"></div><div id="report-facts"></div><div id="warnings"></div></section>
+        <section class="panel" aria-labelledby="actions-title"><div class="section-head"><h2 id="actions-title">逐项审核优化动作</h2><span id="action-count" class="badge"></span></div><p class="muted">批准表示同意纳入草稿。估算出价须结合实际广告后台核实；存在阻断原因的动作不能导出。</p><div id="actions" class="actions"></div></section>
+        <section class="panel" aria-labelledby="budget-title"><div class="section-head"><h2 id="budget-title">每日预算分配建议</h2><span class="badge">仅建议</span></div><p class="callout">预算不会自动修改广告后台，也不会随动作草稿自动执行，请人工确认后调整。</p><p id="budget-total"></p><div id="budget-allocations"></div></section>
+        <section class="panel" aria-labelledby="export-title"><p class="eyebrow">03 / 下载并核对</p><h2 id="export-title">导出已批准的可执行草稿</h2><p>仅包含 approved 且可执行的动作。批量上传草稿尚未与实际站点模板完成对标验证，上传前请核对列名、实体 ID、匹配类型与站点模板。</p><p id="export-eligibility" class="muted"></p><button id="export-plan" type="button" class="primary">下载 TSV 批量草稿</button><p id="export-error" class="inline-error" role="alert" hidden></p></section>
+        <section class="panel" aria-labelledby="execution-title"><p class="eyebrow">04 / 人工执行留痕</p><h2 id="execution-title">记录广告后台执行</h2><p class="muted">请在广告后台完成操作后记录。下载草稿本身不会执行广告调整。</p><div id="execution-record"></div><form id="execution-form"><fieldset><legend class="sr-only">执行记录</legend><div class="form-grid"><label>实际执行日期<input name="executed_at" type="date" required></label><label>执行备注<textarea name="notes" rows="3" placeholder="记录已执行的操作、未执行项或后台反馈"></textarea></label></div><button type="submit" class="primary">保存执行记录</button></fieldset></form></section>
+        <section class="panel" aria-labelledby="review-title"><p class="eyebrow">05 / 下一周期验证</p><h2 id="review-title">上传执行后报告，复盘效果</h2><p class="muted">请保持账户、站点、ASIN 和指标口径一致。复盘仅反映报告数据变化，不能单独证明调整造成了结果。</p><p id="review-gate" class="callout"></p><form id="review-form"><fieldset><legend class="sr-only">执行后周期报告</legend><div class="form-grid"><label>周期开始<input name="period_start" type="date" required></label><label>周期结束<input name="period_end" type="date" required></label><label class="file-field">执行后搜索词报告 · CSV<input name="search_terms" type="file" accept=".csv" required></label></div><button type="submit" class="primary">生成周期复盘</button></fieldset></form><div id="review-record"></div></section>
+      </div>
+    </div>
+  </div>
+  <footer>MVP · 规则分析与人工确认协作。页面不直接操作广告后台。</footer>
+</main>
+</body>
+</html>

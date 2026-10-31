@@ -1,5 +1,7 @@
 # 亚马逊投流关键词优化工具 · 前后端工程版
 
+> 当前 `iteration/yicopy-alignment` 是本机评审迭代分支，尚未整合远程 main 的账户与额度体系，不用于公网部署。2026-10-31 验证：后端 50 项、AI 输出边界 58 项通过；未进行浏览器实测或 Amazon 投放验收。研究与交付记录见 [竞品成本对照](docs/竞品与成本对照-2026-10-31.md) 和 [迭代日志](docs/迭代日志.md)。
+
 把单文件工具升级为标准前后端工程项目：**引擎逻辑下沉后端（Python/FastAPI），前端为独立 SPA**，测试边界固化为 pytest（R-T0 回归集 31 条）。
 
 ## 架构
@@ -32,8 +34,9 @@
 ```bash
 cd backend
 pip install -r requirements.txt
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8787
-# 打开 http://127.0.0.1:8787/  （API 文档：/docs）
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8790
+# 打开 http://127.0.0.1:8790/  （API 文档：/docs）
+# 广告优化闭环：http://127.0.0.1:8790/workflow.html
 ```
 
 或直接双击 `启动工程.bat`。
@@ -42,8 +45,10 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8787
 
 ```bash
 cd backend
-python -m pytest -q        # 26 passed：引擎 25 + API 端到端
+python -m pytest -q
 ```
+
+当前回归为 43 项通过，包含原引擎和 `/workflow.html` 使用的广告闭环。产品方案、技术架构与测试记录见 `docs/MVP-产品方案.md`、`docs/MVP-项目技术文档.md`。
 
 R-T0 边界（与《落地需求拆解与测试边界》一致）：解析（引号/双语表头/货币千分位/空文件/脏行）、七级分级（含 2 处阈值边界）、六类调价动作、否定（精准/词组/互搏、观察与潜力不否定）、词根（亏损→词组否定、盈利不否定）、收割（含查重与 st==kw 排除）、组合扩展、互搏检出、幂等性。
 

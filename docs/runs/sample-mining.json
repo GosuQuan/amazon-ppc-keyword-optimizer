@@ -1,0 +1,510 @@
+{
+  "rows": 63,
+  "aov": 26.57,
+  "campaigns": {
+    "SP-保温杯-广泛": {
+      "n": 22,
+      "imp": 19735.0,
+      "clk": 408.0,
+      "spend": 322.69,
+      "sales": 192.93,
+      "orders": 7.0,
+      "acos": 167.25755455346496
+    },
+    "SP-保温杯-精准": {
+      "n": 18,
+      "imp": 9644.0,
+      "clk": 274.0,
+      "spend": 198.48,
+      "sales": 636.75,
+      "orders": 25.0,
+      "acos": 31.17078916372203
+    },
+    "SP-保温杯-词组": {
+      "n": 17,
+      "imp": 10865.0,
+      "clk": 228.0,
+      "spend": 158.54,
+      "sales": 386.87,
+      "orders": 13.0,
+      "acos": 40.9801742187298
+    },
+    "SP-保温杯-自动": {
+      "n": 6,
+      "imp": 6216.0,
+      "clk": 121.0,
+      "spend": 90.35,
+      "sales": 111.95,
+      "orders": 5.0,
+      "acos": 80.70567217507818
+    }
+  },
+  "matches": {
+    "broad": {
+      "n": 22,
+      "imp": 19735.0,
+      "clk": 408.0,
+      "spend": 322.69,
+      "sales": 192.93,
+      "orders": 7.0,
+      "acos": 167.25755455346496
+    },
+    "exact": {
+      "n": 18,
+      "imp": 9644.0,
+      "clk": 274.0,
+      "spend": 198.48,
+      "sales": 636.75,
+      "orders": 25.0,
+      "acos": 31.17078916372203
+    },
+    "phrase": {
+      "n": 17,
+      "imp": 10865.0,
+      "clk": 228.0,
+      "spend": 158.54,
+      "sales": 386.87,
+      "orders": 13.0,
+      "acos": 40.9801742187298
+    },
+    "auto": {
+      "n": 6,
+      "imp": 6216.0,
+      "clk": 121.0,
+      "spend": 90.35,
+      "sales": 111.95,
+      "orders": 5.0,
+      "acos": 80.70567217507818
+    }
+  },
+  "classes": {
+    "无效": {
+      "terms": 23,
+      "clicks": 500.0,
+      "spend": 462.1,
+      "sales": 0.0,
+      "orders": 0.0,
+      "acos": null
+    },
+    "良好": {
+      "terms": 11,
+      "clicks": 124.0,
+      "spend": 101.91,
+      "sales": 489.82,
+      "orders": 18.0,
+      "acos": 20.81
+    },
+    "优秀": {
+      "terms": 11,
+      "clicks": 226.0,
+      "spend": 91.68,
+      "sales": 797.7,
+      "orders": 30.0,
+      "acos": 11.49
+    },
+    "观察": {
+      "terms": 7,
+      "clicks": 34.0,
+      "spend": 19.43,
+      "sales": 0.0,
+      "orders": 0.0,
+      "acos": null
+    },
+    "亏损": {
+      "terms": 2,
+      "clicks": 35.0,
+      "spend": 21.55,
+      "sales": 40.98,
+      "orders": 2.0,
+      "acos": 52.59
+    },
+    "潜力": {
+      "terms": 9,
+      "clicks": 112.0,
+      "spend": 73.39,
+      "sales": 0.0,
+      "orders": 0.0,
+      "acos": null
+    }
+  },
+  "roots": [
+    {
+      "token": "tumbler",
+      "type": "盈利",
+      "terms": 30,
+      "clicks": 464.0,
+      "spend": 287.95,
+      "sales": 1173.56,
+      "orders": 44.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "coffee tumbler",
+      "type": "盈利",
+      "terms": 11,
+      "clicks": 169.0,
+      "spend": 97.01,
+      "sales": 547.81,
+      "orders": 19.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "tumbler oz",
+      "type": "盈利",
+      "terms": 3,
+      "clicks": 78.0,
+      "spend": 37.38,
+      "sales": 241.91,
+      "orders": 9.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "insulated tumbler",
+      "type": "盈利",
+      "terms": 3,
+      "clicks": 49.0,
+      "spend": 41.13,
+      "sales": 206.92,
+      "orders": 8.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "tumbler dishwasher",
+      "type": "盈利",
+      "terms": 2,
+      "clicks": 33.0,
+      "spend": 19.31,
+      "sales": 131.96,
+      "orders": 4.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "tumbler insulated",
+      "type": "盈利",
+      "terms": 3,
+      "clicks": 66.0,
+      "spend": 31.22,
+      "sales": 129.95,
+      "orders": 5.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "travel",
+      "type": "盈利",
+      "terms": 2,
+      "clicks": 26.0,
+      "spend": 10.4,
+      "sales": 91.96,
+      "orders": 4.0,
+      "suggestion": "围绕词根扩词 / 加精准投放"
+    },
+    {
+      "token": "coffee",
+      "type": "加分",
+      "terms": 21,
+      "clicks": 290.0,
+      "spend": 187.54,
+      "sales": 702.75,
+      "orders": 25.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "insulated",
+      "type": "加分",
+      "terms": 14,
+      "clicks": 237.0,
+      "spend": 175.67,
+      "sales": 369.86,
+      "orders": 14.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "oz",
+      "type": "加分",
+      "terms": 8,
+      "clicks": 173.0,
+      "spend": 91.3,
+      "sales": 355.86,
+      "orders": 14.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "handle",
+      "type": "加分",
+      "terms": 13,
+      "clicks": 160.0,
+      "spend": 95.05,
+      "sales": 296.87,
+      "orders": 13.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "tumbler handle",
+      "type": "加分",
+      "terms": 11,
+      "clicks": 106.0,
+      "spend": 64.99,
+      "sales": 208.91,
+      "orders": 9.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "mug",
+      "type": "加分",
+      "terms": 9,
+      "clicks": 125.0,
+      "spend": 97.0,
+      "sales": 154.94,
+      "orders": 6.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "coffee mug",
+      "type": "加分",
+      "terms": 7,
+      "clicks": 92.0,
+      "spend": 64.36,
+      "sales": 128.95,
+      "orders": 5.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "straw",
+      "type": "加分",
+      "terms": 10,
+      "clicks": 164.0,
+      "spend": 140.3,
+      "sales": 84.97,
+      "orders": 3.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "leak",
+      "type": "加分",
+      "terms": 4,
+      "clicks": 53.0,
+      "spend": 30.11,
+      "sales": 58.98,
+      "orders": 2.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "proof",
+      "type": "加分",
+      "terms": 4,
+      "clicks": 53.0,
+      "spend": 30.11,
+      "sales": 58.98,
+      "orders": 2.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "leak proof",
+      "type": "加分",
+      "terms": 4,
+      "clicks": 53.0,
+      "spend": 30.11,
+      "sales": 58.98,
+      "orders": 2.0,
+      "suggestion": "可用于组合扩展（见新词候选）"
+    },
+    {
+      "token": "bottle",
+      "type": "亏损",
+      "terms": 9,
+      "clicks": 155.0,
+      "spend": 143.61,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "water",
+      "type": "亏损",
+      "terms": 9,
+      "clicks": 139.0,
+      "spend": 126.97,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "water bottle",
+      "type": "亏损",
+      "terms": 8,
+      "clicks": 135.0,
+      "spend": 124.41,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "thermos",
+      "type": "亏损",
+      "terms": 6,
+      "clicks": 118.0,
+      "spend": 118.15,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "flask",
+      "type": "亏损",
+      "terms": 6,
+      "clicks": 108.0,
+      "spend": 100.83,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "thermos flask",
+      "type": "亏损",
+      "terms": 5,
+      "clicks": 96.0,
+      "spend": 93.51,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "insulated water",
+      "type": "亏损",
+      "terms": 6,
+      "clicks": 102.0,
+      "spend": 82.11,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "straw tips",
+      "type": "亏损",
+      "terms": 3,
+      "clicks": 78.0,
+      "spend": 61.22,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "silicone",
+      "type": "亏损",
+      "terms": 3,
+      "clicks": 78.0,
+      "spend": 61.22,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "tips",
+      "type": "亏损",
+      "terms": 3,
+      "clicks": 78.0,
+      "spend": 61.22,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    },
+    {
+      "token": "silicone straw",
+      "type": "亏损",
+      "terms": 3,
+      "clicks": 78.0,
+      "spend": 61.22,
+      "sales": 0.0,
+      "orders": 0.0,
+      "suggestion": "建议词组否定，阻止同类流量"
+    }
+  ],
+  "combos": [
+    {
+      "pair": "coffee mug",
+      "count": 3,
+      "orders": 5.0,
+      "sales": 128.95
+    },
+    {
+      "pair": "tumbler handle",
+      "count": 2,
+      "orders": 4.0,
+      "sales": 82.96
+    }
+  ],
+  "conflicts": [
+    {
+      "term": "silicone straw tips",
+      "locations": 3,
+      "clicks": 78.0,
+      "winner": "SP-保温杯-广泛 / 广泛组（广泛，订单 0，ACOS -, 花费 21.12）",
+      "losers": [
+        {
+          "camp": "SP-保温杯-广泛",
+          "adg": "广泛组",
+          "kw": "tumbler insulated",
+          "mt": "broad",
+          "cls": "无效",
+          "clk": 28.0,
+          "spend": 22.68,
+          "orders": 0.0,
+          "acos": null,
+          "sug": "否定（精准）"
+        },
+        {
+          "camp": "SP-保温杯-广泛",
+          "adg": "广泛组",
+          "kw": "coffee mug",
+          "mt": "broad",
+          "cls": "无效",
+          "clk": 26.0,
+          "spend": 17.42,
+          "orders": 0.0,
+          "acos": null,
+          "sug": "否定（精准）"
+        }
+      ]
+    },
+    {
+      "term": "coffee tumbler dishwasher safe",
+      "locations": 2,
+      "clicks": 33.0,
+      "winner": "SP-保温杯-词组 / 词组组（词组，订单 4，ACOS 11.8%, 花费 15.60）",
+      "losers": [
+        {
+          "camp": "SP-保温杯-精准",
+          "adg": "长尾词",
+          "kw": "coffee tumbler dishwasher safe",
+          "mt": "exact",
+          "cls": "观察",
+          "clk": 7.0,
+          "spend": 3.71,
+          "orders": 0.0,
+          "acos": null,
+          "sug": "观察"
+        }
+      ]
+    },
+    {
+      "term": "insulated coffee tumbler with handle",
+      "locations": 2,
+      "clicks": 20.0,
+      "winner": "SP-保温杯-精准 / 长尾词（精准，订单 1，ACOS 22.9%, 花费 7.56）",
+      "losers": [
+        {
+          "camp": "SP-保温杯-词组",
+          "adg": "词组组",
+          "kw": "coffee tumbler",
+          "mt": "phrase",
+          "cls": "无效",
+          "clk": 13.0,
+          "spend": 13.65,
+          "orders": 0.0,
+          "acos": null,
+          "sug": "否定（精准）"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@
 <div id="errbar"></div>
 <header>
   <h1>亚马逊投流关键词优化工具 <span class="ver">前后端工程版 v0.1</span></h1>
+  <p><a href="/workflow.html">进入广告优化闭环工作台（MVP）</a></p>
   <p>上传广告报表 → 后端规则引擎分析 → 规则 + 专家 AI 双引擎挖掘 → 导出可执行优化清单　|　FastAPI + 原生 SPA</p>
 </header>
 <main>
@@ -51,8 +52,8 @@
         <option value="off">关闭（仅规则挖掘）</option>
       </select>
     </div>
-    <div class="field"><label>在线模式：接口地址</label><input type="text" id="aiBaseUrl" value="https://open.bigmodel.cn/api/paas/v4/chat/completions"></div>
-    <div class="field"><label>在线模式：模型</label><input type="text" id="aiModel" value="glm-4-flash"></div>
+    <div class="field"><label>在线模式：接口地址</label><input type="text" id="aiBaseUrl" value="https://api.scnet.cn/api/llm/v1/chat/completions"></div>
+    <div class="field"><label>在线模式：模型</label><input type="text" id="aiModel" value="GLM-5.3-Flash"></div>
     <div class="field"><label>在线模式：API Key（不落盘）</label><input type="password" id="aiKey" placeholder="sk-..."></div>
   </div>
   <div class="field" style="margin-top:10px"><label>产品 / 品类信息（供专家或模型参考）</label>

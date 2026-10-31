@@ -17,7 +17,7 @@ window.__errors = []; window.addEventListener('error', e => { window.__errors.pu
 const state = { result: null, ai: { expansions: [], intents: [], negatives: [], insights: [], done: false } };
 let P = {};
 
-const LS_KEY = 'amazon-ppc-tool-v2';
+const LS_KEY = 'amazon-ppc-tool-v3';
 const LS_FIELDS = ['inTarget', 'inEcvr', 'inMinClicks', 'inAov', 'inUpCap', 'inDownCap', 'inFloor', 'inImpFloor', 'aiMode', 'aiBaseUrl', 'aiModel', 'aiDesc'];
 function saveSettings() { try { const d = {}; LS_FIELDS.forEach(id => { d[id] = $('#' + id).value; }); localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch (e) {} }
 function loadSettings() { try { const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (!d) return; LS_FIELDS.forEach(id => { const el = $('#' + id); if (el && d[id] != null && d[id] !== '') el.value = d[id]; }); } catch (e) {} }
@@ -183,18 +183,74 @@ function wasteStSet() { return new Set(state.result.st.filter(s => s.cls === '�
 function goodStSet() { return new Set(state.result.st.filter(s => (s.cls === '优秀' || s.cls === '良好') && s.st && s.st.trim() !== '—' && s.st.trim() !== '-').map(s => canon(s.st))); }
 function lossRootSet() { return new Set((state.result.roots || []).filter(r => r.type === '亏损').map(r => canon(r.tok))); }
 function aiStatus(msg, cls) { const el = $('#aiStatus'); el.className = 'status ' + (cls || ''); el.textContent = msg; }
+function parseAiText(text) {
+  if (typeof text !== 'string' || !text.trim()) throw new Error('返回缺少最终 content（非空文本）；推理内容不能作为结果');
+  let txt = text.trim();
+  const fenced = txt.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced) txt = fenced[1].trim();
+  // Parse complete JSON first so arrays/scalars cannot be mistaken for a nested result object.
+  try { return JSON.parse(txt); } catch (e) {
+    if (/^[\[{]/.test(txt)) throw new Error('AI JSON 不完整或格式错误，请重新生成完整结果');
+  }
+  const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+  if (a < 0 || b <= a) throw new Error('最终 content 未包含完整 JSON 对象');
+  try { return JSON.parse(txt.slice(a, b + 1)); }
+  catch (e) { throw new Error('AI JSON 不完整或格式错误，请重新生成完整结果'); }
+}
+function parseAiResponse(response) {
+  const choice = response && Array.isArray(response.choices) && response.choices[0];
+  if (choice && choice.finish_reason === 'length') {
+    throw new Error('模型输出已截断（finish_reason=length），本次结果未合并。请减少输出量或提高输出 token 上限后重试');
+  }
+  return parseAiText(choice && choice.message && choice.message.content);
+}
+function validateAiJson(j) {
+  const object = (v, path) => {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error(path + ' 必须是对象');
+  };
+  const text = (v, path, required = false) => {
+    if (typeof v !== 'string' || (required && !v.trim())) throw new Error(path + (required ? ' 必须是非空字符串' : ' 必须是字符串'));
+  };
+  const optionalText = (v, key, path) => { if (Object.prototype.hasOwnProperty.call(v, key)) text(v[key], path + '.' + key); };
+  const keys = ['expansions', 'intents', 'negativeHints', 'insights'];
+  object(j, 'AI 结果');
+  if (!keys.some(k => Object.prototype.hasOwnProperty.call(j, k))) throw new Error('AI 结果至少需要 expansions/intents/negativeHints/insights 中一个数组');
+  const result = {};
+  for (const key of keys) {
+    const rows = Object.prototype.hasOwnProperty.call(j, key) ? j[key] : [];
+    if (!Array.isArray(rows)) throw new Error(key + ' 必须是数组');
+    result[key] = rows.map((row, i) => {
+      const path = key + '[' + i + ']';
+      object(row, path);
+      if (key === 'expansions' || key === 'negativeHints') {
+        text(row.word, path + '.word', true);
+        optionalText(row, 'reason', path);
+        if (key === 'expansions') optionalText(row, 'type', path);
+      } else if (key === 'intents') {
+        text(row.intent, path + '.intent', true);
+        if (!Array.isArray(row.keywords)) throw new Error(path + '.keywords 必须是数组');
+        row.keywords.forEach((word, n) => text(word, path + '.keywords[' + n + ']', true));
+      } else {
+        optionalText(row, 'title', path); optionalText(row, 'detail', path);
+        if (!(row.title || '').trim() && !(row.detail || '').trim()) throw new Error(path + ' 至少需要非空 title 或 detail');
+      }
+      return row;
+    });
+  }
+  return result;
+}
 function mergeAiJson(j) {
+  j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
-  state.ai.expansions = (j.expansions || []).filter(e => e && e.word).map(e => ({ word: String(e.word).trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(canon(e.word)) }));
-  state.ai.intents = (j.intents || []).filter(g => g && g.intent && Array.isArray(g.keywords));
-  state.ai.negatives = (j.negativeHints || []).filter(e => e && e.word).map(e => {
+  const expansions = j.expansions.map(e => ({ word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(canon(e.word)) }));
+  const intents = j.intents;
+  const negatives = j.negativeHints.map(e => {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
     if (waste.has(w) || loss.has(w)) cross = '与规则一致（高置信）';
     else if (good.has(w)) cross = '⚠ 与优质数据冲突，不建议否定';
-    return { word: String(e.word).trim(), reason: e.reason || '', cross };
+    return { word: e.word.trim(), reason: e.reason || '', cross };
   });
-  state.ai.insights = (j.insights || []).filter(x => x && (x.title || x.detail));
-  state.ai.done = true;
+  state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
   aiStatus(`已合并：扩词 ${state.ai.expansions.length} 个，意图分组 ${state.ai.intents.length} 组，否定预判 ${state.ai.negatives.length} 个，洞察 ${state.ai.insights.length} 条。已并入「新词候选」与导出清单。`, 'ok');
   renderAI(); switchTab('pane-ai');
 }
@@ -202,11 +258,8 @@ function importExpertJson(file) {
   const rd = new FileReader();
   rd.onload = () => {
     try {
-      let txt = String(rd.result).replace(/```json|```/g, '');
-      const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
-      if (a < 0 || b <= a) throw new Error('未找到 JSON 对象');
-      mergeAiJson(JSON.parse(txt.slice(a, b + 1)));
-    } catch (e) { aiStatus('导入失败：' + e.message + '（需要含 expansions/intents/negativeHints 的 JSON，可含说明文字）', 'err'); }
+      mergeAiJson(parseAiText(rd.result));
+    } catch (e) { aiStatus('导入失败：' + e.message + '（需要含 expansions/intents/negativeHints/insights 至少一个数组的 JSON，可含说明文字）', 'err'); }
   };
   rd.readAsText(file, 'utf-8');
 }
@@ -225,12 +278,7 @@ async function runAiOnline() {
     const r = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error ? JSON.stringify(j.error) : 'HTTP ' + r.status);
-    const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-    if (!c) throw new Error('返回缺少 content');
-    let txt = String(c).replace(/```json|```/g, '');
-    const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
-    if (a < 0) throw new Error('模型未返回 JSON');
-    mergeAiJson(JSON.parse(txt.slice(a, b + 1)));
+    mergeAiJson(parseAiResponse(j));
   } catch (e) {
     let m = 'AI 调用失败：' + e.message;
     if (/401|令牌/i.test(m)) m += '\n提示：推荐改用「专家导入」模式（无需 Key）：导出优秀关键词 → 发给「亚马逊数据挖掘专家」Agent → 导入 JSON。';

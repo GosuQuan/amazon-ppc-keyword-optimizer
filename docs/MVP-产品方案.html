@@ -1,0 +1,277 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MVP-产品方案</title><style>body{margin:0;background:#eef3f8;color:#233548;font:16px/1.85 "Microsoft YaHei",system-ui,sans-serif}main{max-width:1120px;margin:32px auto;background:white;padding:45px 55px;border-radius:16px;box-shadow:0 8px 36px #17334c12}h1{font-size:32px;color:#123a59;line-height:1.4;border-bottom:4px solid #13847c;padding-bottom:22px}h2{font-size:23px;color:#16496b;margin-top:38px}h3{color:#16496b}a{color:#087e85}table{width:100%;border-collapse:collapse;font-size:14px;margin:20px 0;display:block;overflow:auto}th,td{border:1px solid #d7e2ee;padding:10px 13px;vertical-align:top;min-width:80px}th{background:#eaf2f8;text-align:left}tr:nth-child(even){background:#f8fafc}pre{background:#102b42;color:#e9f4ff;padding:20px;overflow:auto;border-radius:10px;line-height:1.6;font-size:13px}code{font-family:Consolas,monospace}img,svg{max-width:100%;height:auto}blockquote{border-left:4px solid #13847c;background:#eef8f6;margin:18px 0;padding:10px 20px}.meta{color:#65798b;font-size:13px}.diagram-source{display:none}@media(max-width:700px){main{padding:22px 16px;margin:8px}h1{font-size:26px}}@media print{body{background:white}main{box-shadow:none;margin:0;padding:12px}h2{break-after:avoid}tr,svg{break-inside:avoid}pre{white-space:pre-wrap}}</style><main><p class="meta">Amazon PPC Optimizer · MVP 规划交付 · 2026-10-30</p><h1>亚马逊广告优化助手：MVP 产品方案</h1>
+<p>版本：v1.0 ｜ 日期：2026-10-30 ｜ 项目：amazon-ppc-keyword-optimizer</p>
+<h2>1. 产品决策</h2>
+<p>核心任务：让亚马逊 SP 广告运营从一份已筛选商品的搜索词报表出发，完成可信诊断、逐项审核、批量操作草稿、执行记录和周期复盘。先做到每一个动作都有证据、作用范围和操作记录，再扩展外部挖词与全链路经营。</p>
+<p>目标用户：自行运营广告的中小卖家、负责多个商品的广告运营。首版以本地单人工作台交付，每次方案明确归属一个账户、站点、币种和 ASIN。首次使用可以没有批量表，但只能得到参考建议；提供含真实出价与实体 ID 的批量表后，解锁符合条件的执行草稿。</p>
+<p>对用户的承诺：看得懂为什么改，明确知道改哪里，审核后可以交接执行，执行后能比较结果。降低 ACoS、提高销量属于需通过真实业务实验验证的结果，不预先承诺固定增长率。</p>
+<h2>2. 竞品核心与取舍</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>YICOPY 公开能力</th>
+<th>本产品 MVP</th>
+<th>后续路线</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据输入</td>
+<td>推广商品、搜索词、广告位三份 SP 报表</td>
+<td>搜索词绩效 + Bulk 实体/真实 Bid；限定单商品上下文</td>
+<td>三报表分别建模关联</td>
+</tr>
+<tr>
+<td>分析交付</td>
+<td>ASIN 看板、核心词和分层方案</td>
+<td>单 ASIN 绩效、规则证据、优先级动作</td>
+<td>商品优先级、广告位与多周期</td>
+</tr>
+<tr>
+<td>执行</td>
+<td>预算、出价、结构和上传草稿</td>
+<td>有实体锚点的改价/暂停/否词/收割草稿</td>
+<td>创建完整 Campaign/Ad Group、预算写回</td>
+</tr>
+<tr>
+<td>关键词</td>
+<td>意图挖掘、收录和机会双测试</td>
+<td>历史已出单词收割；AI 辅助结果不直接执行</td>
+<td>外部数据、相关性及机会验证</td>
+</tr>
+<tr>
+<td>复盘</td>
+<td>官网提出周期迭代</td>
+<td>保存方案、审核、导出、人工执行时间和前后周期比较</td>
+<td>控制组和长期实验</td>
+</tr>
+</tbody>
+</table>
+<p>竞品来源：<a href="https://yicopy.com/features/sp-panoramic-ads">全景广告作战</a>、<a href="https://yicopy.com/features/keyword-magic-box">销词魔盒</a>、<a href="https://yicopy.com/features/keyword-sales-probability-test">出单概率测试</a>。本方案依据公开页面，未完成其付费后台实测。首页份额可用于机会评分，但不能直接视为经过校准的成交概率。</p>
+<h2>3. 产品全景图</h2>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="770" viewBox="0 0 1200 770" role="img" aria-label="产品全景图 · 从报表到执行复盘"><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#5f7b9e"/></marker></defs><rect width="1200" height="770" rx="20" fill="#f3f6fb"/><text x="45" y="52" font-size="30" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">产品全景图 · 从报表到执行复盘</text><text x="45" y="85" font-size="17" font-family="Microsoft YaHei, sans-serif" fill="#53697e">MVP：单账户 × 单站点 × 单币种 × 单 ASIN；以可信动作完成运营闭环</text><rect x="45.0" y="115" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="45.0" y="115" width="6" height="108" rx="3" fill="#13847c"/><text x="66.0" y="150" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">数据接入</text><text x="66.0" y="179" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">搜索词绩效 + Bulk 实体快照</text><text x="66.0" y="203" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">上下文校验 / 去重 / 异常提示</text><rect x="610.0" y="115" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="610.0" y="115" width="6" height="108" rx="3" fill="#13847c"/><text x="631.0" y="150" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">可信诊断</text><text x="631.0" y="179" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">指标总览 / 规则分级 / 证据</text><text x="631.0" y="203" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">真实 Bid 与估算分开</text><path d="M600 226 L600 253" stroke="#5f7b9e" stroke-width="2" marker-end="url(#arrow)"/><rect x="45.0" y="260" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="45.0" y="260" width="6" height="108" rx="3" fill="#13847c"/><text x="66.0" y="295" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">动作中心</text><text x="66.0" y="324" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">改价 / 暂停 / 否词 / 收割</text><text x="66.0" y="348" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">优先级与阻断原因</text><rect x="610.0" y="260" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="610.0" y="260" width="6" height="108" rx="3" fill="#13847c"/><text x="631.0" y="295" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">人工审核</text><text x="631.0" y="324" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">待审 / 批准 / 拒绝</text><text x="631.0" y="348" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">审批与执行资格独立</text><path d="M600 371 L600 398" stroke="#5f7b9e" stroke-width="2" marker-end="url(#arrow)"/><rect x="45.0" y="405" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="45.0" y="405" width="6" height="108" rx="3" fill="#13847c"/><text x="66.0" y="440" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">执行交付</text><text x="66.0" y="469" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">批准 + 合格 → 批量操作草稿</text><text x="66.0" y="493" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">保存导出快照 / 核对官方模板</text><rect x="610.0" y="405" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="610.0" y="405" width="6" height="108" rx="3" fill="#13847c"/><text x="631.0" y="440" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">执行留痕</text><text x="631.0" y="469" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">用户在 Amazon 后台操作</text><text x="631.0" y="493" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">记录实际执行日期与备注</text><path d="M600 516 L600 543" stroke="#5f7b9e" stroke-width="2" marker-end="url(#arrow)"/><rect x="45.0" y="550" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="45.0" y="550" width="6" height="108" rx="3" fill="#13847c"/><text x="66.0" y="585" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">周期复盘</text><text x="66.0" y="614" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">新周期报表 / 前后与日均比较</text><text x="66.0" y="638" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">周期不重叠 / 明确非因果</text><rect x="610.0" y="550" width="545.0" height="108" rx="12" fill="white" stroke="#b9cde3"/><rect x="610.0" y="550" width="6" height="108" rx="3" fill="#13847c"/><text x="631.0" y="585" font-size="21" font-family="Microsoft YaHei, sans-serif" font-weight="700" fill="#163655">后续扩展 P1 / P2</text><text x="631.0" y="614" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">多商品 / 广告位 / 结构与预算</text><text x="631.0" y="638" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">外部词验证 / AI / 业务实验</text><text x="45" y="745" font-size="16" font-family="Microsoft YaHei, sans-serif" fill="#53697e">反馈路径：复盘 → 下一轮诊断与动作；竞争优势需用同任务实测验证。</text></svg></p>
+<h2>4. MVP 范围与用户旅程</h2>
+<ol>
+<li>创建方案：填写账户标识、站点、币种、ASIN、目标 ACoS 和每日预算。上传已筛选为该商品的搜索词报告，可补充当前 Bulk 文件。</li>
+<li>查看数据质量：显示有效记录、重复或异常处理、上下文可信程度、缺失真实出价及无法关联实体的提示。混合商品或混合币种不得静默合并。</li>
+<li>查看诊断：展现花费、销售额、订单、点击和 ACoS；动作按优先级展示原始指标、理由与适用范围。零销售时 ACoS 显示为空或无销售，不能显示成 0%。</li>
+<li>审核动作：每项默认待审核。用户逐项批准或拒绝；系统阻断的动作即使批准也不能进入执行文件。改变主意可恢复待审。</li>
+<li>导出草稿：仅导出已批准且满足校验的动作。输出前提示需要核对当前站点官方模板。导出内容、动作版本和时间留存；未批准动作不得混入。</li>
+<li>实际执行：用户自行在广告后台上传，确认成功后记录执行日期与备注。导出成功不代表 Amazon 已接受或已执行。</li>
+<li>周期复盘：填写新的观察周期并上传同商品报表，比较总额与可比较的日均指标。周期长度不同必须说明；无广告订单不推断自然订单变化；前后变化不等于因果效果。</li>
+</ol>
+<p>首版不包含：账号支付、多用户权限、Amazon API 自动调价、整账户自动归因、多 ASIN 自动拆分、外部爬取、神经网络预测、图片视频创作、完整八级广告结构自动搭建。预算分配首先作为建议展示，明确不进入自动预算变更。</p>
+<h2>5. 产品需求与优先级</h2>
+<p>优先级按依赖与业务风险排序：P0 是闭环必需，P1 提升运营效率，P2 建立数据与决策差异。表内边界在编码前确定；任何范围变化需先更新边界，再修改代码与测试。</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>优先级</th>
+<th>用户需求及交付</th>
+<th>依赖</th>
+<th>预先规定的测试边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>M01</td>
+<td>P0-1</td>
+<td>每份方案绑定账户/站点/币种/ASIN，可靠解析搜索词</td>
+<td>无</td>
+<td>必填为空、混合 ASIN/币种、同名词跨账户、缺 ASIN 列显式声明、空文件、非有限/负指标、重复行；不能静默混合</td>
+</tr>
+<tr>
+<td>M02</td>
+<td>P0-2</td>
+<td>导入 Bulk，关联真实 Bid 与实体 ID</td>
+<td>M01</td>
+<td>Keyword 与负词/广告组实体区分；大小写和连续空格规范化但保留词边界；零 Bid、冲突 Bid、缺 ID、同词不同组；歧义必须阻断</td>
+</tr>
+<tr>
+<td>M03</td>
+<td>P0-3</td>
+<td>生成可解释调价/暂停/否词/收割动作</td>
+<td>M01,M02</td>
+<td>阈值两侧及等号、无订单不提价、涨跌幅限制、低于出价下限、同组优质词保护、跨组重复不自动判定应否词；证据和范围完整</td>
+</tr>
+<tr>
+<td>M04</td>
+<td>P0-4</td>
+<td>保存方案并逐项审核，刷新后可恢复</td>
+<td>M03</td>
+<td>默认 pending；非法状态、未知方案和动作 ID、跨方案动作、重复审核；数据库重开状态一致</td>
+</tr>
+<tr>
+<td>M05</td>
+<td>P0-5</td>
+<td>只导出批准且合格的批量操作草稿</td>
+<td>M02,M04</td>
+<td>无审核、被拒绝、估算 Bid、缺父 ID、Update 缺 Keyword ID 均不得执行；暂停 State、否词匹配类型、换行和引号转义；重复导出内容一致</td>
+</tr>
+<tr>
+<td>M06</td>
+<td>P0-6</td>
+<td>记录实际执行，保存导出与审核轨迹</td>
+<td>M05</td>
+<td>未导出不能记为执行；日期非法、重复提交、执行后改变动作；确保导出与执行快照可追溯</td>
+</tr>
+<tr>
+<td>M07</td>
+<td>P0-7</td>
+<td>上传执行后周期并复盘</td>
+<td>M06</td>
+<td>执行前周期、重叠周期、不同上下文、零分母、不同观察天数、空报表；输出变化与非因果说明</td>
+</tr>
+<tr>
+<td>M08</td>
+<td>P0-8</td>
+<td>全流程中文工作台与错误提示</td>
+<td>M01—M07</td>
+<td>网络失败、重复点击、刷新历史、HTML 注入文本、无动作、全部被阻断、审批与导出状态同步</td>
+</tr>
+<tr>
+<td>M09</td>
+<td>P1-1</td>
+<td>推广商品/搜索词/广告位分别建模并关联</td>
+<td>M01</td>
+<td>三份报告指标不相加；多 ASIN 组无法分配时阻断；归因窗口一致</td>
+</tr>
+<tr>
+<td>M10</td>
+<td>P1-2</td>
+<td>生成活动/组结构、预算与商品定向计划</td>
+<td>M02,M09</td>
+<td>总预算约束、最低预算、关键词与 ASIN 类型区分、创建顺序和临时 ID 关系、预算变更审核</td>
+</tr>
+<tr>
+<td>M11</td>
+<td>P1-3</td>
+<td>AI 基于数据解释与语义分组</td>
+<td>M03,M04</td>
+<td>不得覆盖规则阻断；缺证据不编造指标；超时/坏 JSON/无模型可降级；输入与结果版本一致</td>
+</tr>
+<tr>
+<td>M12</td>
+<td>P1-4</td>
+<td>多商品任务队列与优先级看板</td>
+<td>M09</td>
+<td>跨商品权限/上下文隔离、分页选择、批量任务失败恢复</td>
+</tr>
+<tr>
+<td>M13</td>
+<td>P2-1</td>
+<td>外部关键词发现与资格/机会验证</td>
+<td>M09,M11</td>
+<td>数据来源/时间/站点可追溯；检索未出现不能武断等同不收录；概率需校准与验证</td>
+</tr>
+<tr>
+<td>M14</td>
+<td>P2-2</td>
+<td>业务实验与优化模型</td>
+<td>M07,M13</td>
+<td>归因延迟、季节促销、价格库存干扰、对照组、最小样本和停止条件；无显著证据不宣传提升</td>
+</tr>
+</tbody>
+</table>
+<h2>6. 动作产品规则</h2>
+<ul>
+<li>改价：优先使用同一实体的真实 Bid，显示原值、建议值、绝对差和原因。估算只用于参考，禁止直接进入执行文件。</li>
+<li>暂停：需要明确 Keyword ID 和父实体，操作结果为 paused；不把“降价或暂停”这类含糊文本直接转换成确定操作。</li>
+<li>否词：明确精准/词组与应用广告组。与同范围已验证优质搜索词冲突时阻断；全局亏损词根只能作为待研究线索，不能自动应用全账户。</li>
+<li>收割：来源词有订单与可接受 ACoS，明确目标广告组、匹配类型和新增 Bid；同一目标范围查重。与源投放完全相同的词不重复建议。</li>
+<li>重复覆盖：报告中同词出现多个位置，不能证明拍卖自竞争。先提示表现差异，后续再结合结构与实验判断。</li>
+<li>预算：首版按证据生成分配参考，满足合计约束；这是经营建议，并未调整 Amazon 后台预算。</li>
+</ul>
+<h2>7. 页面与信息架构</h2>
+<table>
+<thead>
+<tr>
+<th>页面区域</th>
+<th>主要内容</th>
+<th>用户下一步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>历史方案</td>
+<td>创建时间、商品、状态</td>
+<td>打开或新建</td>
+</tr>
+<tr>
+<td>新建方案</td>
+<td>上下文、绩效报表、Bulk、参数</td>
+<td>分析</td>
+</tr>
+<tr>
+<td>诊断总览</td>
+<td>指标、质量提示、预算参考</td>
+<td>看动作</td>
+</tr>
+<tr>
+<td>动作审核</td>
+<td>类型、实体、Bid、证据、状态和阻断原因</td>
+<td>批准/拒绝</td>
+</tr>
+<tr>
+<td>导出与执行</td>
+<td>批准数、可导出数、模板状态、执行备注</td>
+<td>导出/记录</td>
+</tr>
+<tr>
+<td>周期复盘</td>
+<td>后周期文件、日期、前后指标</td>
+<td>制定下一轮</td>
+</tr>
+</tbody>
+</table>
+<h2>8. 争取超过竞品的衡量方式</h2>
+<p>“赶超”是目标，需要同任务实测。首版先建立以下验收指标，不用功能数量证明竞争优势。</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MVP 发布门槛</th>
+<th>对标验证方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>动作可靠性</td>
+<td>已知测试集中跨上下文、无 ID、估算 Bid、冲突否词误导出为 0</td>
+<td>同一组脱敏报表，人工核对输出</td>
+</tr>
+<tr>
+<td>可解释性</td>
+<td>所有动作均有理由、证据、商品与实体范围</td>
+<td>随机抽查每种动作</td>
+</tr>
+<tr>
+<td>可追溯性</td>
+<td>每次导出能关联方案、审核快照、时间；执行另行记录</td>
+<td>关闭再打开工作台核验</td>
+</tr>
+<tr>
+<td>操作效率</td>
+<td>以 10,000 行和 100 条动作建立耗时基线，记录硬件与峰值内存</td>
+<td>同机器同文件比较端到端任务时间</td>
+</tr>
+<tr>
+<td>实际可上传性</td>
+<td>真实站点模板一致性校验后，再进行卖家后台人工小样验收</td>
+<td>以 Amazon 返回的处理结果为准</td>
+</tr>
+<tr>
+<td>经营效果</td>
+<td>完成至少一个符合预设周期的试点，记录 ACoS、订单、花费与外部干扰</td>
+<td>不预设必然改善，不用个案推广为普适结果</td>
+</tr>
+</tbody>
+</table>
+<p>发布分两层：工程 MVP 通过自动回归与本地操作验收；业务试点版再通过真实模板与卖家后台小样验证。没有竞品实测与业务样本时，不标注“已超过 YICOPY”。</p>
+<h2>9. 迭代节奏</h2>
+<p>第一阶段完成 M01—M03，先解决数据归属和建议可信；第二阶段完成 M04—M06，做到审核、导出和执行留痕；第三阶段完成 M07—M08并联合验收，形成可试用版本。每项均遵循：明确输入/异常/验收边界 → 写失败用例 → 实现 → 运行相关回归 → 更新验证记录。估工在真实报表样本和模板到位后重新评估。</p>
+<p>本地数据说明：数据保存在本机工作区；首版适合本机单人使用。公开部署前需要另行完成身份权限、隔离、上传限额和审计管理。</p>
+<h2>10. 当前实现状态（2026-10-30）</h2>
+<p>P0 的 M01—M08 已有可运行版本：工作台位于 <code>/workflow.html</code>，后端为 <code>/api/workflow</code>。搜索词与 Bulk 分开使用；建议出价按真实出价向盈利上限调整；任一已批准动作不满足执行条件时，整份批量草稿会被拒绝。执行日期使用 <code>YYYY-MM-DD</code>，复盘要求报告含 ASIN 与币种列，且周期不与基线重叠。</p>
+<p>自动测试 46 项通过。M09 已实现：推广商品报告和广告位报告可选上传，指标单独展示且不并入搜索词花费；归因窗口冲突会拒绝分析；一个广告组出现多个 ASIN 时，该组动作不能导出。浏览器人工流程、Amazon 官方模板上传和经营效果仍未验证，因此不能称为已经超过 YICOPY。P1 剩余的广告结构创建、AI 解释和多商品看板，以及 P2 的外部词验证，尚未开发。</p></main></html>

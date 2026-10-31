@@ -1,0 +1,998 @@
+{
+  "source": "examples/亚马逊搜索词报告-示例.csv",
+  "context": {
+    "account": "sample",
+    "marketplace": "US",
+    "currency": "USD",
+    "asin": "B0SAMPLE01"
+  },
+  "metrics": {
+    "spend": 770.06,
+    "sales": 1328.5000000000002,
+    "orders": 50.0,
+    "clicks": 1031.0,
+    "acos": 57.96462175385773
+  },
+  "target_acos": 25.0,
+  "budget": {
+    "daily_total": 50.0,
+    "allocations": [
+      {
+        "campaign": "SP-保温杯-广泛",
+        "daily_budget": 12.5,
+        "reason": "MVP 按活动均分；仅建议，不执行预算更新"
+      },
+      {
+        "campaign": "SP-保温杯-精准",
+        "daily_budget": 12.5,
+        "reason": "MVP 按活动均分；仅建议，不执行预算更新"
+      },
+      {
+        "campaign": "SP-保温杯-自动",
+        "daily_budget": 12.5,
+        "reason": "MVP 按活动均分；仅建议，不执行预算更新"
+      },
+      {
+        "campaign": "SP-保温杯-词组",
+        "daily_budget": 12.5,
+        "reason": "MVP 按活动均分；仅建议，不执行预算更新"
+      }
+    ],
+    "advisory": true
+  },
+  "warnings": [
+    "search_terms: account 未由报告验证，采用显式上下文",
+    "search_terms: marketplace 未由报告验证，采用显式上下文",
+    "search_terms: currency 未由报告验证，采用显式上下文",
+    "search_terms: asin 未由报告验证，采用显式上下文",
+    "重复覆盖仅提示，不据此自动否定：silicone straw tips",
+    "重复覆盖仅提示，不据此自动否定：insulated coffee tumbler with handle",
+    "重复覆盖仅提示，不据此自动否定：coffee tumbler dishwasher safe",
+    "亏损词根无确定范围或重复覆盖：仅提示，不自动否定",
+    "重复覆盖动作合并，需人工确认：silicone straw tips",
+    "TSV 为待 Amazon 当前模板校验草稿，未获真实模板认证",
+    "执行记录仅为用户手工登记；不验证 Amazon 实际执行"
+  ],
+  "action_count": 41,
+  "by_kind": {
+    "bid": 13,
+    "negative": 17,
+    "harvest": 11
+  },
+  "exportable": 0,
+  "actions": [
+    {
+      "kind": "bid",
+      "keyword": "thermos flask",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "broad",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 180 次 0 订单，花费 169.48（允许预算 112.50），建议止损；该词下无效搜索词见否定清单；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 169.48,
+        "sales": 0.0,
+        "orders": 0.0,
+        "clicks": 180.0,
+        "acos": null
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "car cup holder expander",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 25 次 0 订单，花费 16.75（允许预算 15.62）",
+      "evidence": {
+        "clicks": 25.0,
+        "spend": 16.75
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "thermos flask",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 27 次 0 订单，花费 25.38（允许预算 16.88）",
+      "evidence": {
+        "clicks": 27.0,
+        "spend": 25.38
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "silicone straw tips",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 24 次 0 订单，花费 21.12（允许预算 15.00）",
+      "evidence": {
+        "clicks": 24.0,
+        "spend": 21.12
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "多个来源生成相同动作，存在实体歧义",
+        "多个来源生成相同动作，存在实体歧义"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "bottle brush cleaner",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 20 次 0 订单，花费 19.20（允许预算 12.50）",
+      "evidence": {
+        "clicks": 20.0,
+        "spend": 19.2
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "water bottle stickers",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 15 次 0 订单，花费 18.90（允许预算 9.38）",
+      "evidence": {
+        "clicks": 15.0,
+        "spend": 18.9
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "thermos flask dishwasher safe",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 19 次 0 订单，花费 19.38（允许预算 11.88）",
+      "evidence": {
+        "clicks": 19.0,
+        "spend": 19.38
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "thermos flask 40 oz",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 15 次 0 订单，花费 19.35（允许预算 9.38）",
+      "evidence": {
+        "clicks": 15.0,
+        "spend": 19.35
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "thermos flask with straw",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 20 次 0 订单，花费 21.00（允许预算 12.50）",
+      "evidence": {
+        "clicks": 20.0,
+        "spend": 21.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "tumbler with handle 1 pack",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 4.45,
+        "sales": 25.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "tumbler with handle 40 oz",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 5.76,
+        "sales": 25.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "tumbler with handle for coffee",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 2.46,
+        "sales": 25.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee tumbler 40 oz",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 11.48,
+        "sales": 131.96,
+        "orders": 4.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee tumbler dishwasher safe",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 15.6,
+        "sales": 131.96,
+        "orders": 4.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee tumbler with straw",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 5.67,
+        "sales": 25.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "wine tumbler",
+      "campaign": "SP-保温杯-自动",
+      "ad_group": "自动组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 19 次 0 订单，花费 22.61（允许预算 10.64）",
+      "evidence": {
+        "clicks": 19.0,
+        "spend": 22.61
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "smoothie blender",
+      "campaign": "SP-保温杯-自动",
+      "ad_group": "自动组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 25 次 0 订单，花费 16.25（允许预算 13.99）",
+      "evidence": {
+        "clicks": 25.0,
+        "spend": 16.25
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "food jar thermos",
+      "campaign": "SP-保温杯-自动",
+      "ad_group": "自动组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 22 次 0 订单，花费 24.64（允许预算 12.31）",
+      "evidence": {
+        "clicks": 22.0,
+        "spend": 24.64
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "insulated tumbler with handle",
+      "campaign": "SP-保温杯-自动",
+      "ad_group": "自动组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 6.75,
+        "sales": 56.97,
+        "orders": 3.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee tumbler leak proof",
+      "campaign": "SP-保温杯-自动",
+      "ad_group": "自动组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 7.7,
+        "sales": 32.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "coffee tumbler 40 oz with handle",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "长尾词",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 15.3% 达标且低于盈利上限 0.73，小幅提价；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 13.5,
+        "sales": 87.96,
+        "orders": 4.0,
+        "clicks": 30.0,
+        "acos": 15.347885402455663
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "tumbler insulated",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "broad",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 47.1% 超出目标 25%（1.9 倍），盈利出价上限 0.31；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 61.22,
+        "sales": 129.95,
+        "orders": 5.0,
+        "clicks": 106.0,
+        "acos": 47.110427087341286
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "tumbler insulated with straw",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 5.25,
+        "sales": 25.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "mug warmer",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "核心词",
+      "match_type": "exact",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 24 次 0 订单，花费 29.04（允许预算 15.00），建议止损；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 29.04,
+        "sales": 0.0,
+        "orders": 0.0,
+        "clicks": 24.0,
+        "acos": null
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "kids water bottle",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "长尾词",
+      "match_type": "exact",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 18 次 0 订单，花费 23.40（允许预算 11.25），建议止损；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 23.4,
+        "sales": 0.0,
+        "orders": 0.0,
+        "clicks": 18.0,
+        "acos": null
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "insulated water bottle",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "phrase",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 102 次 0 订单，花费 82.11（允许预算 63.75），建议止损；该词下无效搜索词见否定清单；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 82.11,
+        "sales": 0.0,
+        "orders": 0.0,
+        "clicks": 102.0,
+        "acos": null
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "insulated water bottle with straw",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 18 次 0 订单，花费 19.08（允许预算 11.25）",
+      "evidence": {
+        "clicks": 18.0,
+        "spend": 19.08
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "insulated water bottle 40 oz",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 27 次 0 订单，花费 13.50（允许预算 16.88）",
+      "evidence": {
+        "clicks": 27.0,
+        "spend": 13.5
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "insulated water bottle for coffee",
+      "campaign": "SP-保温杯-词组",
+      "ad_group": "词组组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 19 次 0 订单，花费 21.47（允许预算 11.88）",
+      "evidence": {
+        "clicks": 19.0,
+        "spend": 21.47
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "coffee mug",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "broad",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 146.1% 超出目标 25%（5.8 倍），盈利出价上限 0.13；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 91.99000000000002,
+        "sales": 62.980000000000004,
+        "orders": 2.0,
+        "clicks": 122.0,
+        "acos": 146.06224198158148
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "coffee mug with handle",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 24 次 0 订单，花费 16.56（允许预算 18.89）",
+      "evidence": {
+        "clicks": 24.0,
+        "spend": 16.56
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "lunch box ice pack",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 21 次 0 订单，花费 17.01（允许预算 16.53）",
+      "evidence": {
+        "clicks": 21.0,
+        "spend": 17.01
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "negative",
+      "keyword": "coffee mug for coffee",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "negativeExact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 27 次 0 订单，花费 24.03（允许预算 21.26）",
+      "evidence": {
+        "clicks": 27.0,
+        "spend": 24.03
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee mug with straw",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 4.4,
+        "sales": 32.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "harvest",
+      "keyword": "coffee mug stainless steel",
+      "campaign": "SP-保温杯-广泛",
+      "ad_group": "广泛组",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "优质搜索词建议新增精准投放；出价采用来源真实 Bid",
+      "evidence": {
+        "spend": 3.78,
+        "sales": 29.99,
+        "orders": 1.0
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "glass tumbler with straw",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "核心词",
+      "match_type": "exact",
+      "priority": "P0",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "点击 24 次 0 订单，花费 19.68（允许预算 15.00），建议止损；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 19.68,
+        "sales": 0.0,
+        "orders": 0.0,
+        "clicks": 24.0,
+        "acos": null
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "40 oz tumbler",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "核心词",
+      "match_type": "exact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 12.9% 优于目标 25%，转化率 10.3%，盈利出价上限 0.56，建议提价抢曝光；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 11.31,
+        "sales": 87.96,
+        "orders": 4.0,
+        "clicks": 39.0,
+        "acos": 12.8581173260573
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "travel mug leak proof",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "长尾词",
+      "match_type": "exact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 13.9% 优于目标 25%，转化率 11.1%，盈利出价上限 0.72，建议提价抢曝光；曝光偏低（可提价或放宽匹配）；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 3.6,
+        "sales": 25.99,
+        "orders": 1.0,
+        "clicks": 9.0,
+        "acos": 13.851481338976532
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "insulated tumbler for hot drinks",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "长尾词",
+      "match_type": "exact",
+      "priority": "P2",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 20.0% 达标且低于盈利上限 3.75，小幅提价；曝光偏低（可提价或放宽匹配）；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 6.0,
+        "sales": 29.99,
+        "orders": 1.0,
+        "clicks": 2.0,
+        "acos": 20.00666888962988
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "travel coffee mug",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "核心词",
+      "match_type": "exact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 10.3% 优于目标 25%，转化率 17.6%，盈利出价上限 0.97，建议提价抢曝光；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 6.8,
+        "sales": 65.97,
+        "orders": 3.0,
+        "clicks": 17.0,
+        "acos": 10.3077156283159
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    },
+    {
+      "kind": "bid",
+      "keyword": "coffee tumbler",
+      "campaign": "SP-保温杯-精准",
+      "ad_group": "核心词",
+      "match_type": "exact",
+      "priority": "P1",
+      "current_bid": null,
+      "proposed_bid": null,
+      "reason": "ACOS 11.7% 优于目标 25%，转化率 13.8%，盈利出价上限 0.90，建议提价抢曝光；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%",
+      "evidence": {
+        "spend": 12.18,
+        "sales": 103.96,
+        "orders": 4.0,
+        "clicks": 29.0,
+        "acos": 11.716044632550982
+      },
+      "exportable": false,
+      "blocking_reasons": [
+        "缺少 campaign_id",
+        "缺少 ad_group_id",
+        "更新缺少 keyword_id",
+        "缺少真实 bulk Bid，禁止使用估算 bid",
+        "缺少明确有效的新出价"
+      ]
+    }
+  ]
+}

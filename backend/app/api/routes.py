@@ -17,8 +17,8 @@ from ..engine.pipeline import run_analysis, sanitize
 router = APIRouter(prefix="/api")
 
 AI_TOKEN_URL = "http://127.0.0.1:18432/get_token"
-AI_DEFAULT_UPSTREAM = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-AI_DEFAULT_MODEL = "glm-4-flash"
+AI_DEFAULT_UPSTREAM = "https://api.scnet.cn/api/llm/v1/chat/completions"
+AI_DEFAULT_MODEL = "GLM-5.3-Flash"
 
 
 @router.get("/health")
@@ -104,10 +104,16 @@ def _bearer_for(body: dict) -> Optional[str]:
 
 @router.post("/ai/chat")
 def ai_chat(body: dict):
-    upstream = str(body.get("base_url") or AI_DEFAULT_UPSTREAM).strip()
-    payload = {"model": str(body.get("model") or AI_DEFAULT_MODEL),
+    configured = str(os.environ.get("AI_BASE_URL") or AI_DEFAULT_UPSTREAM).strip()
+    upstream = str(body.get("base_url") or configured).strip()
+    if upstream.rstrip('/') != configured.rstrip('/') and not str(body.get("api_key") or '').strip():
+        raise HTTPException(400, "自定义接口必须提供独立密钥，不能使用本机保存的密钥。")
+    model = str(body.get("model") or os.environ.get("AI_MODEL") or AI_DEFAULT_MODEL)
+    payload = {"model": model,
                "messages": body.get("messages") or [],
                "temperature": body.get("temperature", 0.3)}
+    if "bigmodel.cn" in upstream and model.lower().startswith("glm-5.3"):
+        payload["thinking"] = {"type": "enabled"}
     if "max_tokens" in body:
         payload["max_tokens"] = body["max_tokens"]
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -120,6 +126,6 @@ def ai_chat(body: dict):
         with urllib.request.urlopen(req, timeout=300) as r:
             return JSONResponse(json.loads(r.read().decode("utf-8", "replace")))
     except urllib.error.HTTPError as e:
-        return JSONResponse(json.loads((e.read() or b"{}").decode("utf-8", "replace")), status_code=e.code)
-    except Exception as e:  # noqa: BLE001
-        return JSONResponse({"error": f"upstream failed: {e}"}, status_code=502)
+        return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
+    except Exception:  # noqa: BLE001
+        return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)

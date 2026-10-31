@@ -1,0 +1,191 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>示例报表实测与 YICOPY 对照</title><style>
+body{margin:0;background:#eef3f8;color:#233548;font:16px/1.85 "Microsoft YaHei",system-ui,sans-serif}
+main{max-width:980px;margin:32px auto;background:white;padding:40px 48px;border-radius:16px}
+h1{font-size:30px;color:#123a59;border-bottom:4px solid #13847c;padding-bottom:16px}
+h2{color:#16496b;margin-top:32px}
+table{width:100%;border-collapse:collapse;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid #d7e2ee;padding:8px 10px;vertical-align:top}
+th{background:#eaf2f8;text-align:left}
+a{color:#087e85}
+</style><main><h1>示例报表实测与 YICOPY 方案对照</h1>
+<p>运行日期：2026-10-30。数据是仓库自带的 <a href="../examples/亚马逊搜索词报告-示例.csv">亚马逊搜索词报告-示例.csv</a>，不是客户的真实账户。方案由当前工作流引擎实际生成，原始结果在 <a href="runs/sample-plan.json">sample-plan.json</a>。</p>
+<p>这次没有登录 YICOPY，也没有把同一份文件送进 YICOPY。对照依据是 YICOPY 公开的全景广告作战说明：<a href="https://yicopy.com/features/sp-panoramic-ads">全景广告作战</a>、<a href="https://yicopy.com/ai-advertising-strategy">广告方案</a>。因此下面比的是“同一类任务各自会交出什么”，不是两边对同一账户的效果实验。</p>
+<p>本机没有可用的模型密钥，本地令牌接口 <code>127.0.0.1:18432/get_token</code> 返回 403。这次结果全部来自规则引擎，没有调用大模型。</p>
+<h2>1. 实际跑出来的账</h2>
+<p>上下文按用户显式声明：账户 sample、美国站、USD、ASIN <code>B0SAMPLE01</code>。报表本身没有账户、站点、币种、ASIN 和日期列，所以这些字段未被报告证明。目标 ACOS 25%，每日预算 50 美元，没有上传 Bulk，因此没有真实出价和实体 ID。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>本次结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>花费</td>
+<td>770.06 美元</td>
+</tr>
+<tr>
+<td>销售额</td>
+<td>1328.50 美元</td>
+</tr>
+<tr>
+<td>订单</td>
+<td>50</td>
+</tr>
+<tr>
+<td>点击</td>
+<td>1031</td>
+</tr>
+<tr>
+<td>实际 ACOS</td>
+<td>57.96%</td>
+</tr>
+<tr>
+<td>距离目标</td>
+<td>高出目标 32.96 个百分点</td>
+</tr>
+<tr>
+<td>动作</td>
+<td>41 条：调价 13、精准否定 17、收割 11</td>
+</tr>
+<tr>
+<td>可导出动作</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>41 条动作全部不可导出。阻断原因是缺少 Campaign ID、Ad Group ID、Keyword ID 和真实出价。这是预期结果，不是计算失败。</p>
+<h2>2. 引擎给出的决定</h2>
+<p>金额都来自报表证据。关键词花费和搜索词花费会重叠，不能把两组数字加在一起。</p>
+<p><strong>先止损的投放词，5 个，合计花费 323.71 美元，订单为 0。</strong></p>
+<table>
+<thead>
+<tr>
+<th>关键词</th>
+<th>活动</th>
+<th style="text-align: right;">花费</th>
+<th style="text-align: right;">点击</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>thermos flask</td>
+<td>广泛</td>
+<td style="text-align: right;">169.48</td>
+<td style="text-align: right;">180</td>
+</tr>
+<tr>
+<td>insulated water bottle</td>
+<td>词组</td>
+<td style="text-align: right;">82.11</td>
+<td style="text-align: right;">102</td>
+</tr>
+<tr>
+<td>mug warmer</td>
+<td>精准</td>
+<td style="text-align: right;">29.04</td>
+<td style="text-align: right;">24</td>
+</tr>
+<tr>
+<td>kids water bottle</td>
+<td>精准</td>
+<td style="text-align: right;">23.40</td>
+<td style="text-align: right;">18</td>
+</tr>
+<tr>
+<td>glass tumbler with straw</td>
+<td>精准</td>
+<td style="text-align: right;">19.68</td>
+<td style="text-align: right;">24</td>
+</tr>
+</tbody>
+</table>
+<p>这些词目前只能给出“应降价或暂停”的方向。没有 Bulk 里的真实出价，不能生成可上传的新出价。</p>
+<p><strong>精准否定 17 条，对应搜索词花费 336.23 美元，且这些搜索词自身没有订单。</strong> 例子包括 <code>car cup holder expander</code>、<code>wine tumbler</code>、<code>smoothie blender</code>、<code>water bottle stickers</code>、<code>lunch box ice pack</code>。<code>silicone straw tips</code> 出现在多个投放词下，系统没有自动否定，而是标成实体歧义，要求人工确认。</p>
+<p><strong>收割 11 条。</strong> 这些搜索词已经在广泛、词组或自动投放里出单，建议单独做成精准投放。来源表现合计 19 单、销售额 546.81 美元。这是已有流量的拆分建议，不是预测会新增 546.81 美元。代表词：<code>coffee tumbler 40 oz</code>（4 单，131.96 美元）、<code>coffee tumbler dishwasher safe</code>（4 单，131.96 美元）、<code>insulated tumbler with handle</code>（3 单，56.97 美元）。</p>
+<p><strong>已有订单、可以考虑调价的投放词 8 个，花费 206.60 美元，销售额 594.76 美元。</strong> 包括 <code>tumbler insulated</code>、<code>coffee tumbler</code>、<code>40 oz tumbler</code>、<code>travel coffee mug</code>。同样因为没有真实出价，系统没有给出可执行的新价格。</p>
+<p>每日 50 美元被平均分到 4 个活动，各 12.50 美元。这只是预算参考，没有修改广告后台，也没有按词的盈亏做分层。</p>
+<h2>3. 和 YICOPY 公开方案怎么比</h2>
+<table>
+<thead>
+<tr>
+<th>环节</th>
+<th>这次实际产出</th>
+<th>YICOPY 公开承诺</th>
+<th>对照结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>输入</td>
+<td>只有搜索词报告</td>
+<td>推广商品、搜索词、广告位三份报表</td>
+<td>本次输入更少。产品里已经能接收另外两份报表，但示例文件没有提供</td>
+</tr>
+<tr>
+<td>商品归属</td>
+<td>显式 ASIN，报告未验证</td>
+<td>先选 ASIN，再看该商品</td>
+<td>我们明确标注“未验证”；不能假装已经按商品归因</td>
+</tr>
+<tr>
+<td>诊断</td>
+<td>总花费、销售额、订单、ACOS，以及每条动作的证据</td>
+<td>8 张概览卡、5 张图、4 张透视表</td>
+<td>数字结论已经有；图表和广告位透视没有</td>
+</tr>
+<tr>
+<td>止损</td>
+<td>5 个零订单投放词、17 个零订单搜索词，金额和点击可回溯</td>
+<td>否定清单，并区分立即否定和观察</td>
+<td>证据粒度我们已经有；优先级和复盘节奏还没做成产品规则</td>
+</tr>
+<tr>
+<td>收割</td>
+<td>11 个已出单搜索词，建议转精准</td>
+<td>核心大词进入必开广告组</td>
+<td>我们只建议转精准，没有创建新的广告组结构</td>
+</tr>
+<tr>
+<td>出价</td>
+<td>方向有，金额没有</td>
+<td>每组每日预算和建议出价</td>
+<td>缺 Bulk 时 YICOPY 若仍给可上传出价，我们故意不给</td>
+</tr>
+<tr>
+<td>预算</td>
+<td>4 个活动平均分配</td>
+<td>按确定性分层分配</td>
+<td>平均分配只是占位，不能称为预算策略</td>
+</tr>
+<tr>
+<td>结构</td>
+<td>不生成 8 级活动</td>
+<td>自动、超级/高潜力/高竞争关键词和 ASIN、销词魔盒词</td>
+<td>这是当前最大的产品差距</td>
+</tr>
+<tr>
+<td>导出</td>
+<td>0 行可导出</td>
+<td>搜索词分层、广告组统计、建议动作、批量上传草稿</td>
+<td>没有实体 ID 时我们拒绝导出；YICOPY 的草稿仍需用真实模板验证</td>
+</tr>
+<tr>
+<td>新词</td>
+<td>只使用报表里已经出现的搜索词</td>
+<td>COSMO 意图词、收录测试和机会判断</td>
+<td>本次完全没有外部挖词</td>
+</tr>
+<tr>
+<td>效果</td>
+<td>未执行，不能计算改善</td>
+<td>公开页面有 ACOS、ROAS 案例</td>
+<td>两边都不能用这次文件证明谁更能降低 ACOS</td>
+</tr>
+</tbody>
+</table>
+<h2>4. 这次能下的判断</h2>
+<p>以这份示例报表、目标 ACOS 25% 来看，当前广告整体 ACOS 是 57.96%，优先动作不是加预算，而是处理 323.71 美元的零订单投放词，并审核 17 个零订单搜索词。已经出单的 11 个搜索词可以转成精准投放，但必须先有目标广告组、真实出价和实体 ID。</p>
+<p>相对 YICOPY 公开的“选 ASIN、看全景、给 8 级结构、预算、出价和上传草稿”，这次只完成了其中的证据诊断、否词和收割名单。还没有广告结构、可执行出价和批量草稿。缺数据时不编造出价，是当前实现相对公开宣传的一个明确差别，不代表整体功能已经超过 YICOPY。</p>
+<p>全量后端测试在这次运行后为 47 项通过，其中包括这份中文示例报表能够生成方案、且在没有 Bulk 时全部动作不可导出。</p></main></html>

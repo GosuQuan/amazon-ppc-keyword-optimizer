@@ -52,3 +52,13 @@ def test_static_frontend_served():
     r = client.get("/")
     assert r.status_code == 200
     assert "亚马逊投流关键词优化工具" in r.text
+
+
+def test_workflow_page_and_api_are_mounted(monkeypatch, tmp_path):
+    monkeypatch.setenv("PPC_DB_PATH", str(tmp_path / "workflow.sqlite3"))
+    listed = client.get("/api/workflow/plans")
+    assert listed.status_code == 200
+    assert listed.json() == []
+    page = client.get("/workflow.html")
+    assert page.status_code == 200
+    assert "广告优化闭环" in page.text
