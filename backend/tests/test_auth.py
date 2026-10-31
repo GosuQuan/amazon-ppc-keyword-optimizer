@@ -26,6 +26,15 @@ def register(client, email):
     return body['token']
 
 
+def test_me_returns_only_the_authenticated_user(client):
+    token = register(client, 'a@example.com')
+    register(client, 'b@example.com')
+    me = client.get('/api/auth/me', headers={'Authorization': 'Bearer ' + token})
+    assert me.status_code == 200
+    assert me.json()['email'] == 'a@example.com'
+    assert 'password' not in me.text
+
+
 def test_login_rejects_bad_password_and_missing_token(client):
     register(client, 'a@example.com')
     assert client.post('/api/auth/login', json={'email': 'missing@example.com', 'password': 'password1'}).status_code == 401

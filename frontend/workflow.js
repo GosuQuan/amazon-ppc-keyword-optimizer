@@ -62,6 +62,9 @@
   }
   if (!sessionStorage.getItem('ppc_token')) location.replace('/login.html');
   $('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
+  request('/api/auth/me').then((account) => {
+    if (account && account.email) $('logout').textContent = account.email + ' · 退出';
+  }).catch(() => {});
   async function request(url, options = {}) {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 90000);

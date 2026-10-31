@@ -28,13 +28,19 @@ function readParams() {
   saveSettings(); return P;
 }
 
+function withAuth(options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (typeof sessionStorage !== 'undefined') headers.Authorization = 'Bearer ' + (sessionStorage.getItem('ppc_token') || '');
+  return { ...options, headers };
+}
+if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('ppc_token') && typeof location !== 'undefined') location.replace('/login.html');
 /* ---------- 数据获取 ---------- */
 async function analyzeWithFiles(files) {
   const fd = new FormData(); const p = readParams();
   for (const f of files) fd.append('files', f, f.name);
   Object.entries({ target: p.target, ecvr: p.ecvr, minClicks: p.minClicks, aov: p.aovOverride, upCap: p.upCap, downCap: p.downCap, floor: p.floor, impFloor: p.impFloor })
     .forEach(([k, v]) => fd.append(k, String(v)));
-  const r = await fetch('/api/analyze', { method: 'POST', body: fd });
+  const r = await fetch('/api/analyze', withAuth({ method: 'POST', body: fd }));
   const d = await r.json();
   if (!r.ok) { renderFileList(d.files || [], d.error); toast(d.error || '分析失败', true); return; }
   applyResult(d);
@@ -42,7 +48,7 @@ async function analyzeWithFiles(files) {
 async function analyzeDemo() {
   const p = readParams();
   const qs = new URLSearchParams({ target: p.target, ecvr: p.ecvr, minClicks: p.minClicks, aov: p.aovOverride });
-  const r = await fetch('/api/demo?' + qs.toString());
+  const r = await fetch('/api/demo?' + qs.toString(), withAuth());
   applyResult(await r.json());
 }
 function applyResult(d) {
@@ -275,7 +281,7 @@ async function runAiOnline() {
   try {
     const body = { messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.3 };
     if (mode === 'direct') { body.base_url = $('#aiBaseUrl').value.trim(); body.model = $('#aiModel').value.trim(); body.api_key = $('#aiKey').value.trim(); if (!body.api_key) throw new Error('直连模式需要填写 API Key'); }
-    const r = await fetch('/api/ai/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch('/api/ai/chat', withAuth({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }));
     const j = await r.json();
     if (!r.ok) throw new Error(j.error ? JSON.stringify(j.error) : 'HTTP ' + r.status);
     mergeAiJson(parseAiResponse(j));

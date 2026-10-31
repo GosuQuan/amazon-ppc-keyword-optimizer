@@ -31,7 +31,7 @@ def health():
 
 
 @router.post("/analyze")
-async def analyze(files: List[UploadFile] = File(...),
+async def analyze(files: List[UploadFile] = File(...), user: int = Depends(bind_user),
                   target: Optional[float] = Form(None), ecvr: Optional[float] = Form(None),
                   min_clicks: Optional[float] = Form(None), aov: Optional[float] = Form(None),
                   up_cap: Optional[float] = Form(None), down_cap: Optional[float] = Form(None),
@@ -58,7 +58,7 @@ async def analyze(files: List[UploadFile] = File(...),
 
 
 @router.get("/demo")
-def demo(target: Optional[float] = None, ecvr: Optional[float] = None,
+def demo(target: Optional[float] = None, ecvr: Optional[float] = None, user: int = Depends(bind_user),
          min_clicks: Optional[float] = None, aov: Optional[float] = None):
     params = {"target": target, "ecvr": ecvr, "minClicks": min_clicks, "aovOverride": aov}
     records = demo_records()
@@ -68,7 +68,7 @@ def demo(target: Optional[float] = None, ecvr: Optional[float] = None,
 
 
 @router.post("/export/{kind}")
-async def export_csv(kind: str, payload: dict):
+async def export_csv(kind: str, payload: dict, user: int = Depends(bind_user)):
     result = payload.get("result")
     if not result:
         raise HTTPException(422, "缺少 result 数据")

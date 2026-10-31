@@ -48,6 +48,10 @@ def test_selftest_endpoint():
     assert d["passed"] == d["total"], f"自检未全绿：{[x for x in d['results'] if not x['passed']]}"
 
 
+def test_legacy_demo_requires_login():
+    assert client.get("/api/demo", headers={"Authorization": "Bearer invalid"}).status_code == 401
+
+
 def test_static_frontend_served():
     r = client.get("/")
     assert r.status_code == 200
