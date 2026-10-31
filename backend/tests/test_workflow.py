@@ -114,6 +114,18 @@ def test_context_mixture_and_duplicate_rows(client):
     assert create(client, text + report(Spend='61').splitlines()[1] + '\n').status_code == 422
 
 
+def test_overlap_spend_is_not_counted_twice(client):
+    text = table_csv(
+        ['Date', 'ASIN', 'Currency', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Customer Search Term', 'Clicks', 'Spend', 'Sales', 'Orders'],
+        [['2026-01-01', 'B001', 'USD', 'One', 'Group', 'shoe', 'Exact', 'red shoe', '10', '10', '0', '0'],
+         ['2026-01-01', 'B001', 'USD', 'Two', 'Group', 'shoe', 'Phrase', 'red shoe', '10', '15', '0', '0']])
+    plan = create(client, text, bulk=None).json()
+    assert plan['metrics']['spend'] == 25
+    assert plan['overlaps'] == [{'term': 'red shoe', 'locations': 2, 'observed_spend': 25,
+                                 'already_in_plan_metrics': True, 'auto_negative': False}]
+    assert not any(action['kind'] == 'negative' and action['keyword'] == 'red shoe' and '重复覆盖' in action['reason'] for action in plan['actions'])
+
+
 def test_budget_split_ignores_spend(client):
     text = table_csv(
         ['Date', 'ASIN', 'Currency', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Customer Search Term', 'Clicks', 'Spend', 'Sales', 'Orders'],

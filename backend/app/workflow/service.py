@@ -373,6 +373,21 @@ def evidence_card(period, search_metrics, search_window, products, placements):
             'combination_rule': '只采用搜索词花费；推广商品和广告位不得相加'}
 
 
+def overlap_summary(records):
+    grouped = defaultdict(list)
+    for record in records:
+        grouped[norm(record['st'])].append(record)
+    overlaps = []
+    for rows in grouped.values():
+        locations = {(norm(row['camp']), norm(row['adg']), norm(row['kw']), row['mt']) for row in rows}
+        if len(locations) < 2:
+            continue
+        overlaps.append({'term': rows[0]['st'], 'locations': len(locations),
+                         'observed_spend': metrics(rows)['spend'], 'already_in_plan_metrics': True,
+                         'auto_negative': False})
+    return sorted(overlaps, key=lambda item: item['term'])
+
+
 def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placements_raw=None):
     for key, value in context.items():
         if not value.strip():
@@ -475,7 +490,8 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             'budget': {'daily_total': budget, 'allocations': allocations, 'advisory': True,
                        'allocation_method': 'equal_split', 'performance_based': False,
                        'executes_budget_changes': False},
-            'execution': None, 'review': None, 'exports': [], 'baseline_period': period, 'target_acos': target,
+            'execution': None, 'review': None, 'exports': [], 'overlaps': overlap_summary(records),
+            'baseline_period': period, 'target_acos': target,
             'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 
 
