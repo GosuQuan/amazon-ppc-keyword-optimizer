@@ -12,6 +12,12 @@ function pointBalancePreview(pricing, balance) {
   if (balance < cost) return `当前 ${balance} 积分，不足以生成方案（需要 ${cost}）。`;
   return `当前 ${balance} 积分，生成方案后剩余 ${balance - cost}。积分不是人民币。`;
 }
+function canAfford(balance, costs, action) {
+  const cost = costs && costs[action];
+  if (!Number.isInteger(balance) || !Number.isInteger(cost)) return null;
+  return balance >= cost;
+}
 window.pointCostText = pointCostText;
+window.canAfford = canAfford;
 window.pointBalancePreview = pointBalancePreview;
-if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview };
+if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview, canAfford };

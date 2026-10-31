@@ -3,7 +3,7 @@
 (() => {
   const API = '/api/workflow/plans';
   const $ = (id) => document.getElementById(id);
-  const state = { plan: null, busy: false, history: [] };
+  const state = { plan: null, busy: false, history: [], pointBalance: null, serviceCosts: null };
   const kinds = { bid: '调整出价', pause: '暂停投放', negative: '添加否定词', harvest: '收割关键词' };
   const statuses = { pending: '待审核', approved: '已批准', rejected: '已拒绝', draft: '草稿', executed: '已记录执行', reviewed: '已复盘' };
   const priorities = { high: '高', medium: '中', low: '低' };
@@ -43,6 +43,11 @@
     document.querySelectorAll('form fieldset').forEach((fieldset) => { fieldset.disabled = state.busy; });
     $('reload-plan').disabled = state.busy || !state.plan;
     $('export-plan').disabled = state.busy || !exportReady();
+    const costs = state.serviceCosts || {};
+    if (window.canAfford(state.pointBalance, costs, 'workflow_plan') === false) document.querySelector('#import-form button[type="submit"]').disabled = true;
+    if (window.canAfford(state.pointBalance, costs, 'demo_plan') === false) $('load-demo').disabled = true;
+    const repeatExport = Array.isArray(state.plan?.exports) && state.plan.exports.length > 0;
+    if (!repeatExport && window.canAfford(state.pointBalance, costs, 'export_draft') === false) $('export-plan').disabled = true;
     $('execution-form').querySelector('fieldset').disabled = state.busy || !state.plan;
     $('review-form').querySelector('fieldset').disabled = state.busy || !state.plan?.execution;
     document.querySelector('main').setAttribute('aria-busy', String(state.busy));
@@ -68,6 +73,9 @@
     ]).then(([pricing, account]) => {
       $('point-cost').textContent = window.pointCostText(pricing);
       $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
+      state.pointBalance = Number.isInteger(account.points) ? account.points : null;
+      state.serviceCosts = pricing && pricing.serviceCosts || null;
+      syncDisabled();
     }).catch(() => {
       $('point-cost').textContent = '积分规则暂时无法读取。';
       $('point-balance').textContent = '当前积分暂时无法读取。';
