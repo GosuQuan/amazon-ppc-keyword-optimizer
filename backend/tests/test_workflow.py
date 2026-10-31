@@ -185,6 +185,12 @@ def test_companion_reports_stay_separate_and_link_single_asin(client):
     assert plan['reports']['advertised_products']['included_in_plan_metrics'] is False
     assert plan['reports']['placements']['included_in_plan_metrics'] is False
     assert plan['reports']['advertised_products']['ad_groups'][0]['allocatable'] is True
+    evidence = plan['evidence']
+    assert evidence['plan_spend'] == 60
+    assert evidence['companion_spend_excluded'] == 1049
+    assert evidence['baseline_period'] == {'start': '2026-01-01', 'end': '2026-01-01'}
+    assert [item['included_in_plan_metrics'] for item in evidence['reports']] == [True, False, False]
+    assert '不得相加' in evidence['combination_rule']
     assert any(a['exportable'] for a in plan['actions'])
 
 

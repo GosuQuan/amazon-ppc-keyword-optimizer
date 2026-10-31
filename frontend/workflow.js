@@ -138,6 +138,12 @@
     if (!reports) return;
     const box = node('div', undefined, 'report-facts');
     box.append(node('strong', '三份报表分开计算，推广商品和广告位不计入上方搜索词花费'));
+    const evidence = state.plan.evidence;
+    if (evidence) {
+      const period = evidence.baseline_period;
+      box.append(node('p', period ? `搜索词周期 ${period.start} 至 ${period.end}` : '搜索词报告没有完整日期，不能确定周期。'));
+      box.append(node('p', `${evidence.combination_rule}。未并入方案的花费 ${money(evidence.companion_spend_excluded)}。`));
+    }
     const grid = node('div', undefined, 'metrics');
     [['搜索词', reports.search_terms], ['推广商品', reports.advertised_products], ['广告位', reports.placements]].forEach(([label, report]) => {
       const tile = node('div', undefined, 'metric');

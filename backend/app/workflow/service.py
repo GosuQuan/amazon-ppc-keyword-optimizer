@@ -355,6 +355,20 @@ def apply_product_scope(actions, products, warnings):
         warnings.append('广告组未出现在推广商品报告，ASIN 归属未验证：' + name)
 
 
+def evidence_card(period, search_metrics, search_window, products, placements):
+    def entry(key, report, included):
+        if not report:
+            return {'key': key, 'uploaded': False, 'included_in_plan_metrics': False, 'spend': None, 'attribution_window': None}
+        return {'key': key, 'uploaded': True, 'included_in_plan_metrics': included,
+                'spend': report['metrics']['spend'], 'attribution_window': report.get('attribution_window')}
+    search = {'metrics': search_metrics, 'attribution_window': search_window}
+    reports = [entry('search_terms', search, True), entry('advertised_products', products, False), entry('placements', placements, False)]
+    excluded = [item['spend'] for item in reports if item['uploaded'] and not item['included_in_plan_metrics']]
+    return {'baseline_period': period, 'plan_spend': search_metrics['spend'], 'reports': reports,
+            'companion_spend_excluded': round(sum(excluded), 2),
+            'combination_rule': '只采用搜索词花费；推广商品和广告位不得相加'}
+
+
 def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placements_raw=None):
     for key, value in context.items():
         if not value.strip():
@@ -455,7 +469,8 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             'reports': {'search_terms': {'metrics': metrics(records), 'attribution_window': search_window, 'included_in_plan_metrics': True},
                         'advertised_products': products, 'placements': placements},
             'budget': {'daily_total': budget, 'allocations': allocations, 'advisory': True},
-            'execution': None, 'review': None, 'exports': [], 'baseline_period': period, 'target_acos': target}
+            'execution': None, 'review': None, 'exports': [], 'baseline_period': period, 'target_acos': target,
+            'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 
 
 def make_action(kind, keyword, campaign, group, match, bid, proposed, reason, priority, evidence, source):
