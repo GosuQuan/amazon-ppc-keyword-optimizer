@@ -280,7 +280,8 @@ function mergeAiJson(j) {
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
-  aiStatus(`已合并：扩词 ${state.ai.expansions.length} 个，意图分组 ${state.ai.intents.length} 组，否定预判 ${state.ai.negatives.length} 个，洞察 ${state.ai.insights.length} 条。已并入「新词候选」与导出清单。`, 'ok');
+  const heldBack = expansions.filter((item) => item.competitorBrand || item.coveredByGood).length;
+  aiStatus(`已合并：扩词 ${expansions.length} 个，其中 ${expansions.length - heldBack} 个进入新词清单，${heldBack} 个因竞品品牌或已包含未进入清单。意图分组 ${intents.length} 组，否定预判 ${negatives.length} 个，洞察 ${j.insights.length} 条。`, 'ok');
   renderAI(); switchTab('pane-ai');
 }
 function importExpertJson(file) {
