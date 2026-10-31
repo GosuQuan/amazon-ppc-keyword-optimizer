@@ -66,9 +66,15 @@ def run_demo(user: int = Depends(bind_user)):
 def list_plans(user: int = Depends(bind_user)):
     with database() as connection:
         plans = [json.loads(row[0]) for row in connection.execute('SELECT document FROM plans WHERE user_id=? ORDER BY created_at DESC', (user,))]
-    return [{'id': p['id'], 'created_at': p['created_at'], 'context': p['context'], 'status': p['status'],
-             'metrics': p['metrics'], 'action_count': len(p['actions']),
-             'approved_count': sum(a['status'] == 'approved' for a in p['actions'])} for p in plans]
+    summaries = []
+    for plan in plans:
+        readiness = S.export_readiness(plan)
+        summaries.append({'id': plan['id'], 'created_at': plan['created_at'], 'context': plan['context'], 'status': plan['status'],
+                          'metrics': plan['metrics'], 'action_count': len(plan['actions']),
+                          'approved_count': sum(action['status'] == 'approved' for action in plan['actions']),
+                          'export_ready': readiness['ready'], 'export_blocked': len(readiness['blocked']),
+                          'already_exported': readiness['already_exported']})
+    return summaries
 
 
 @router.get('/plans/{plan_id}')

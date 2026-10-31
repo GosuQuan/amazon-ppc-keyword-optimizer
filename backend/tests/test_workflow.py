@@ -61,6 +61,7 @@ def test_full_loop_persistence_and_idempotent_export(client):
     plan = response.json()
     url = '/api/workflow/plans/' + plan['id']
     assert plan['metrics']['spend'] == 60
+    assert client.get('/api/workflow/plans').json()[0]['export_ready'] is False
     assert client.post(url + '/export').status_code == 422
     action = next(a for a in plan['actions'] if a['kind'] == 'bid')
     assert action['current_bid'] == 2
@@ -72,6 +73,7 @@ def test_full_loop_persistence_and_idempotent_export(client):
     assert plan['export_readiness']['ready'] is True
     assert plan['export_readiness']['template_validated'] is False
     assert plan['export_readiness']['download_executes_ads'] is False
+    assert client.get('/api/workflow/plans').json()[0]['export_ready'] is True
     first = client.post(url + '/export')
     assert first.status_code == 200, first.text
     assert '33' in first.text and 'Update' in first.text

@@ -127,7 +127,8 @@
       button.setAttribute('aria-current', String(state.plan?.id === summary.id));
       button.append(node('strong', summary.context?.asin || summary.asin || summary.id));
       button.append(node('small', `${summary.context?.account || summary.account || '账户未提供'} · ${summary.context?.marketplace || summary.marketplace || '站点未提供'}`));
-      button.append(node('small', `${dateText(summary.created_at)} · ${statuses[summary.status] || summary.status || '方案'}`));
+      const readinessText = summary.already_exported ? '已有草稿' : summary.export_ready ? '可导出' : summary.export_blocked ? `阻断 ${summary.export_blocked} 项` : '待审核';
+      button.append(node('small', `${dateText(summary.created_at)} · ${statuses[summary.status] || summary.status || '方案'} · ${readinessText}`));
       button.addEventListener('click', () => task('正在加载历史方案…', async () => {
         setPlan(await request(`${API}/${encodeURIComponent(summary.id)}`));
         notice('历史方案已加载。');
