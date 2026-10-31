@@ -126,6 +126,19 @@ def test_overlap_spend_is_not_counted_twice(client):
     assert not any(action['kind'] == 'negative' and action['keyword'] == 'red shoe' and '重复覆盖' in action['reason'] for action in plan['actions'])
 
 
+def test_unscoped_root_is_advisory_and_not_claimable(client):
+    rows = [['2026-01-01', 'B001', 'USD', 'Camp', 'Group', 'shoe', 'Broad', term, '10', '10', '0', '0']
+            for term in ('cheap shoe', 'cheap hat', 'cheap bag')]
+    text = table_csv(['Date', 'ASIN', 'Currency', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Customer Search Term', 'Clicks', 'Spend', 'Sales', 'Orders'], rows)
+    plan = create(client, text, bulk=None).json()
+    advisory = next(item for item in plan['advisories'] if item['term'] == 'cheap')
+    assert advisory['exportable'] is False
+    assert advisory['included_in_claimable_spend'] is False
+    assert advisory['spend'] == 30
+    assert not any(action['keyword'] == 'cheap' for action in plan['actions'])
+    assert plan['claimable_observed_spend'] == 30
+
+
 def test_same_keyword_spend_has_one_primary_claim(client):
     plan = create(client, report(**{'Match Type': 'Broad', 'Keyword': 'shoe', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0', 'Clicks': '40', 'Spend': '80'})).json()
     related = [action for action in plan['actions'] if action['kind'] in ('bid', 'pause', 'negative')]

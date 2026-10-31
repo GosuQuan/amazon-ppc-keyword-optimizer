@@ -437,6 +437,8 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
         if len(locations) > 1:
             warnings.append('重复覆盖仅提示，不据此自动否定：' + term)
     actions = []
+    advisories = []
+    seen_advisories = set()
     for key, group in groups.items():
         analysis = sanitize(run_analysis(group, {'target': target}))
         source = entities.get(key, {})
@@ -463,7 +465,14 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
         # Scoped exact negatives only; roots and conflict-derived negatives remain advisory.
         for old in analysis['negatives']:
             if not old['camp'] or not old['adg'] or old.get('source') == '互搏检测':
-                warnings.append('亏损词根无确定范围或重复覆盖：仅提示，不自动否定')
+                marker = (old.get('word'), old.get('source'))
+                if marker not in seen_advisories:
+                    seen_advisories.add(marker)
+                    spend = old.get('spend')
+                    advisories.append({'term': old.get('word'), 'source': old.get('source'),
+                                       'spend': spend if isinstance(spend, (int, float)) and not isinstance(spend, bool) else None,
+                                       'reason': '没有确定广告组，或属于重复覆盖；只提示，不自动否定',
+                                       'exportable': False, 'included_in_claimable_spend': False})
                 continue
             protected = any(norm(r['camp']) == norm(old['camp']) and norm(r['adg']) == norm(old['adg']) and norm(r['st']) == norm(old['word']) and r['orders'] > 0 for r in records)
             a = make_action('negative', old['word'], old['camp'], old['adg'], 'negativeExact', None, None, old['reason'], 'P1', {'clicks': old['clk'], 'spend': old['spend']}, source)
@@ -526,7 +535,7 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
                        'allocation_method': 'equal_split', 'performance_based': False,
                        'executes_budget_changes': False},
             'execution': None, 'review': None, 'exports': [], 'overlaps': overlap_summary(records),
-            'claimable_observed_spend': claimable_spend(actions),
+            'claimable_observed_spend': claimable_spend(actions), 'advisories': advisories,
             'baseline_period': period, 'target_acos': target,
             'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 

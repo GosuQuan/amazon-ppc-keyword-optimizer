@@ -249,6 +249,9 @@
       plan.warnings.forEach((warning) => list.append(node('li', warning)));
       box.append(list); warningRoot.append(box);
     }
+    (plan.advisories || []).forEach((item) => {
+      warningRoot.append(node('p', `${item.term || '未命名提示'}：${item.reason}。已发生花费 ${money(item.spend)}，不可导出，也不计入可认领花费。`));
+    });
     (plan.overlaps || []).forEach((item) => {
       const row = node('p', `${item.term} 出现在 ${item.locations} 个位置，已发生花费 ${money(item.observed_spend)}。该花费已包含在方案合计中，不重复计算，也不据此自动否定。`);
       warningRoot.append(row);
