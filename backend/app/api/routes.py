@@ -175,7 +175,7 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
 @router.get('/ai/usage')
 def get_ai_usage(user: int = Depends(bind_user)):
     data = ai_usage.get_usage(user)
-    data['summary']['cache_hits'] = ai_cache.hits()
+    data['summary']['cache_hits'] = ai_cache.hits(user)
     return data
 
 

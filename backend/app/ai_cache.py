@@ -9,18 +9,18 @@ from urllib.parse import urlsplit
 
 _lock = threading.Lock()
 _entries = OrderedDict()
-_hits = 0
+_hits = {}
 
 
-def hits():
-    return _hits
+def hits(user_id):
+    return _hits.get(int(user_id), 0)
 
 
 def clear():
     global _hits
     with _lock:
         _entries.clear()
-        _hits = 0
+        _hits = {}
 
 
 def _ttl():
@@ -48,7 +48,6 @@ def _key(upstream, payload, user_id):
 
 
 def get(upstream, payload, user_id):
-    global _hits
     ttl = _ttl()
     if ttl == 0:
         return None
@@ -62,7 +61,7 @@ def get(upstream, payload, user_id):
             _entries.pop(key, None)
             return None
         _entries.move_to_end(key)
-        _hits += 1
+        _hits[int(user_id)] = _hits.get(int(user_id), 0) + 1
         return json.loads(json.dumps(item[1]))
 
 

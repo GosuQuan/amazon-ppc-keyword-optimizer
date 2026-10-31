@@ -55,10 +55,14 @@ def test_cache_is_not_shared_between_users(monkeypatch):
     install(monkeypatch, lambda request, **kwargs: calls.append(1) or Upstream('{"choices":[{"message":{"content":"ok"}}]}'))
     body = {'messages': [{'content': 'same'}]}
     assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'miss'
+    assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'hit'
     other = client.post('/api/auth/register', json={'email': 'other@example.com', 'password': 'password1'})
-    second = client.post('/api/ai/chat', json=body, headers={'Authorization': 'Bearer ' + other.json()['token']})
+    other_headers = {'Authorization': 'Bearer ' + other.json()['token']}
+    second = client.post('/api/ai/chat', json=body, headers=other_headers)
     assert second.headers['x-ppc-cache'] == 'miss'
     assert len(calls) == 2
+    assert client.get('/api/ai/usage').json()['summary']['cache_hits'] == 1
+    assert client.get('/api/ai/usage', headers=other_headers).json()['summary']['cache_hits'] == 0
 
 
 def test_disabled_cache_and_rejected_endpoint(monkeypatch):
