@@ -65,6 +65,23 @@ def test_cache_is_not_shared_between_users(monkeypatch):
     assert client.get('/api/ai/usage', headers=other_headers).json()['summary']['cache_hits'] == 0
 
 
+def test_credit_is_spent_only_on_upstream_calls(monkeypatch):
+    calls = []
+    install(monkeypatch, lambda request, **kwargs: calls.append(1) or Upstream('{"choices":[{"message":{"content":"ok"}}]}'))
+    body = {'messages': [{'content': 'credit'}]}
+    assert client.get('/api/auth/me').json()['aiCredits'] == 20
+    assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'miss'
+    assert client.get('/api/auth/me').json()['aiCredits'] == 19
+    assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'hit'
+    assert client.get('/api/auth/me').json()['aiCredits'] == 19
+    from app.workflow.store import database
+    with database() as connection:
+        connection.execute('UPDATE users SET ai_credits=0')
+    blocked = client.post('/api/ai/chat', json={'messages': [{'content': 'another'}]})
+    assert blocked.status_code == 429
+    assert len(calls) == 1
+
+
 def test_disabled_cache_and_rejected_endpoint(monkeypatch):
     calls = []
     monkeypatch.setenv('AI_CACHE_SECONDS', '0')

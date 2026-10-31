@@ -18,7 +18,9 @@ class Credentials(BaseModel):
 
 
 def _public_user(row):
-    return {'id': row['id'], 'email': row['email'], 'created_at': row['created_at']}
+    if isinstance(row, dict):
+        return row
+    return {'id': row['id'], 'email': row['email'], 'created_at': row['created_at'], 'aiCredits': row['ai_credits']}
 
 
 @router.post('/register')
@@ -31,9 +33,9 @@ def register(body: Credentials):
         if connection.execute('SELECT id FROM users WHERE email=?', (email,)).fetchone():
             raise HTTPException(409, '该邮箱已注册')
         cursor = connection.execute(
-            'INSERT INTO users (email, password_hash, salt, created_at) VALUES (?, ?, ?, ?)',
+            'INSERT INTO users (email, password_hash, salt, created_at, ai_credits) VALUES (?, ?, ?, ?, 20)',
             (email, hash_password(password, salt), salt, now))
-        user = _public_user({'id': cursor.lastrowid, 'email': email, 'created_at': now})
+        user = _public_user({'id': cursor.lastrowid, 'email': email, 'created_at': now, 'aiCredits': 20})
     return {'token': make_token(user['id']), 'user': user}
 
 
@@ -56,7 +58,7 @@ def me(authorization: str = Header(None)):
     if uid is None:
         raise HTTPException(401, '登录已失效，请重新登录')
     with database() as connection:
-        row = connection.execute('SELECT id, email, created_at FROM users WHERE id=?', (uid,)).fetchone()
+        row = connection.execute('SELECT id, email, created_at, ai_credits FROM users WHERE id=?', (uid,)).fetchone()
     if row is None:
         raise HTTPException(401, '登录已失效，请重新登录')
     return _public_user(row)

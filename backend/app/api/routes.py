@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .. import ai_cache, ai_usage, cost_ledger
 from ..auth import bind_user
+from ..workflow.store import consume_ai_credit
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -125,6 +126,8 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
         response = JSONResponse(cached)
         response.headers['X-PPC-Cache'] = 'hit'
         return response
+    if not consume_ai_credit(user):
+        return JSONResponse({'error': '模型调用次数已用完。缓存命中不扣次数；这不是金额。'}, status_code=429)
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(upstream, data=data, method="POST",
                                  headers={"Content-Type": "application/json"})

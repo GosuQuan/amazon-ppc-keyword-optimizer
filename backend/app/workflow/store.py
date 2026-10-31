@@ -13,7 +13,10 @@ def database():
     connection = sqlite3.connect(str(path), timeout=20)
     connection.row_factory = sqlite3.Row
     try:
-        connection.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at TEXT NOT NULL)')
+        connection.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, salt TEXT NOT NULL, created_at TEXT NOT NULL, ai_credits INTEGER NOT NULL DEFAULT 20)')
+        user_columns = {row['name'] for row in connection.execute('PRAGMA table_info(users)')}
+        if 'ai_credits' not in user_columns:
+            connection.execute('ALTER TABLE users ADD COLUMN ai_credits INTEGER NOT NULL DEFAULT 20')
         connection.execute('CREATE TABLE IF NOT EXISTS plans (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, document TEXT NOT NULL, user_id INTEGER NOT NULL DEFAULT 0)')
         columns = {row['name'] for row in connection.execute('PRAGMA table_info(plans)')}
         if 'user_id' not in columns:
@@ -27,6 +30,12 @@ def database():
         raise
     finally:
         connection.close()
+
+
+def consume_ai_credit(user_id):
+    with database() as connection:
+        cursor = connection.execute('UPDATE users SET ai_credits=ai_credits-1 WHERE id=? AND ai_credits>0', (int(user_id),))
+        return cursor.rowcount == 1
 
 
 def save(connection, plan, user_id):
