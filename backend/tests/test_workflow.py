@@ -126,6 +126,15 @@ def test_overlap_spend_is_not_counted_twice(client):
     assert not any(action['kind'] == 'negative' and action['keyword'] == 'red shoe' and '重复覆盖' in action['reason'] for action in plan['actions'])
 
 
+def test_same_keyword_spend_has_one_primary_claim(client):
+    plan = create(client, report(**{'Match Type': 'Broad', 'Keyword': 'shoe', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0', 'Clicks': '40', 'Spend': '80'})).json()
+    related = [action for action in plan['actions'] if action['kind'] in ('bid', 'pause', 'negative')]
+    assert len(related) >= 2
+    assert sum(action['spend_claim'] == 'primary' for action in related) == 1
+    assert any(action['spend_claim'] == 'shared_reference' for action in related)
+    assert {action['spend_claim'] for action in plan['actions']} <= {'primary', 'shared_reference'}
+
+
 def test_budget_split_ignores_spend(client):
     text = table_csv(
         ['Date', 'ASIN', 'Currency', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Customer Search Term', 'Clicks', 'Spend', 'Sales', 'Orders'],

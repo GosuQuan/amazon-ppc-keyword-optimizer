@@ -373,6 +373,21 @@ def evidence_card(period, search_metrics, search_window, products, placements):
             'combination_rule': '只采用搜索词花费；推广商品和广告位不得相加'}
 
 
+def assign_spend_claims(actions):
+    rank = {'pause': 0, 'bid': 1, 'negative': 2, 'harvest': 3}
+    ordered = sorted(actions, key=lambda action: (rank.get(action['kind'], 9), norm(action['keyword'])))
+    claimed = set()
+    for action in ordered:
+        group = action.get('spend_group')
+        if not group:
+            action['spend_claim'] = 'primary'
+            continue
+        action['spend_claim'] = 'shared_reference' if group in claimed else 'primary'
+        claimed.add(group)
+    for action in actions:
+        action.pop('spend_group', None)
+
+
 def overlap_summary(records):
     grouped = defaultdict(list)
     for record in records:
@@ -428,6 +443,7 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
                 elif abs(proposed - bid) < .005:
                     continue
             action = make_action(kind, old['kw'], old['camp'], old['adg'], old['mt'], bid, proposed, old['reason'] + '；按真实出价向盈利上限调整，单次最多上调 30% 或下调 50%', old['prio'], observed, source)
+            action['spend_group'] = key
             actions.append(action)
         # Scoped exact negatives only; roots and conflict-derived negatives remain advisory.
         for old in analysis['negatives']:
@@ -436,6 +452,7 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
                 continue
             protected = any(norm(r['camp']) == norm(old['camp']) and norm(r['adg']) == norm(old['adg']) and norm(r['st']) == norm(old['word']) and r['orders'] > 0 for r in records)
             a = make_action('negative', old['word'], old['camp'], old['adg'], 'negativeExact', None, None, old['reason'], 'P1', {'clicks': old['clk'], 'spend': old['spend']}, source)
+            a['spend_group'] = key
             if protected:
                 a['blocking_reasons'].append('同组存在该搜索词的有订单记录，保护优质词')
                 a['exportable'] = False
@@ -446,7 +463,9 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             if dest_key in entities or dest_key in groups:
                 warnings.append('已有精准覆盖：' + old['st'] + '，仅提示')
                 continue
-            actions.append(make_action('harvest', old['st'], old['camp'], old['adg'], 'exact', source.get('bid'), source.get('bid'), '优质搜索词建议新增精准投放；出价采用来源真实 Bid', 'P2', {'spend': old['spend'], 'sales': old['sales'], 'orders': old['orders']}, source))
+            harvest = make_action('harvest', old['st'], old['camp'], old['adg'], 'exact', source.get('bid'), source.get('bid'), '优质搜索词建议新增精准投放；出价采用来源真实 Bid', 'P2', {'spend': old['spend'], 'sales': old['sales'], 'orders': old['orders']}, source)
+            harvest['spend_group'] = key
+            actions.append(harvest)
     # Dedupe generated recommendations across keyword sources, preserving strict destination identity.
     unique = {}
     for a in actions:
@@ -465,6 +484,7 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
         remaining = round(remaining - amount, 2)
         allocations.append({'campaign': campaign, 'daily_budget': amount, 'reason': 'MVP 按活动均分；仅建议，不执行预算更新'})
     actions = list(unique.values())
+    assign_spend_claims(actions)
     products, product_warnings = parse_products(products_raw, context)
     placements, placement_warnings = parse_placements(placements_raw, context)
     warnings.extend(product_warnings + placement_warnings)

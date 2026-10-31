@@ -180,6 +180,7 @@
       addDetail(details, '调整理由', action.reason);
       addDetail(details, '已发生数据', action.evidence);
       addDetail(details, '预测增量', action.forecast == null ? '无。历史订单和花费不代表预计新增销售。' : action.forecast);
+      if (action.spend_claim === 'shared_reference') addDetail(details, '花费归属', '这笔已发生花费已由同一关键词的主动作认领，不能再算一次可节省金额。');
       card.append(top, details);
       const reasons = blockers(action);
       if (action.exportable !== true || reasons.length) {
