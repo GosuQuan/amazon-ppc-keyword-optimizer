@@ -1,4 +1,5 @@
 """Exact-request cache boundaries. No live model calls."""
+import io
 import json
 
 from fastapi.testclient import TestClient
@@ -63,6 +64,24 @@ def test_cache_is_not_shared_between_users(monkeypatch):
     assert len(calls) == 2
     assert client.get('/api/ai/usage').json()['summary']['cache_hits'] == 1
     assert client.get('/api/ai/usage', headers=other_headers).json()['summary']['cache_hits'] == 0
+
+
+def test_connection_failure_refunds_credit_but_http_error_does_not(monkeypatch):
+    import urllib.error
+    before = client.get('/api/auth/me').json()['aiCredits']
+    def offline(request, **kwargs):
+        raise urllib.error.URLError('offline')
+    install(monkeypatch, offline)
+    failed = client.post('/api/ai/chat', json={'messages': [{'content': 'offline'}]})
+    assert failed.status_code == 502
+    assert '已退回' in failed.text
+    assert client.get('/api/auth/me').json()['aiCredits'] == before
+    def http_error(request, **kwargs):
+        raise urllib.error.HTTPError(request.full_url, 429, 'limit', {}, io.BytesIO(b'{}'))
+    monkeypatch.setattr(routes.urllib.request, 'urlopen', http_error)
+    rejected = client.post('/api/ai/chat', json={'messages': [{'content': 'limited'}]})
+    assert rejected.status_code == 429
+    assert client.get('/api/auth/me').json()['aiCredits'] == before - 1
 
 
 def test_credit_is_spent_only_on_upstream_calls(monkeypatch):

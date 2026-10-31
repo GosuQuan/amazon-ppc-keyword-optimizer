@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .. import ai_cache, ai_usage, cost_ledger
 from ..auth import bind_user
-from ..workflow.store import consume_ai_credit
+from ..workflow.store import consume_ai_credit, refund_ai_credit
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -162,6 +162,9 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
         finally:
             e.close()
         return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
+    except urllib.error.URLError:
+        refund_ai_credit(user)
+        return JSONResponse({"error": "模型服务连接失败，本次次数已退回。"}, status_code=502)
     except Exception:  # noqa: BLE001
         return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)
     finally:

@@ -38,6 +38,11 @@ def consume_ai_credit(user_id):
         return cursor.rowcount == 1
 
 
+def refund_ai_credit(user_id):
+    with database() as connection:
+        connection.execute('UPDATE users SET ai_credits=ai_credits+1 WHERE id=?', (int(user_id),))
+
+
 def save(connection, plan, user_id):
     connection.execute('INSERT OR REPLACE INTO plans (id, created_at, document, user_id) VALUES (?, ?, ?, ?)',
                        (plan['id'], plan['created_at'], json.dumps(plan, ensure_ascii=False, allow_nan=False), user_id))
