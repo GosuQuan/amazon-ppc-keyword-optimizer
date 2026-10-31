@@ -153,6 +153,14 @@ for (const text of ['```json\n[{"expansions":[]}]\n```', '```json\n{"expansions"
   });
 }
 
+test('a negative inside a good term is a conflict', () => {
+  const a = app();
+  a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
+  a.mergeAiJson({ expansions: [], negativeHints: [{ word: 'cell phone' }, { word: 'a' }], intents: [], insights: [] });
+  assert.match(a.state.ai.negatives[0].cross, /冲突/);
+  assert.match(a.state.ai.negatives[1].cross, /人工复核/);
+});
+
 test('successful merge preserves duplicate and rule cross-check behavior', () => {
   const a = app();
   a.mergeAiJson({ expansions: [{ word: ' existing ', type: '', reason: '' }],

@@ -245,6 +245,14 @@ function validateAiJson(j) {
   }
   return result;
 }
+function negativeContainedInGood(word, goodTerms) {
+  if (word.length < 4) return false;
+  for (const term of goodTerms) {
+    if (term.length < 4 || term === word) continue;
+    if (term.includes(word) || word.includes(term)) return true;
+  }
+  return false;
+}
 function mergeAiJson(j) {
   j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
@@ -253,7 +261,7 @@ function mergeAiJson(j) {
   const negatives = j.negativeHints.map(e => {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
     if (waste.has(w) || loss.has(w)) cross = '与规则一致（高置信）';
-    else if (good.has(w)) cross = '⚠ 与优质数据冲突，不建议否定';
+    else if (good.has(w) || negativeContainedInGood(w, good)) cross = '⚠ 与优质数据冲突，不建议否定';
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
