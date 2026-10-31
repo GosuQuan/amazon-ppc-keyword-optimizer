@@ -153,6 +153,13 @@ for (const text of ['```json\n[{"expansions":[]}]\n```', '```json\n{"expansions"
   });
 }
 
+test('an expansion with a competitor brand is flagged', () => {
+  const a = app();
+  a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung galaxy tab' }, { word: 'foldable phone stand for desk' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].competitorBrand, true);
+  assert.equal(a.state.ai.expansions[1].competitorBrand, false);
+});
+
 test('an expansion inside a longer good term is already covered', () => {
   const a = app();
   a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
