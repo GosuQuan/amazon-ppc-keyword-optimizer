@@ -61,16 +61,19 @@
     return new Error(`请求失败（HTTP ${response.status}）${details ? '\n' + details : '，服务端未返回具体原因。'}`);
   }
   if (!sessionStorage.getItem('ppc_token')) location.replace('/login.html');
-  Promise.all([
-    fetch('/api/auth/pricing').then((response) => response.json()),
-    fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } }).then((response) => response.json()),
-  ]).then(([pricing, account]) => {
-    $('point-cost').textContent = window.pointCostText(pricing);
-    $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
-  }).catch(() => {
-    $('point-cost').textContent = '积分规则暂时无法读取。';
-    $('point-balance').textContent = '当前积分暂时无法读取。';
-  });
+  function refreshPointPreview() {
+    return Promise.all([
+      fetch('/api/auth/pricing').then((response) => response.json()),
+      fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } }).then((response) => response.json()),
+    ]).then(([pricing, account]) => {
+      $('point-cost').textContent = window.pointCostText(pricing);
+      $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
+    }).catch(() => {
+      $('point-cost').textContent = '积分规则暂时无法读取。';
+      $('point-balance').textContent = '当前积分暂时无法读取。';
+    });
+  }
+  refreshPointPreview();
   $('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   request('/api/auth/me').then((account) => {
     if (account && account.email) {
@@ -341,6 +344,7 @@
     const plan = await request('/api/workflow/demo', { method: 'POST' });
     renderTrace(plan.demo_trace || []);
     setPlan(plan);
+    await refreshPointPreview();
     notice('示例方案已显示。没有 Bulk 时，动作只供查看，不能导出。');
   }));
   $('import-form').addEventListener('submit', (event) => {
@@ -361,6 +365,7 @@
       if (!data.get('advertised_products')?.name) data.delete('advertised_products');
       if (!data.get('placements')?.name) data.delete('placements');
       setPlan(await request(API, { method: 'POST', body: data }));
+      await refreshPointPreview();
       notice('方案已生成。请查看警告、估算出价与阻断原因，再逐项审核。');
     });
   });
@@ -382,6 +387,7 @@
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    await refreshPointPreview();
     notice('草稿下载已发起。请先核对实际站点模板，再到广告后台人工上传与执行。');
   }, true));
   $('execution-form').addEventListener('submit', (event) => {
