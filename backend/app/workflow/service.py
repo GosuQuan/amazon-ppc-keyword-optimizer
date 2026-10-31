@@ -373,6 +373,21 @@ def evidence_card(period, search_metrics, search_window, products, placements):
             'combination_rule': '只采用搜索词花费；推广商品和广告位不得相加'}
 
 
+def claimable_spend(actions):
+    total = 0.0
+    seen = False
+    for action in actions:
+        if action.get('spend_claim') != 'primary':
+            continue
+        evidence = action.get('evidence') if isinstance(action.get('evidence'), dict) else {}
+        value = evidence.get('spend')
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        total += value
+        seen = True
+    return round(total, 2) if seen else None
+
+
 def assign_spend_claims(actions):
     rank = {'pause': 0, 'bid': 1, 'negative': 2, 'harvest': 3}
     ordered = sorted(actions, key=lambda action: (rank.get(action['kind'], 9), norm(action['keyword'])))
@@ -511,6 +526,7 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
                        'allocation_method': 'equal_split', 'performance_based': False,
                        'executes_budget_changes': False},
             'execution': None, 'review': None, 'exports': [], 'overlaps': overlap_summary(records),
+            'claimable_observed_spend': claimable_spend(actions),
             'baseline_period': period, 'target_acos': target,
             'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 

@@ -131,6 +131,8 @@ def test_same_keyword_spend_has_one_primary_claim(client):
     related = [action for action in plan['actions'] if action['kind'] in ('bid', 'pause', 'negative')]
     assert len(related) >= 2
     assert sum(action['spend_claim'] == 'primary' for action in related) == 1
+    assert plan['claimable_observed_spend'] == 80
+    assert round(sum(action['evidence']['spend'] for action in related), 2) == 160
     assert any(action['spend_claim'] == 'shared_reference' for action in related)
     assert {action['spend_claim'] for action in plan['actions']} <= {'primary', 'shared_reference'}
 
