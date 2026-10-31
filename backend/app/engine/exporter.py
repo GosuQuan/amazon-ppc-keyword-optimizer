@@ -60,13 +60,22 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
             for n in negatives]
     for e in (ai_negatives or []):
         cross = e.get("cross", "")
-        rows.append(["精准否定", e["word"], "", "", "AI预判" + ("（与规则一致）" if "一致" in cross else ""), "", "", e.get("reason", "")])
+        if "不建议否定" in cross:
+            continue
+        source = "AI预判"
+        if "一致" in cross:
+            source += "（与规则一致）"
+        elif "竞品品牌" in cross:
+            source += "（竞品品牌候选）"
+        rows.append(["精准否定", e["word"], "", "", source, "", "", e.get("reason", "")])
     return csv_string(["否定方式", "否定词", "广告活动", "广告组", "来源", "点击", "花费", "理由"], rows)
 
 
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:
     rows = [[r["word"], "精准", r["camp"], r["adg"], r["src"], r["type"], r["note"]] for r in new_rows]
     for e in (ai_expansions or []):
+        if e.get("competitorBrand") or e.get("coveredByGood"):
+            continue
         note = e.get("reason", "") + ("（已有精准词，注意去重）" if e.get("exists") else "")
         rows.append([e["word"], "精准", "", "", "AI扩词", e.get("type", "AI"), note])
     return csv_string(["建议关键词", "建议匹配类型", "建议放入广告活动", "建议放入广告组", "来源", "类型", "说明"], rows)
