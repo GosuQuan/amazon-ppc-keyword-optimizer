@@ -114,6 +114,22 @@ def test_context_mixture_and_duplicate_rows(client):
     assert create(client, text + report(Spend='61').splitlines()[1] + '\n').status_code == 422
 
 
+def test_budget_split_ignores_spend(client):
+    text = table_csv(
+        ['Date', 'ASIN', 'Currency', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Customer Search Term', 'Clicks', 'Spend', 'Sales', 'Orders'],
+        [['2026-01-01', 'B001', 'USD', 'Low', 'Group', 'shoe', 'Exact', 'shoe', '30', '10', '30', '1'],
+         ['2026-01-01', 'B001', 'USD', 'High', 'Group', 'shoe', 'Exact', 'shoe', '30', '90', '30', '1']])
+    plan = create(client, text, bulk=None, daily_budget='50').json()
+    budget = plan['budget']
+    assert budget['allocation_method'] == 'equal_split'
+    assert budget['performance_based'] is False
+    assert budget['executes_budget_changes'] is False
+    amounts = {item['campaign']: item['daily_budget'] for item in budget['allocations']}
+    assert amounts['High'] == amounts['Low'] == 25
+    assert round(sum(amounts.values()), 2) == 50
+    assert not any(action['kind'] == 'budget' for action in plan['actions'])
+
+
 def test_missing_bid_ids_and_boundary_matching(client):
     for bulk in [None, BULK.replace(',33\n', ',\n'), BULK.replace('red shoe', 'redshoe')]:
         plan = create(client, bulk=bulk).json()

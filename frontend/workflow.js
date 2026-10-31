@@ -249,7 +249,9 @@
     }
     renderReports();
     renderActions();
-    $('budget-total').textContent = `每日建议总额：${money(plan.budget?.daily_total)}`;
+    $('budget-total').textContent = plan.budget?.performance_based === false
+      ? `每日建议总额：${money(plan.budget?.daily_total)}。按活动平均分配，不按花费或销售倾斜，也不会修改广告后台。`
+      : `每日建议总额：${money(plan.budget?.daily_total)}`;
     const allocations = $('budget-allocations');
     allocations.replaceChildren();
     const items = Array.isArray(plan.budget?.allocations) ? plan.budget.allocations : [];

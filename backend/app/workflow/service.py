@@ -472,7 +472,9 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             'warnings': list(dict.fromkeys(warnings)), 'actions': actions,
             'reports': {'search_terms': {'metrics': metrics(records), 'attribution_window': search_window, 'included_in_plan_metrics': True},
                         'advertised_products': products, 'placements': placements},
-            'budget': {'daily_total': budget, 'allocations': allocations, 'advisory': True},
+            'budget': {'daily_total': budget, 'allocations': allocations, 'advisory': True,
+                       'allocation_method': 'equal_split', 'performance_based': False,
+                       'executes_budget_changes': False},
             'execution': None, 'review': None, 'exports': [], 'baseline_period': period, 'target_acos': target,
             'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 
