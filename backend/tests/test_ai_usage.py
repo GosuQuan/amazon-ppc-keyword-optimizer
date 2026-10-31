@@ -65,6 +65,7 @@ def test_success_records_hostname_zero_and_tokens(monkeypatch, tmp_path):
         'calls': 1, 'successes': 1, 'failures': 0, 'cost': None,
         'prompt_tokens': 0, 'completion_tokens': 4, 'total_tokens': 4,
         'prompt_known_calls': 1, 'completion_known_calls': 1, 'usage_known_calls': 1,
+        'cache_hits': 0,
     }
     stored = db_blob(tmp_path).decode('utf-8', 'replace')
     assert 'SECRET_' not in stored

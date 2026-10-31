@@ -26,6 +26,7 @@
         ['已知输入 token', `${value(s.prompt_tokens)}（覆盖 ${value(s.prompt_known_calls)} 次）`],
         ['已知输出 token', `${value(s.completion_tokens)}（覆盖 ${value(s.completion_known_calls)} 次）`],
         ['已知总 token', `${value(s.total_tokens)}（覆盖 ${value(s.usage_known_calls)} 次）`],
+        ['本次启动后的重复命中', value(s.cache_hits)],
         ['模型费用', '未知（待核实费率及账单）'],
       ];
       $('usage-summary').replaceChildren(...cards.map(([title, detail]) => {

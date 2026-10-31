@@ -10,7 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from .. import ai_usage
+from .. import ai_cache, ai_usage
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -119,6 +119,11 @@ def ai_chat(body: dict):
         payload["thinking"] = {"type": "enabled"}
     if "max_tokens" in body:
         payload["max_tokens"] = body["max_tokens"]
+    cached = ai_cache.get(upstream, payload)
+    if cached is not None:
+        response = JSONResponse(cached)
+        response.headers['X-PPC-Cache'] = 'hit'
+        return response
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(upstream, data=data, method="POST",
                                  headers={"Content-Type": "application/json"})
@@ -129,13 +134,18 @@ def ai_chat(body: dict):
     status = None
     success = False
     usage = None
+    attempted = False
     try:
+        attempted = True
         with urllib.request.urlopen(req, timeout=300) as r:
             status = getattr(r, 'status', 200)
             result = json.loads(r.read().decode("utf-8", "replace"))
             usage = result.get('usage') if isinstance(result, dict) else None
             response = JSONResponse(result)
             success = status is not None and 200 <= status < 300
+            if success:
+                ai_cache.put(upstream, payload, result)
+                response.headers['X-PPC-Cache'] = 'miss'
             return response
     except urllib.error.HTTPError as e:
         status = e.code
@@ -151,6 +161,8 @@ def ai_chat(body: dict):
     except Exception:  # noqa: BLE001
         return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)
     finally:
+        if not attempted:
+            return
         try:
             ai_usage.record_call(upstream=upstream, model=model, status=status,
                                  success=success, duration_ms=(time.perf_counter() - started) * 1000,
@@ -161,4 +173,6 @@ def ai_chat(body: dict):
 
 @router.get('/ai/usage')
 def get_ai_usage():
-    return ai_usage.get_usage()
+    data = ai_usage.get_usage()
+    data['summary']['cache_hits'] = ai_cache.hits()
+    return data
