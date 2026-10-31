@@ -125,7 +125,9 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
     payload = {"model": model,
                "messages": body.get("messages") or [],
                "temperature": body.get("temperature", 0.3)}
-    if "bigmodel.cn" in upstream and model.lower().startswith("glm-5.3"):
+    if body.get("thinking") is False:
+        payload["thinking"] = {"type": "disabled"}
+    elif body.get("thinking") is True or ("bigmodel.cn" in upstream and model.lower().startswith("glm-5.3")):
         payload["thinking"] = {"type": "enabled"}
     if "max_tokens" in body:
         payload["max_tokens"] = body["max_tokens"]

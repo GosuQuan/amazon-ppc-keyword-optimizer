@@ -85,6 +85,7 @@ test('prompt carries observed totals without treating them as savings', async ()
   assert.match(sent, /ACOS 31\.25%/);
   assert.match(sent, /不是已节省金额/);
   assert.doesNotMatch(sent, /api_key|SECRET/);
+  assert.equal(JSON.parse(sent).thinking, false);
 });
 
 test('missing finish reason and optional collections remain supported', async () => {

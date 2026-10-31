@@ -33,6 +33,19 @@ def test_configured_key_and_explicit_key_are_separate(monkeypatch):
     assert seen == [('https://provider.example/chat/completions', 'Bearer server-test-key'), ('https://other.example/chat/completions', 'Bearer browser-test-key')]
 
 
+def test_structured_call_can_disable_thinking(monkeypatch):
+    monkeypatch.setenv('AI_BASE_URL', 'https://provider.example/chat/completions')
+    seen = []
+    def upstream(request, **kwargs):
+        seen.append(json.loads(request.data.decode()))
+        return io.BytesIO(json.dumps({'choices': [{'message': {'content': 'OK'}}]}).encode())
+    monkeypatch.setattr(routes.urllib.request, 'urlopen', upstream)
+    assert client.post('/api/ai/chat', json={'messages': [], 'thinking': False}).status_code == 200
+    assert client.post('/api/ai/chat', json={'messages': [{'content': 'other'}]}).status_code == 200
+    assert seen[0]['thinking'] == {'type': 'disabled'}
+    assert 'thinking' not in seen[1]
+
+
 def test_non_json_upstream_error_is_safe(monkeypatch):
     monkeypatch.setenv('AI_API_KEY', 'server-test-key')
     def upstream(request, **kwargs):

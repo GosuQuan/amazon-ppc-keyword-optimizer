@@ -316,7 +316,7 @@ async function runAiOnline() {
   const user = '【产品信息】' + ($('#aiDesc').value || '（未填写）') + aiEvidenceLine(state.result) + '\n【优质搜索词】\n' + top.join('\n') + (roots.length ? '\n【盈利词根】' + roots.join(', ') : '');
   aiStatus('正在调用在线模型…', 'busy');
   try {
-    const body = { messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.3 };
+    const body = { messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.3, thinking: false };
     if (mode === 'direct') { body.base_url = $('#aiBaseUrl').value.trim(); body.model = $('#aiModel').value.trim(); body.api_key = $('#aiKey').value.trim(); if (!body.api_key) throw new Error('直连模式需要填写 API Key'); }
     const r = await fetch('/api/ai/chat', withAuth({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }));
     const j = await r.json();
