@@ -29,7 +29,7 @@
     list.slice(0, 8).forEach((plan) => {
       const row = document.createElement('p');
       const link = document.createElement('a');
-      link.href = '/workflow.html';
+      link.href = window.planLink(plan.id);
       link.textContent = `${plan.context?.asin || plan.id} · ${plan.export_ready ? '可导出' : '待审核'}`;
       row.append(link);
       root.append(row);

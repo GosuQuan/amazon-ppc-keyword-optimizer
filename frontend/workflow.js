@@ -396,5 +396,11 @@
       notice('周期复盘已生成，请结合周期长短、预算和其他影响因素评估变化。');
     });
   });
-  task('正在加载历史方案…', async () => { await loadHistory(); notice(''); });
+  task('正在加载历史方案…', async () => {
+    await loadHistory();
+    const requested = window.requestedPlanId(location.search);
+    if (!requested) { notice(''); return; }
+    setPlan(await request(`${API}/${encodeURIComponent(requested)}`));
+    notice('已打开仪表盘选择的方案。');
+  });
 })();
