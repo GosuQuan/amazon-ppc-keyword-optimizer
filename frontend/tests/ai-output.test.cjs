@@ -69,6 +69,24 @@ for (const [name, data, error] of [
   assert.match(a.node('#aiStatus').textContent, error);
 });
 
+test('prompt carries observed totals without treating them as savings', async () => {
+  const a = app();
+  a.state.result.kpi = { spend: 12.5, sales: 40, orders: 3, clk: 9, acos: 0.3125 };
+  a.state.result.context = { marketplace: 'US', asin: 'B0SAMPLE01', currency: 'USD' };
+  let sent = '';
+  a.context.fetch = async (url, options) => {
+    sent = options.body;
+    return { ok: true, json: async () => response('{"expansions":[{"word":"final"}]}') };
+  };
+  await a.runAiOnline();
+  assert.match(sent, /站点 US/);
+  assert.match(sent, /ASIN B0SAMPLE01/);
+  assert.match(sent, /花费 12\.5/);
+  assert.match(sent, /ACOS 31\.25%/);
+  assert.match(sent, /不是已节省金额/);
+  assert.doesNotMatch(sent, /api_key|SECRET/);
+});
+
 test('missing finish reason and optional collections remain supported', async () => {
   const a = app();
   await online(a, { choices: [{ message: { content: '{"insights":[{"title":"标题"},{"detail":"详情"}]}' } }] });

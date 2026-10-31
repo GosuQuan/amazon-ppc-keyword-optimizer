@@ -269,14 +269,31 @@ function importExpertJson(file) {
   };
   rd.readAsText(file, 'utf-8');
 }
+function aiEvidenceLine(result) {
+  const kpi = result && result.kpi || {};
+  const context = result && result.context || {};
+  const parts = [];
+  const label = (name, value) => { const text = String(value || '').trim(); if (/^[A-Za-z0-9._:-]{2,40}$/.test(text)) parts.push(name + ' ' + text); };
+  const number = (name, value) => { if (typeof value === 'number' && isFinite(value)) parts.push(name + ' ' + value); };
+  label('站点', context.marketplace);
+  label('ASIN', context.asin);
+  label('币种', context.currency);
+  number('花费', kpi.spend);
+  number('销售额', kpi.sales);
+  number('订单', kpi.orders);
+  number('点击', kpi.clk);
+  if (typeof kpi.acos === 'number' && isFinite(kpi.acos)) parts.push('ACOS ' + (kpi.acos * 100).toFixed(2) + '%');
+  if (typeof P.target === 'number' && isFinite(P.target)) parts.push('目标ACOS ' + P.target + '%');
+  return parts.length ? '\n【已发生指标】' + parts.join('，') + '。这些是历史合计，不是预测，也不是已节省金额。' : '';
+}
 async function runAiOnline() {
   const mode = $('#aiMode').value;
   if (!state.result) { aiStatus('请先载入数据。', 'err'); return; }
   const top = state.result.st.filter(s => s.st && s.cls === '优秀').sort((a, b) => b.sales - a.sales).slice(0, 40).map(s => s.st);
   if (!top.length) { aiStatus('没有优秀关键词可供挖掘。', 'err'); return; }
   const roots = state.result.roots.filter(r => r.type === '盈利' || r.type === '加分').slice(0, 15).map(r => r.tok);
-  const sys = '你是亚马逊广告关键词专家。根据优质搜索词、盈利词根和产品信息，输出严格 JSON（无 markdown）：{"expansions":[{"word":"","type":"长尾|场景|人群|规格","reason":""}],"intents":[{"intent":"","keywords":[""]}],"negativeHints":[{"word":"","reason":""}],"insights":[{"title":"","detail":""}]}。expansions 15~30 个跟随输入语言且不重复；intents 3~6 组；negativeHints 只列明显无关词。';
-  const user = '【产品信息】' + ($('#aiDesc').value || '（未填写）') + '\n【优质搜索词】\n' + top.join('\n') + (roots.length ? '\n【盈利词根】' + roots.join(', ') : '');
+  const sys = '你是亚马逊广告关键词专家。根据优质搜索词、盈利词根、产品信息和已发生指标，输出严格 JSON（无 markdown）：{"expansions":[{"word":"","type":"长尾|场景|人群|规格","reason":""}],"intents":[{"intent":"","keywords":[""]}],"negativeHints":[{"word":"","reason":""}],"insights":[{"title":"","detail":""}]}。expansions 15~30 个跟随输入语言且不重复；intents 3~6 组；negativeHints 只列明显无关词。不要把历史花费写成已节省金额，也不要预测增量订单。';
+  const user = '【产品信息】' + ($('#aiDesc').value || '（未填写）') + aiEvidenceLine(state.result) + '\n【优质搜索词】\n' + top.join('\n') + (roots.length ? '\n【盈利词根】' + roots.join(', ') : '');
   aiStatus('正在调用在线模型…', 'busy');
   try {
     const body = { messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], temperature: 0.3 };
