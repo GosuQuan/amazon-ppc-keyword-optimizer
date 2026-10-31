@@ -71,7 +71,7 @@
       fetch('/api/auth/pricing').then((response) => response.json()),
       fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } }).then((response) => response.json()),
     ]).then(([pricing, account]) => {
-      $('point-cost').textContent = window.pointCostText(pricing);
+      $('point-cost').textContent = window.pointCostText(pricing, account.plan);
       $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
       state.pointBalance = Number.isInteger(account.points) ? account.points : null;
       state.serviceCosts = pricing && pricing.serviceCosts || null;

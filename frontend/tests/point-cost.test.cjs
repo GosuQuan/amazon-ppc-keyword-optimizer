@@ -13,6 +13,13 @@ test('point hint uses the published service costs', () => {
   assert.match(text, /不是人民币/);
 });
 
+test('enterprise accounts see their own flash price', () => {
+  const pricing = { serviceCosts: { workflow_plan: 5, demo_plan: 1, export_draft: 2 }, modelCosts: { individual: { flash: 10 }, enterprise: { flash: 6 } } };
+  const text = pointCostText(pricing, 'enterprise');
+  assert.match(text, /企业 Flash 模型每次 6 积分/);
+  assert.doesNotMatch(text, /个人 Flash|每次 10 积分/);
+});
+
 test('balance preview refuses an unaffordable plan without inventing numbers', () => {
   const pricing = { serviceCosts: { workflow_plan: 5 } };
   assert.equal(pointBalancePreview(pricing, 4), '当前 4 积分，不足以生成方案（需要 5）。');

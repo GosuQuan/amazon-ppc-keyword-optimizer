@@ -44,7 +44,7 @@ def build(source, target):
     document.save(target)
     reopened = Document(target)
     text = '\n'.join(paragraph.text for paragraph in reopened.paragraphs)
-    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示', '积分余额预览', '余额刷新', '禁用按钮')):
+    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示', '积分余额预览', '余额刷新', '禁用按钮', '企业模型价格')):
         raise SystemExit('document missing expected heading: ' + target.name)
     print(target)
 
@@ -68,3 +68,6 @@ build(refresh, ARCHIVE / '2026-11-01-余额刷新.docx')
 guard = ARCHIVE / '2026-11-01-积分不足禁用按钮.md'
 guard.write_text('# 2026-11-01 积分不足禁用按钮\n\n余额和价格都是整数且余额不足时，禁用生成、示例或首次导出。未知余额不禁用。重复下载已有草稿不因积分不足被禁用。未做浏览器截图，未调用真实模型。\n', encoding='utf-8')
 build(guard, ARCHIVE / '2026-11-01-积分不足禁用按钮.docx')
+tier = ARCHIVE / '2026-11-01-企业模型价格.md'
+tier.write_text('# 2026-11-01 企业模型价格\n\n工作台按当前账号显示 Flash 模型积分。企业账号显示 6，个人账号显示 10。企业价格缺失时不改用个人价格。未做浏览器截图，未调用真实模型。\n', encoding='utf-8')
+build(tier, ARCHIVE / '2026-11-01-企业模型价格.docx')
