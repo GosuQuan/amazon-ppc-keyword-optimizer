@@ -153,6 +153,15 @@ for (const text of ['```json\n[{"expansions":[]}]\n```', '```json\n{"expansions"
   });
 }
 
+test('an expansion inside a longer good term is already covered', () => {
+  const a = app();
+  a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
+  a.mergeAiJson({ expansions: [{ word: 'cell phone' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].coveredByGood, true);
+  assert.equal(a.state.ai.expansions[0].exists, false);
+  assert.equal(a.state.ai.expansions[1].coveredByGood, false);
+});
+
 test('a negative inside a good term is a conflict', () => {
   const a = app();
   a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });

@@ -179,7 +179,7 @@ function newWordRows() {
   const R = state.result, rows = [];
   for (const h of R.harvest) rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   for (const c of R.combos) rows.push({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
-  for (const e of state.ai.expansions) rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason + (e.exists ? '（已有精准词，注意去重）' : '') });
+  for (const e of state.ai.expansions) rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason + (e.exists ? '（已有精准词，注意去重）' : e.coveredByGood ? '（已包含在优质词中，不必单独新增）' : '') });
   return rows;
 }
 
@@ -245,6 +245,13 @@ function validateAiJson(j) {
   }
   return result;
 }
+function expansionCoveredByGood(word, goodTerms) {
+  if (word.length < 4) return false;
+  for (const term of goodTerms) {
+    if (term.length > word.length && term.includes(word)) return true;
+  }
+  return false;
+}
 function negativeContainedInGood(word, goodTerms) {
   if (word.length < 4) return false;
   for (const term of goodTerms) {
@@ -256,7 +263,7 @@ function negativeContainedInGood(word, goodTerms) {
 function mergeAiJson(j) {
   j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
-  const expansions = j.expansions.map(e => ({ word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(canon(e.word)) }));
+  const expansions = j.expansions.map(e => { const word = canon(e.word); return { word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good) }; });
   const intents = j.intents;
   const negatives = j.negativeHints.map(e => {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
@@ -321,7 +328,7 @@ function renderAI() {
   if (!state.ai.done) { $('#aiExp').innerHTML = '<p class="hint">三种方式：① <b>专家导入（推荐，无需 Key）</b>——导出优秀关键词发给「亚马逊数据挖掘专家」Agent，把返回 JSON 导入；② 在线代理/直连；③ 关闭仅用规则。</p>'; $('#aiIntent').innerHTML = ''; $('#aiNeg').innerHTML = ''; $('#aiInsight').innerHTML = ''; return; }
   mkTable('aiExp', { name: 'AI扩词', rows: () => state.ai.expansions, max: 200, cols: [
     { k: 'word', label: 'AI 建议关键词' }, { k: 'type', label: '类型', fmt: v => `<span class="badge b-ai">${esc(v)}</span>`, csv: r => r.type },
-    { k: 'exists', label: '查重', get: r => r.exists ? '已有精准词，注意去重' : '新词', csv: r => r.exists ? '已有精准词' : '新词' }, { k: 'reason', label: '理由', fmt: esc }] });
+    { k: 'exists', label: '查重', get: r => r.exists ? '已有精准词，注意去重' : r.coveredByGood ? '已包含在优质词中' : '新词', csv: r => r.exists ? '已有精准词' : r.coveredByGood ? '已包含在优质词中' : '新词' }, { k: 'reason', label: '理由', fmt: esc }] });
   $('#aiIntent').innerHTML = state.ai.intents.map((g, i) => `<div class="intent-card"><b>${i + 1}. ${esc(g.intent)}</b><div>${g.keywords.map(k => `<span class="kwchip">${esc(k)}</span>`).join('')}</div></div>`).join('') || '<p class="hint">无意图分组。</p>';
   $('#aiInsight').innerHTML = state.ai.insights.map(x => `<div class="insight-card"><b>${esc(x.title || '洞察')}</b>　${esc(x.detail || '')}</div>`).join('') || '<p class="hint">无洞察。</p>';
   mkTable('aiNeg', { name: 'AI否定预判', rows: () => state.ai.negatives, max: 200, cols: [
