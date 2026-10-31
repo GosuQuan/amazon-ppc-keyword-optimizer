@@ -81,23 +81,23 @@ def test_connection_failure_refunds_credit_but_http_error_does_not(monkeypatch):
     monkeypatch.setattr(routes.urllib.request, 'urlopen', http_error)
     rejected = client.post('/api/ai/chat', json={'messages': [{'content': 'limited'}]})
     assert rejected.status_code == 429
-    assert client.get('/api/auth/me').json()['aiCredits'] == before - 1
+    assert client.get('/api/auth/me').json()['aiCredits'] == before - 10
 
 
 def test_credit_is_spent_only_on_upstream_calls(monkeypatch):
     calls = []
     install(monkeypatch, lambda request, **kwargs: calls.append(1) or Upstream('{"choices":[{"message":{"content":"ok"}}]}'))
     body = {'messages': [{'content': 'credit'}]}
-    assert client.get('/api/auth/me').json()['aiCredits'] == 20
+    assert client.get('/api/auth/me').json()['points'] == 1000
     assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'miss'
-    assert client.get('/api/auth/me').json()['aiCredits'] == 19
+    assert client.get('/api/auth/me').json()['points'] == 990
     assert client.post('/api/ai/chat', json=body).headers['x-ppc-cache'] == 'hit'
-    assert client.get('/api/auth/me').json()['aiCredits'] == 19
+    assert client.get('/api/auth/me').json()['points'] == 990
     from app.workflow.store import database
     with database() as connection:
         connection.execute('UPDATE users SET ai_credits=0')
     blocked = client.post('/api/ai/chat', json={'messages': [{'content': 'another'}]})
-    assert blocked.status_code == 429
+    assert blocked.status_code == 402
     assert len(calls) == 1
 
 

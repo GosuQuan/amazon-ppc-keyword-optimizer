@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from .. import ai_cache, ai_usage, cost_ledger
 from ..auth import bind_user
-from ..workflow.store import consume_ai_credit, refund_ai_credit
+from ..workflow.store import POINT_COSTS, change_points, model_point_cost, user_plan
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -53,7 +53,13 @@ async def analyze(files: List[UploadFile] = File(...), user: int = Depends(bind_
             file_infos.append({"name": f.filename, "rows": 0, "error": f"解析失败：{e}"})
     if not records:
         return JSONResponse({"error": "没有解析到有效数据行", "files": file_infos}, status_code=422)
-    result = sanitize(run_analysis(records, params))
+    if not change_points(user, 'legacy_analyze', -POINT_COSTS['legacy_analyze']):
+        return JSONResponse({'error': f"积分不足：分析报告需要 {POINT_COSTS['legacy_analyze']} 积分"}, status_code=402)
+    try:
+        result = sanitize(run_analysis(records, params))
+    except Exception:
+        change_points(user, 'legacy_analyze_refund', POINT_COSTS['legacy_analyze'])
+        raise
     result["files"] = file_infos
     return result
 
@@ -62,6 +68,8 @@ async def analyze(files: List[UploadFile] = File(...), user: int = Depends(bind_
 def demo(target: Optional[float] = None, ecvr: Optional[float] = None, user: int = Depends(bind_user),
          min_clicks: Optional[float] = None, aov: Optional[float] = None):
     params = {"target": target, "ecvr": ecvr, "minClicks": min_clicks, "aovOverride": aov}
+    if not change_points(user, 'legacy_demo', -POINT_COSTS['legacy_demo']):
+        return JSONResponse({'error': f"积分不足：示例分析需要 {POINT_COSTS['legacy_demo']} 积分"}, status_code=402)
     records = demo_records()
     result = sanitize(run_analysis(records, params))
     result["files"] = [{"name": "示例数据（后端内置：无线充电器品类）", "rows": len(records)}]
@@ -126,8 +134,9 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
         response = JSONResponse(cached)
         response.headers['X-PPC-Cache'] = 'hit'
         return response
-    if not consume_ai_credit(user):
-        return JSONResponse({'error': '模型调用次数已用完。缓存命中不扣次数；这不是金额。'}, status_code=429)
+    cost, plan_name, model_kind = model_point_cost(user_plan(user), model)
+    if not change_points(user, f'ai_chat_{plan_name}_{model_kind}', -cost):
+        return JSONResponse({'error': f'积分不足：当前{plan_name}账号调用该模型需要 {cost} 积分。缓存命中不扣积分；积分不是金额。'}, status_code=402)
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(upstream, data=data, method="POST",
                                  headers={"Content-Type": "application/json"})
@@ -163,8 +172,8 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
             e.close()
         return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
     except urllib.error.URLError:
-        refund_ai_credit(user)
-        return JSONResponse({"error": "模型服务连接失败，本次次数已退回。"}, status_code=502)
+        change_points(user, f'ai_chat_{plan_name}_{model_kind}_refund', cost)
+        return JSONResponse({"error": "模型服务连接失败，本次积分已退回。"}, status_code=502)
     except Exception:  # noqa: BLE001
         return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)
     finally:

@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .api.auth import router as auth_router
+from .api.billing import router as billing_router
 from .api.routes import router
 from .api.workflow import router as workflow_router
 
@@ -30,6 +31,7 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 app.include_router(auth_router)
+app.include_router(billing_router)
 app.include_router(router)
 app.include_router(workflow_router)
 

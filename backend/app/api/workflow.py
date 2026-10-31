@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from ..workflow import service as S
 from ..auth import bind_user
-from ..workflow.store import database, load, save
+from ..workflow.store import POINT_COSTS, apply_points, change_points, database, load, save
 
 router = APIRouter(prefix='/api/workflow', tags=['workflow'])
 
@@ -28,12 +28,18 @@ async def create_plan(search_terms: UploadFile = File(...), bulk: Optional[Uploa
                       advertised_products: Optional[UploadFile] = File(None), placements: Optional[UploadFile] = File(None),
                       account: str = Form(...), marketplace: str = Form(...), currency: str = Form(...),
                       asin: str = Form(...), target_acos: float = Form(25), daily_budget: float = Form(50)):
-    plan = S.build_plan(await search_terms.read(), await bulk.read() if bulk else None,
-                        {'account': account, 'marketplace': marketplace, 'currency': currency, 'asin': asin}, target_acos, daily_budget,
-                        await advertised_products.read() if advertised_products else None,
-                        await placements.read() if placements else None)
-    with database() as connection:
-        save(connection, plan, user)
+    if not change_points(user, 'workflow_plan', -POINT_COSTS['workflow_plan']):
+        raise HTTPException(402, f"积分不足：生成方案需要 {POINT_COSTS['workflow_plan']} 积分")
+    try:
+        plan = S.build_plan(await search_terms.read(), await bulk.read() if bulk else None,
+                            {'account': account, 'marketplace': marketplace, 'currency': currency, 'asin': asin}, target_acos, daily_budget,
+                            await advertised_products.read() if advertised_products else None,
+                            await placements.read() if placements else None)
+        with database() as connection:
+            save(connection, plan, user)
+    except Exception:
+        change_points(user, 'workflow_plan_refund', POINT_COSTS['workflow_plan'])
+        raise
     return with_readiness(plan)
 
 
@@ -47,10 +53,16 @@ def run_demo(user: int = Depends(bind_user)):
     sample = Path(__file__).resolve().parents[3] / 'examples' / '亚马逊搜索词报告-示例.csv'
     if not sample.is_file():
         raise HTTPException(404, '找不到示例报表')
-    plan = S.build_plan(sample.read_bytes(), None,
+    if not change_points(user, 'demo_plan', -POINT_COSTS['demo_plan']):
+        raise HTTPException(402, f"积分不足：示例方案需要 {POINT_COSTS['demo_plan']} 积分")
+    try:
+        plan = S.build_plan(sample.read_bytes(), None,
                         {'account': 'sample', 'marketplace': 'US', 'currency': 'USD', 'asin': 'B0SAMPLE01'}, 25, 50)
-    with database() as connection:
-        save(connection, plan, user)
+        with database() as connection:
+            save(connection, plan, user)
+    except Exception:
+        change_points(user, 'demo_plan_refund', POINT_COSTS['demo_plan'])
+        raise
     plan['demo_trace'] = [
         'POST /api/workflow/demo',
         f'读取 {sample.name}，共生成方案 {plan["id"]}',
@@ -107,6 +119,8 @@ def export_plan(plan_id: str, user: int = Depends(bind_user)):
         if plan['exports']:
             text = plan['exports'][0]['tsv']
         else:
+            if not apply_points(connection, user, 'export_draft', -POINT_COSTS['export_draft']):
+                raise HTTPException(402, f"积分不足：首次导出草稿需要 {POINT_COSTS['export_draft']} 积分")
             text, ids = S.render_export(plan)
             plan['exports'].append({'id': S.uuid4().hex, 'created_at': S.now(), 'action_ids': ids,
                                     'context': dict(plan['context']), 'actions': [dict(a) for a in plan['actions'] if a['status'] == 'approved'],

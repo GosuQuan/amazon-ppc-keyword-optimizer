@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.auth import router as auth_router
+from app.api.billing import router as billing_router
 from app.api.workflow import router as workflow_router
 
 
@@ -13,6 +14,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv('AUTH_SECRET', 'test-secret')
     app = FastAPI()
     app.include_router(auth_router)
+    app.include_router(billing_router)
     app.include_router(workflow_router)
     return TestClient(app)
 
@@ -33,6 +35,48 @@ def test_me_returns_only_the_authenticated_user(client):
     assert me.status_code == 200
     assert me.json()['email'] == 'a@example.com'
     assert 'password' not in me.text
+
+
+def test_enterprise_pricing_and_wrong_code(client, monkeypatch):
+    monkeypatch.setenv('PPC_ENTERPRISE_CODE', 'enterprise-test')
+    pricing = client.get('/api/auth/pricing')
+    assert pricing.status_code == 200
+    assert pricing.json()['modelCosts']['individual']['flash'] == 10
+    assert pricing.json()['modelCosts']['enterprise']['flash'] == 6
+    assert pricing.json()['modelCosts']['enterprise']['other'] == 15
+    assert client.post('/api/auth/register', json={'email': 'ent@example.com', 'password': 'password1', 'enterpriseCode': 'wrong'}).status_code == 400
+    created = client.post('/api/auth/register', json={'email': 'ent@example.com', 'password': 'password1', 'enterpriseCode': 'enterprise-test'})
+    assert created.status_code == 200, created.text
+    assert created.json()['user']['plan'] == 'enterprise'
+    assert created.json()['user']['points'] == 20000
+
+
+def test_demo_recharge_is_once_and_not_a_payment(client):
+    token = register(client, 'pay@example.com')
+    headers = {'Authorization': 'Bearer ' + token}
+    first = client.post('/api/billing/recharge', headers=headers, json={'pack': 'pro'})
+    assert first.status_code == 200, first.text
+    assert first.json()['status'] == 'demo_no_payment'
+    assert first.json()['balance'] == 1000 + 1500
+    assert client.post('/api/billing/recharge', headers=headers, json={'pack': 'pro'}).status_code == 409
+    ultra = client.post('/api/billing/recharge', headers=headers, json={'pack': 'ultra'})
+    assert ultra.status_code == 200, ultra.text
+    assert ultra.json()['plan'] == 'enterprise'
+    assert ultra.json()['balance'] == 1000 + 1500 + 20000
+
+
+def test_failed_plan_does_not_keep_the_charge(client):
+    token = register(client, 'points@example.com')
+    headers = {'Authorization': 'Bearer ' + token}
+    from app.workflow.store import database
+    with database() as connection:
+        connection.execute('UPDATE users SET ai_credits=5 WHERE email=?', ('points@example.com',))
+    denied = client.post('/api/workflow/plans', headers=headers,
+                         data={'account': 'acct', 'marketplace': 'US', 'currency': 'USD', 'asin': 'B001', 'target_acos': '25', 'daily_budget': '50'},
+                         files={'search_terms': ('bad.csv', 'not,a,report\n', 'text/csv')})
+    assert denied.status_code != 200
+    assert client.get('/api/auth/me', headers=headers).json()['points'] == 5
+    assert client.get('/api/workflow/plans', headers=headers).json() == []
 
 
 def test_login_rejects_bad_password_and_missing_token(client):
