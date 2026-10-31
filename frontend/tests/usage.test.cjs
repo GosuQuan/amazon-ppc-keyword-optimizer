@@ -25,6 +25,14 @@ test('missing usage and price are unknown, request only reads ledger', async () 
   assert.match(text(nodes.get('usage-summary')), /未知/);
   assert.match(nodes.get('usage-status').textContent, /1 次调用未返回有效总 token/);
 });
+test('reasoning tokens stay visible and are not called savings', async () => {
+  const { nodes } = await render({summary: {calls: 1, successes: 1, failures: 0, prompt_tokens: 337, completion_tokens: 7728, total_tokens: 8065, reasoning_tokens: 7177, usage_known_calls: 1, prompt_known_calls: 1, completion_known_calls: 1, reasoning_known_calls: 1}, records: []});
+  const shown = text(nodes.get('usage-summary'));
+  assert.match(shown, /7,177/);
+  assert.match(shown, /不是建议正文/);
+  assert.match(shown, /未知（待核实费率及账单）/);
+});
+
 test('read error is visible and refresh becomes available', async () => {
   const { nodes } = await render({}, false);
   assert.match(nodes.get('usage-status').textContent, /读取失败.*503/);

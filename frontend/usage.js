@@ -16,7 +16,8 @@
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const response = await fetch('/api/ai/usage', { signal: controller.signal, headers: { Authorization: 'Bearer ' + sessionStorage.getItem('ppc_token') } });
+      const token = typeof sessionStorage === 'undefined' ? '' : (sessionStorage.getItem('ppc_token') || '');
+      const response = await fetch('/api/ai/usage', { signal: controller.signal, headers: { Authorization: 'Bearer ' + token } });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       if (!data.summary || !Array.isArray(data.records)) throw new Error('账本格式无效');
@@ -25,6 +26,7 @@
         ['已记录调用', value(s.calls)], ['接口成功 / 失败', `${value(s.successes)} / ${value(s.failures)}`],
         ['已知输入 token', `${value(s.prompt_tokens)}（覆盖 ${value(s.prompt_known_calls)} 次）`],
         ['已知输出 token', `${value(s.completion_tokens)}（覆盖 ${value(s.completion_known_calls)} 次）`],
+        ['其中推理 token', `${value(s.reasoning_tokens)}（覆盖 ${value(s.reasoning_known_calls)} 次，不是建议正文，也不等于已节省费用）`],
         ['已知总 token', `${value(s.total_tokens)}（覆盖 ${value(s.usage_known_calls)} 次）`],
         ['本次启动后的重复命中', value(s.cache_hits)],
         ['模型费用', '未知（待核实费率及账单）'],

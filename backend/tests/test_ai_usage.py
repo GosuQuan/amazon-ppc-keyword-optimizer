@@ -64,12 +64,29 @@ def test_success_records_hostname_zero_and_tokens(monkeypatch, tmp_path):
     assert usage['summary'] == {
         'calls': 1, 'successes': 1, 'failures': 0, 'cost': None,
         'prompt_tokens': 0, 'completion_tokens': 4, 'total_tokens': 4,
+        'reasoning_tokens': None, 'reasoning_known_calls': 0,
         'prompt_known_calls': 1, 'completion_known_calls': 1, 'usage_known_calls': 1,
         'cache_hits': 0,
     }
     stored = db_blob(tmp_path).decode('utf-8', 'replace')
     assert 'SECRET_' not in stored
     assert 'chat/completions' not in stored
+
+
+def test_reasoning_tokens_are_separate_and_not_secret(monkeypatch, tmp_path):
+    install(monkeypatch, lambda request, **kwargs: Upstream(json.dumps({
+        'choices': [{'message': {'content': 'ok', 'reasoning_content': 'SECRET_REASON'}}],
+        'usage': {'prompt_tokens': 337, 'completion_tokens': 7728, 'total_tokens': 8065,
+                  'completion_tokens_details': {'reasoning_tokens': 7177}},
+    })))
+    assert client.post('/api/ai/chat', json={'messages': [{'content': 'SECRET_PROMPT'}]}).status_code == 200
+    usage = client.get('/api/ai/usage').json()
+    record = usage['records'][0]
+    assert record['completion_tokens'] == 7728
+    assert record['reasoning_tokens'] == 7177
+    assert usage['summary']['reasoning_tokens'] == 7177
+    assert usage['summary']['reasoning_known_calls'] == 1
+    assert 'SECRET_REASON' not in db_blob(tmp_path).decode('utf-8', 'replace')
 
 
 @pytest.mark.parametrize('usage', [None, [], {'prompt_tokens': True, 'completion_tokens': 1.5, 'total_tokens': '4'}])
@@ -82,6 +99,7 @@ def test_invalid_usage_stays_null(monkeypatch, usage):
     record = client.get('/api/ai/usage').json()['records'][0]
     assert record['prompt_tokens'] is None
     assert record['completion_tokens'] is None
+    assert record['reasoning_tokens'] is None
     assert record['total_tokens'] is None
 
 
