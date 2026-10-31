@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 global.window = {};
-const { pointCostText, pointBalancePreview, canAfford } = require('../point-cost.js');
+const { pointCostText, pointBalancePreview, canAfford, rechargeNotice } = require('../point-cost.js');
 
 test('point hint uses the published service costs', () => {
   const text = pointCostText({ serviceCosts: { workflow_plan: 5, demo_plan: 1, export_draft: 2 }, modelCosts: { individual: { flash: 10 } } });
@@ -25,6 +25,13 @@ test('balance preview refuses an unaffordable plan without inventing numbers', (
   assert.equal(pointBalancePreview(pricing, 4), '当前 4 积分，不足以生成方案（需要 5）。');
   assert.equal(pointBalancePreview(pricing, 5), '当前 5 积分，生成方案后剩余 0。积分不是人民币。');
   assert.equal(pointBalancePreview(pricing, 1.5), '当前积分暂时无法读取。');
+});
+
+test('demo recharge is never described as a real payment', () => {
+  assert.match(rechargeNotice({ demoRecharge: true }), /演示充值/);
+  assert.match(rechargeNotice({ demoRecharge: true }), /不会产生真实扣款/);
+  assert.equal(rechargeNotice({ demoRecharge: false }), '正式支付尚未接入，现在不能入账。');
+  assert.equal(rechargeNotice({}), '充值状态暂时无法读取。');
 });
 
 test('unknown balance does not block an action', () => {

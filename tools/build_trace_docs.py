@@ -44,7 +44,7 @@ def build(source, target):
     document.save(target)
     reopened = Document(target)
     text = '\n'.join(paragraph.text for paragraph in reopened.paragraphs)
-    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示', '积分余额预览', '余额刷新', '禁用按钮', '企业模型价格')):
+    if not any(marker in text for marker in ('亚马逊广告优化平台白皮书', '本轮技术思考', '平台需求拆分', '方案直达', '模型提示词', '可核对花费', '积分提示', '积分余额预览', '余额刷新', '禁用按钮', '企业模型价格', '演示充值')):
         raise SystemExit('document missing expected heading: ' + target.name)
     print(target)
 
@@ -71,3 +71,6 @@ build(guard, ARCHIVE / '2026-11-01-积分不足禁用按钮.docx')
 tier = ARCHIVE / '2026-11-01-企业模型价格.md'
 tier.write_text('# 2026-11-01 企业模型价格\n\n工作台按当前账号显示 Flash 模型积分。企业账号显示 6，个人账号显示 10。企业价格缺失时不改用个人价格。未做浏览器截图，未调用真实模型。\n', encoding='utf-8')
 build(tier, ARCHIVE / '2026-11-01-企业模型价格.docx')
+demo = ARCHIVE / '2026-11-01-演示充值提示.md'
+demo.write_text('# 2026-11-01 演示充值提示\n\n' + (DOCS / '演示充值提示测试边界.md').read_text(encoding='utf-8') + '\n未做浏览器截图，未接入真实支付。\n', encoding='utf-8')
+build(demo, ARCHIVE / '2026-11-01-演示充值提示.docx')

@@ -25,12 +25,13 @@
       fetch('/api/billing/packs', { headers }).then((response) => response.json()),
     ]).then(([account, pricing, billing]) => {
       renderAccount(account, pricing);
+      document.getElementById('recharge-notice').textContent = window.rechargeNotice(billing) + ' 这不是 YICOPY 的收款页面。';
       const packs = document.getElementById('packs');
       packs.replaceChildren();
       Object.entries(billing.packs || {}).forEach(([id, pack]) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.textContent = `${pack.title} · ¥${pack.priceCny} · ${pack.points} 积分 · 演示入账`;
+        button.textContent = `${pack.title} · ¥${pack.priceCny} · ${pack.points} 积分 · ${billing.demoRecharge === true ? '演示入账' : '暂不能入账'}`;
         button.addEventListener('click', () => {
           status.textContent = '正在演示入账…';
           fetch('/api/billing/recharge', { method: 'POST', headers, body: JSON.stringify({ pack: id }) })

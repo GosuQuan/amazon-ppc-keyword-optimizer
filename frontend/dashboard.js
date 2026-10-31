@@ -8,7 +8,9 @@
   Promise.all([
     fetch('/api/auth/me', { headers }).then((response) => { if (response.status === 401) location.replace('/login.html'); return response.json(); }),
     fetch('/api/workflow/plans', { headers }).then((response) => response.json()),
-  ]).then(([account, plans]) => {
+    fetch('/api/billing/packs', { headers }).then((response) => response.json()),
+  ]).then(([account, plans, billing]) => {
+    document.getElementById('recharge-notice').textContent = window.rechargeNotice(billing);
     const list = Array.isArray(plans) ? plans : [];
     text('welcome', (account.plan === 'enterprise' ? '企业' : '个人') + '仪表盘');
     text('account', `${account.email} · 剩余 ${account.points} 积分。积分不是人民币，也不能当成已节省的广告费。`);
