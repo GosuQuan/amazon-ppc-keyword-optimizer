@@ -78,7 +78,13 @@ def test_full_loop_persistence_and_idempotent_export(client):
     reviewed = client.post(url + '/review', data={'period_start': '2026-01-11', 'period_end': '2026-01-20'},
                            files={'search_terms': ('after.csv', report(Date='2026-01-15', Spend='30'), 'text/csv')})
     assert reviewed.status_code == 200, reviewed.text
+    comparison = reviewed.json()['review']['comparison']
     assert reviewed.json()['review']['delta']['spend'] == -30
+    assert comparison['daily_normalized'] is False
+    assert comparison['baseline_days'] == 1
+    assert comparison['declared_review_days'] == 10
+    assert comparison['observed_report_days'] == 1
+    assert comparison['advertising_savings'] is None
     assert reviewed.json()['review']['non_causal_note']
     fresh = FastAPI()
     fresh.include_router(router)

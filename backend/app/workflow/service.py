@@ -39,6 +39,10 @@ def iso_date(value):
         fail('日期必须为 ISO 日期 YYYY-MM-DD')
 
 
+def inclusive_days(start, end):
+    return (iso_date(end) - iso_date(start)).days + 1
+
+
 def positive(value, name):
     try:
         value = float(value)

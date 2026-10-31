@@ -217,6 +217,7 @@
       record.append(node('p', `备注：${valueText(data.notes)}`));
     } else {
       record.append(node('p', `周期：${valueText(data.period_start)} 至 ${valueText(data.period_end)}`));
+      if (data.comparison) record.append(node('p', `对比口径：周期合计，未按天折算。基线 ${valueText(data.comparison.baseline_days)} 天，复盘窗口 ${valueText(data.comparison.declared_review_days)} 天，报告实际覆盖 ${valueText(data.comparison.observed_report_days)} 天。花费差额不是日均节省，也不是已节省广告费。`));
       record.append(node('pre', data));
     }
     root.append(record);

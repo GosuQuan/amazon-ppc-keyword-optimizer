@@ -164,6 +164,11 @@ async def review_plan(plan_id: str, search_terms: UploadFile = File(...), period
         review = {'period_start': period_start, 'period_end': period_end, 'context': dict(plan['context']),
                   'before': before, 'after': after,
                   'delta': {k: after[k] - before[k] if after[k] is not None and before[k] is not None else None for k in before},
+                  'comparison': {'method': 'period_totals', 'daily_normalized': False,
+                                 'baseline_days': S.inclusive_days(baseline['start'], baseline['end']),
+                                 'declared_review_days': S.inclusive_days(period_start, period_end),
+                                 'observed_report_days': S.inclusive_days(period['start'], period['end']),
+                                 'advertising_savings': None},
                   'warnings': warnings, 'non_causal_note': '前后周期差异仅为描述性对比，受季节、流量、归因延迟及周期长度影响，不能证明动作产生因果效果。'}
         if plan['review'] and {k: v for k, v in plan['review'].items() if k != 'created_at'} != review:
             raise HTTPException(409, '复盘记录已固定，不可覆盖')
