@@ -1,6 +1,8 @@
 """API 路由：分析、导出、自检、AI 代理（可选）。"""
 import json
+import logging
 import os
+import time
 import urllib.request
 import urllib.error
 from typing import List, Optional
@@ -8,6 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
+from .. import ai_usage
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -122,10 +125,40 @@ def ai_chat(body: dict):
     auth = _bearer_for(body)
     if auth:
         req.add_header("Authorization", auth)
+    started = time.perf_counter()
+    status = None
+    success = False
+    usage = None
     try:
         with urllib.request.urlopen(req, timeout=300) as r:
-            return JSONResponse(json.loads(r.read().decode("utf-8", "replace")))
+            status = getattr(r, 'status', 200)
+            result = json.loads(r.read().decode("utf-8", "replace"))
+            usage = result.get('usage') if isinstance(result, dict) else None
+            response = JSONResponse(result)
+            success = status is not None and 200 <= status < 300
+            return response
     except urllib.error.HTTPError as e:
+        status = e.code
+        # Only extract usage; never persist error bodies or messages.
+        try:
+            result = json.loads(e.read().decode('utf-8', 'replace'))
+            usage = result.get('usage') if isinstance(result, dict) else None
+        except Exception:  # noqa: BLE001
+            pass
+        finally:
+            e.close()
         return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
     except Exception:  # noqa: BLE001
         return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)
+    finally:
+        try:
+            ai_usage.record_call(upstream=upstream, model=model, status=status,
+                                 success=success, duration_ms=(time.perf_counter() - started) * 1000,
+                                 usage=usage)
+        except Exception:  # noqa: BLE001
+            logging.getLogger(__name__).error('AI usage ledger write failed')
+
+
+@router.get('/ai/usage')
+def get_ai_usage():
+    return ai_usage.get_usage()

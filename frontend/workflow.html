@@ -6,6 +6,7 @@
   <title>广告优化闭环 · 工作台</title>
   <link rel="stylesheet" href="/workflow.css">
   <script src="/workflow.js" defer></script>
+  <script src="/usage.js" defer></script>
 </head>
 <body>
 <header class="topbar"><a class="brand" href="/workflow.html">PPC <span>优化工作台</span></a><a href="/">返回旧工具 ↗</a></header>
@@ -33,6 +34,7 @@
           <label class="file-field">广告位报告 · 可选 CSV<input name="placements" type="file" accept=".csv"><small>按活动单独展示，不生成调价动作</small></label>
         </div><button type="submit" class="primary">生成优化方案 →</button></fieldset></form>
       </section>
+      <section class="panel" aria-labelledby="usage-title"><div class="section-head"><h2 id="usage-title">模型调用与成本</h2><button id="refresh-usage" type="button" class="quiet">刷新用量</button></div><p class="muted">只统计启用账本后、本机代理发起的调用。汇总覆盖全部记录，明细显示最近 50 条。接口成功不代表建议有效；未知用量不按零计算。未核实费率，费用暂显示未知。规则分析不调用模型。</p><p id="usage-status" role="status" aria-live="polite">正在读取调用记录…</p><div id="usage-summary" class="metrics"></div><details><summary>查看最近调用明细</summary><div id="usage-records"></div></details></section>
       <section id="empty-plan" class="panel empty"><h2>让每次调整都有记录</h2><p>导入报告生成新方案，或从左侧打开历史方案。</p></section>
       <div id="plan-content" hidden>
         <section class="panel" aria-labelledby="analysis-title"><div class="section-head"><div><p class="eyebrow">02 / 分析看板</p><h2 id="analysis-title">当前方案</h2></div><button id="reload-plan" type="button" class="quiet">重新获取</button></div><p id="plan-meta" class="muted"></p><div id="context-summary" class="context-summary"></div><div id="metrics" class="metrics"></div><div id="report-facts"></div><div id="warnings"></div></section>
