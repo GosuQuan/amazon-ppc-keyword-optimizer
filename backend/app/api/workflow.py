@@ -33,6 +33,11 @@ async def create_plan(search_terms: UploadFile = File(...), bulk: Optional[Uploa
                         await placements.read() if placements else None)
     with database() as connection:
         save(connection, plan)
+    return with_readiness(plan)
+
+
+def with_readiness(plan):
+    plan['export_readiness'] = S.export_readiness(plan)
     return plan
 
 
@@ -53,7 +58,7 @@ def run_demo():
         f'花费 {plan["metrics"]["spend"]}，销售额 {plan["metrics"]["sales"]}，订单 {plan["metrics"]["orders"]}，ACOS {plan["metrics"]["acos"]}',
         f'动作 {len(plan["actions"])} 条',
     ]
-    return plan
+    return with_readiness(plan)
 
 
 @router.get('/plans')
@@ -68,7 +73,7 @@ def list_plans():
 @router.get('/plans/{plan_id}')
 def get_plan(plan_id: str):
     with database() as connection:
-        return load(connection, plan_id)
+        return with_readiness(load(connection, plan_id))
 
 
 @router.patch('/plans/{plan_id}/actions/{action_id}')
@@ -85,7 +90,7 @@ def update_action(plan_id: str, action_id: str, body: ActionStatus):
         if not plan['exports']:
             plan['status'] = 'approved' if any(a['status'] == 'approved' for a in plan['actions']) else 'pending'
         save(connection, plan)
-    return plan
+    return with_readiness(plan)
 
 
 @router.post('/plans/{plan_id}/export')
@@ -122,12 +127,12 @@ def record_execution(plan_id: str, body: Execution):
             old = plan['execution']
             if any(old[k] != record[k] for k in record):
                 raise HTTPException(409, '执行记录已固定，不可覆盖')
-            return plan
+            return with_readiness(plan)
         record['recorded_at'] = S.now()
         plan['execution'] = record
         plan['status'] = 'executed'
         save(connection, plan)
-    return plan
+    return with_readiness(plan)
 
 
 @router.post('/plans/{plan_id}/review')
@@ -167,4 +172,4 @@ async def review_plan(plan_id: str, search_terms: UploadFile = File(...), period
             plan['review'] = review
             plan['status'] = 'reviewed'
             save(connection, plan)
-    return plan
+    return with_readiness(plan)

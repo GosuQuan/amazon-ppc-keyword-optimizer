@@ -60,10 +60,17 @@ def test_full_loop_persistence_and_idempotent_export(client):
     assert action['proposed_bid'] < 2
     assert action['exportable']
     plan = client.patch(url + '/actions/' + action['id'], json={'status': 'approved'}).json()
+    assert plan['export_readiness']['ready'] is True
+    assert plan['export_readiness']['template_validated'] is False
+    assert plan['export_readiness']['download_executes_ads'] is False
     first = client.post(url + '/export')
     assert first.status_code == 200, first.text
     assert '33' in first.text and 'Update' in first.text
     assert client.post(url + '/export').content == first.content
+    exported = client.get(url).json()
+    assert exported['export_readiness']['already_exported'] is True
+    assert exported['execution'] is None
+    assert exported['exports'][0]['template_validated'] is False
     assert client.get(url).json()['exports'][0]['action_ids'] == [action['id']]
     assert client.get('/api/workflow/plans').json()[0]['id'] == plan['id']
     executed = client.post(url + '/execution', json={'executed_at': '2026-01-10', 'notes': 'Manual upload'})
@@ -105,7 +112,9 @@ def test_missing_bid_ids_and_boundary_matching(client):
         a = next(a for a in plan['actions'] if a['kind'] == 'bid')
         assert not a['exportable']
         url = '/api/workflow/plans/' + plan['id']
-        client.patch(url + '/actions/' + a['id'], json={'status': 'approved'})
+        blocked = client.patch(url + '/actions/' + a['id'], json={'status': 'approved'}).json()
+        assert blocked['export_readiness']['ready'] is False
+        assert blocked['export_readiness']['blocked'][0]['reasons']
         assert client.post(url + '/export').status_code == 422
     assert create(client, bulk=BULK + BULK.splitlines()[1] + '\n').status_code == 422
 

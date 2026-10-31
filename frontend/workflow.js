@@ -259,11 +259,20 @@
     });
     const approved = approvedActions();
     const blocked = approved.filter((action) => !eligible(action)).length;
-    $('export-eligibility').textContent = exportReady()
-      ? `可导出 ${approved.length} 项已批准且通过校验的动作。`
-      : blocked
-        ? `暂不能导出：${blocked} 项已批准动作仍有阻断。整份草稿会被拒绝，请改为拒绝或恢复待审，不能只导出其中合格的一部分。`
-        : '暂不能导出：尚无已批准且可执行的动作。请先逐项审核。';
+    const readiness = plan.export_readiness;
+    $('export-eligibility').textContent = readiness
+      ? readiness.ready
+        ? `可导出 ${readiness.approved} 项已批准且通过校验的动作。${readiness.note}`
+        : readiness.blocked.length
+          ? `暂不能导出：${readiness.blocked.map((item) => `${item.keyword}：${(item.reasons || []).join('、')}`).join('；')}。整份草稿会被拒绝，不能只导出其中合格的一部分。`
+          : readiness.already_exported
+            ? `已有草稿快照，模板验收状态：${readiness.template_validated ? '已验证' : '未验证'}。${readiness.note}`
+            : '暂不能导出：尚无已批准且可执行的动作。请先逐项审核。'
+      : exportReady()
+        ? `可导出 ${approved.length} 项已批准且通过校验的动作。`
+        : blocked
+          ? `暂不能导出：${blocked} 项已批准动作仍有阻断。整份草稿会被拒绝，请改为拒绝或恢复待审，不能只导出其中合格的一部分。`
+          : '暂不能导出：尚无已批准且可执行的动作。请先逐项审核。';
     renderRecord('execution-record', '执行记录', plan.execution);
     renderRecord('review-record', '周期复盘结果', plan.review);
     $('review-gate').textContent = plan.execution ? '已记录执行，可上传执行后周期报告。' : '请先在广告后台执行并保存执行记录，再上传周期复盘报告。';

@@ -473,6 +473,23 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             'evidence': evidence_card(period, metrics(records), search_window, products, placements)}
 
 
+def export_readiness(plan):
+    approved = [action for action in plan.get('actions') or [] if action.get('status') == 'approved']
+    blocked = []
+    for action in approved:
+        reasons = [str(reason) for reason in (action.get('blocking_reasons') or []) if str(reason).strip()]
+        if action.get('exportable') is not True and not reasons:
+            reasons.append('动作未标记为可导出')
+        if action.get('exportable') is not True or reasons:
+            blocked.append({'id': action.get('id'), 'keyword': action.get('keyword'), 'reasons': reasons or ['不可导出']})
+    exported = bool(plan.get('exports'))
+    validated = bool(exported and plan['exports'][0].get('template_validated') is True)
+    return {'approved': len(approved), 'blocked': blocked,
+            'ready': bool(approved) and not blocked,
+            'already_exported': exported, 'template_validated': validated, 'download_executes_ads': False,
+            'note': '下载草稿不会修改广告后台；模板尚未与当前亚马逊站点文件完成验收'}
+
+
 def make_action(kind, keyword, campaign, group, match, bid, proposed, reason, priority, evidence, source):
     blocked = []
     for field in ('campaign_id', 'ad_group_id'):
