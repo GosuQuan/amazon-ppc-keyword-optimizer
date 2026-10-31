@@ -10,7 +10,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from .. import ai_cache, ai_usage
+from .. import ai_cache, ai_usage, cost_ledger
 from ..engine import parser as P
 from ..engine import selftest as ST
 from ..engine.demo import demo_records
@@ -176,3 +176,16 @@ def get_ai_usage():
     data = ai_usage.get_usage()
     data['summary']['cache_hits'] = ai_cache.hits()
     return data
+
+
+@router.get('/cost')
+def get_cost():
+    return cost_ledger.summary(ai_usage.get_usage()['summary'])
+
+
+@router.post('/cost/review')
+def add_review(body: dict):
+    try:
+        return cost_ledger.record_review(body.get('minutes'), body.get('note'))
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
