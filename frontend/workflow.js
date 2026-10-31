@@ -60,11 +60,20 @@
     try { details = errorDetails(JSON.parse(text)); } catch { /* 保留服务端纯文本错误。 */ }
     return new Error(`请求失败（HTTP ${response.status}）${details ? '\n' + details : '，服务端未返回具体原因。'}`);
   }
+  if (!sessionStorage.getItem('ppc_token')) location.replace('/login.html');
+  $('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   async function request(url, options = {}) {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 90000);
+    const headers = new Headers(options.headers || {});
+    headers.set('Authorization', 'Bearer ' + sessionStorage.getItem('ppc_token'));
     try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
+      const response = await fetch(url, { ...options, headers, signal: controller.signal });
+      if (response.status === 401) {
+        sessionStorage.removeItem('ppc_token');
+        location.replace('/login.html');
+        throw new Error('请先登录');
+      }
       if (!response.ok) throw await responseError(response);
       if (options.download) return await response.blob();
       try { return await response.json(); } catch { throw new Error('服务端返回的内容不是有效 JSON，请检查接口响应。'); }

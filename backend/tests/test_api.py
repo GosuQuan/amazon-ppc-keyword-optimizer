@@ -57,8 +57,7 @@ def test_static_frontend_served():
 def test_workflow_page_and_api_are_mounted(monkeypatch, tmp_path):
     monkeypatch.setenv("PPC_DB_PATH", str(tmp_path / "workflow.sqlite3"))
     listed = client.get("/api/workflow/plans")
-    assert listed.status_code == 200
-    assert listed.json() == []
+    assert listed.status_code == 401
     page = client.get("/workflow.html")
     assert page.status_code == 200
     assert "广告优化闭环" in page.text

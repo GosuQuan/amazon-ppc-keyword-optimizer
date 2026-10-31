@@ -7,15 +7,22 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.api.auth import router as auth_router
 from app.api.workflow import router
 
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv('PPC_DB_PATH', str(tmp_path / 'workflow.sqlite3'))
+    monkeypatch.setenv('AUTH_SECRET', 'test-secret')
     app = FastAPI()
+    app.include_router(auth_router)
     app.include_router(router)
-    return TestClient(app)
+    test_client = TestClient(app)
+    registered = test_client.post('/api/auth/register', json={'email': 'owner@example.com', 'password': 'password1'})
+    assert registered.status_code == 200, registered.text
+    test_client.headers['Authorization'] = 'Bearer ' + registered.json()['token']
+    return test_client
 
 
 def report(**changes):
@@ -90,7 +97,9 @@ def test_full_loop_persistence_and_idempotent_export(client):
     assert reviewed.json()['review']['non_causal_note']
     fresh = FastAPI()
     fresh.include_router(router)
-    assert TestClient(fresh).get(url).json()['status'] == 'reviewed'
+    reopened = TestClient(fresh)
+    reopened.headers['Authorization'] = client.headers['Authorization']
+    assert reopened.get(url).json()['status'] == 'reviewed'
 
 
 @pytest.mark.parametrize('field,value', [('Spend', '-1'), ('Spend', 'NaN'), ('Clicks', 'inf'), ('Sales', '-2')])

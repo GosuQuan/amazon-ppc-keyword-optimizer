@@ -3,11 +3,12 @@ import json
 from pathlib import Path
 from typing import Literal, Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel
 
 from ..workflow import service as S
+from ..auth import bind_user
 from ..workflow.store import database, load, save
 
 router = APIRouter(prefix='/api/workflow', tags=['workflow'])
@@ -23,7 +24,7 @@ class Execution(BaseModel):
 
 
 @router.post('/plans')
-async def create_plan(search_terms: UploadFile = File(...), bulk: Optional[UploadFile] = File(None),
+async def create_plan(search_terms: UploadFile = File(...), bulk: Optional[UploadFile] = File(None), user: int = Depends(bind_user),
                       advertised_products: Optional[UploadFile] = File(None), placements: Optional[UploadFile] = File(None),
                       account: str = Form(...), marketplace: str = Form(...), currency: str = Form(...),
                       asin: str = Form(...), target_acos: float = Form(25), daily_budget: float = Form(50)):
@@ -32,7 +33,7 @@ async def create_plan(search_terms: UploadFile = File(...), bulk: Optional[Uploa
                         await advertised_products.read() if advertised_products else None,
                         await placements.read() if placements else None)
     with database() as connection:
-        save(connection, plan)
+        save(connection, plan, user)
     return with_readiness(plan)
 
 
@@ -42,14 +43,14 @@ def with_readiness(plan):
 
 
 @router.post('/demo')
-def run_demo():
+def run_demo(user: int = Depends(bind_user)):
     sample = Path(__file__).resolve().parents[3] / 'examples' / '亚马逊搜索词报告-示例.csv'
     if not sample.is_file():
         raise HTTPException(404, '找不到示例报表')
     plan = S.build_plan(sample.read_bytes(), None,
                         {'account': 'sample', 'marketplace': 'US', 'currency': 'USD', 'asin': 'B0SAMPLE01'}, 25, 50)
     with database() as connection:
-        save(connection, plan)
+        save(connection, plan, user)
     plan['demo_trace'] = [
         'POST /api/workflow/demo',
         f'读取 {sample.name}，共生成方案 {plan["id"]}',
@@ -62,24 +63,24 @@ def run_demo():
 
 
 @router.get('/plans')
-def list_plans():
+def list_plans(user: int = Depends(bind_user)):
     with database() as connection:
-        plans = [json.loads(row[0]) for row in connection.execute('SELECT document FROM plans ORDER BY created_at DESC')]
+        plans = [json.loads(row[0]) for row in connection.execute('SELECT document FROM plans WHERE user_id=? ORDER BY created_at DESC', (user,))]
     return [{'id': p['id'], 'created_at': p['created_at'], 'context': p['context'], 'status': p['status'],
              'metrics': p['metrics'], 'action_count': len(p['actions']),
              'approved_count': sum(a['status'] == 'approved' for a in p['actions'])} for p in plans]
 
 
 @router.get('/plans/{plan_id}')
-def get_plan(plan_id: str):
+def get_plan(plan_id: str, user: int = Depends(bind_user)):
     with database() as connection:
-        return with_readiness(load(connection, plan_id))
+        return with_readiness(load(connection, plan_id, user))
 
 
 @router.patch('/plans/{plan_id}/actions/{action_id}')
-def update_action(plan_id: str, action_id: str, body: ActionStatus):
+def update_action(plan_id: str, action_id: str, body: ActionStatus, user: int = Depends(bind_user)):
     with database() as connection:
-        plan = load(connection, plan_id)
+        plan = load(connection, plan_id, user)
         action = next((a for a in plan['actions'] if a['id'] == action_id), None)
         if action is None:
             raise HTTPException(404, '动作不存在')
@@ -89,14 +90,14 @@ def update_action(plan_id: str, action_id: str, body: ActionStatus):
         plan.setdefault('audit', []).append({'at': S.now(), 'action_id': action_id, 'status': body.status})
         if not plan['exports']:
             plan['status'] = 'approved' if any(a['status'] == 'approved' for a in plan['actions']) else 'pending'
-        save(connection, plan)
+        save(connection, plan, user)
     return with_readiness(plan)
 
 
 @router.post('/plans/{plan_id}/export')
-def export_plan(plan_id: str):
+def export_plan(plan_id: str, user: int = Depends(bind_user)):
     with database() as connection:
-        plan = load(connection, plan_id)
+        plan = load(connection, plan_id, user)
         if plan['exports']:
             text = plan['exports'][0]['tsv']
         else:
@@ -105,19 +106,19 @@ def export_plan(plan_id: str):
                                     'context': dict(plan['context']), 'actions': [dict(a) for a in plan['actions'] if a['status'] == 'approved'],
                                     'tsv': text, 'template_validated': False})
             plan['status'] = 'exported'
-            save(connection, plan)
+            save(connection, plan, user)
     return Response(text.encode('utf-8-sig'), media_type='text/tab-separated-values',
                     headers={'Content-Disposition': f'attachment; filename="sp-draft-{plan_id}.tsv"',
                              'X-Template-Validation': 'draft-unverified'})
 
 
 @router.post('/plans/{plan_id}/execution')
-def record_execution(plan_id: str, body: Execution):
+def record_execution(plan_id: str, body: Execution, user: int = Depends(bind_user)):
     executed = S.iso_date(body.executed_at)
     if executed > S.date.today():
         S.fail('执行日期不能在未来')
     with database() as connection:
-        plan = load(connection, plan_id)
+        plan = load(connection, plan_id, user)
         if not plan['exports']:
             S.fail('必须先批准并导出快照，再登记执行')
         if plan['baseline_period'] and executed <= S.iso_date(plan['baseline_period']['end']):
@@ -131,18 +132,18 @@ def record_execution(plan_id: str, body: Execution):
         record['recorded_at'] = S.now()
         plan['execution'] = record
         plan['status'] = 'executed'
-        save(connection, plan)
+        save(connection, plan, user)
     return with_readiness(plan)
 
 
 @router.post('/plans/{plan_id}/review')
-async def review_plan(plan_id: str, search_terms: UploadFile = File(...), period_start: str = Form(...), period_end: str = Form(...)):
+async def review_plan(plan_id: str, search_terms: UploadFile = File(...), period_start: str = Form(...), period_end: str = Form(...), user: int = Depends(bind_user)):
     start, end = S.iso_date(period_start), S.iso_date(period_end)
     if start > end:
         S.fail('复盘开始日期晚于结束日期')
     raw = await search_terms.read()
     with database() as connection:
-        plan = load(connection, plan_id)
+        plan = load(connection, plan_id, user)
         if not plan['execution']:
             S.fail('复盘必须先登记执行')
         if start <= S.iso_date(plan['execution']['executed_at']):
@@ -176,5 +177,5 @@ async def review_plan(plan_id: str, search_terms: UploadFile = File(...), period
             review['created_at'] = S.now()
             plan['review'] = review
             plan['status'] = 'reviewed'
-            save(connection, plan)
+            save(connection, plan, user)
     return with_readiness(plan)
