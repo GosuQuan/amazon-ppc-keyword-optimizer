@@ -85,6 +85,9 @@ test('prompt carries observed totals without treating them as savings', async ()
   assert.match(sent, /花费 12\.5/);
   assert.match(sent, /ACOS 31\.25%/);
   assert.match(sent, /不是已节省金额/);
+  assert.match(sent, /不得将竞品词或搜索词中的规格、材质、兼容性当成产品事实/);
+  assert.match(sent, /信息不足时可以返回空数组/);
+  assert.match(sent, /品牌或设备兼容性未知时不要建议否定/);
   assert.doesNotMatch(sent, /api_key|SECRET/);
   assert.equal(JSON.parse(sent).thinking, false);
 });

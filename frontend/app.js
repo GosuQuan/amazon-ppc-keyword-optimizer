@@ -324,7 +324,7 @@ async function runAiOnline() {
   const top = state.result.st.filter(s => s.st && s.cls === '优秀').sort((a, b) => b.sales - a.sales).slice(0, 40).map(s => s.st);
   if (!top.length) { aiStatus('没有优秀关键词可供挖掘。', 'err'); return; }
   const roots = state.result.roots.filter(r => r.type === '盈利' || r.type === '加分').slice(0, 15).map(r => r.tok);
-  const sys = '你是亚马逊广告关键词专家。根据优质搜索词、盈利词根、产品信息和已发生指标，输出严格 JSON（无 markdown）：{"expansions":[{"word":"","type":"长尾|场景|人群|规格","reason":""}],"intents":[{"intent":"","keywords":[""]}],"negativeHints":[{"word":"","reason":""}],"insights":[{"title":"","detail":""}]}。expansions 15~30 个跟随输入语言且不重复；intents 3~6 组；negativeHints 只列明显无关词。不要把历史花费写成已节省金额，也不要预测增量订单。';
+  const sys = '你是亚马逊广告关键词专家。根据优质搜索词、盈利词根、产品信息和已发生指标，输出严格 JSON（无 markdown）：{"expansions":[{"word":"","type":"长尾|场景|人群|规格","reason":""}],"intents":[{"intent":"","keywords":[""]}],"negativeHints":[{"word":"","reason":""}],"insights":[{"title":"","detail":""}]}。扩词跟随输入语言且不重复，不强求数量；信息不足时可以返回空数组。不得将竞品词或搜索词中的规格、材质、兼容性当成产品事实；仅有明确产品信息支持时才推荐对应属性词。品牌或设备兼容性未知时不要建议否定；negativeHints 只列有明确证据的无关词。不要把历史花费写成已节省金额，也不要预测增量订单。';
   const user = '【产品信息】' + ($('#aiDesc').value || '（未填写）') + aiEvidenceLine(state.result) + '\n【优质搜索词】\n' + top.join('\n') + (roots.length ? '\n【盈利词根】' + roots.join(', ') : '');
   aiStatus('正在调用在线模型…', 'busy');
   try {
