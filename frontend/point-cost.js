@@ -26,14 +26,23 @@ function rechargeNotice(billing) {
   if (billing.demoRecharge) return '当前是演示充值，不会产生真实扣款。同一档位只能入账一次。';
   return '正式支付尚未接入，现在不能入账。';
 }
+function actionCostText(costs, action, balance) {
+  const cost = costs && costs[action];
+  if (!Number.isInteger(cost)) return '';
+  if (!Number.isInteger(balance)) return `本次消耗 ${cost} 积分。`;
+  return balance < cost
+    ? `本次消耗 ${cost} 积分，当前 ${balance} 积分，不足以执行。`
+    : `本次消耗 ${cost} 积分，当前 ${balance} 积分，执行后剩余 ${balance - cost}。`;
+}
 function canAfford(balance, costs, action) {
   const cost = costs && costs[action];
   if (!Number.isInteger(balance) || !Number.isInteger(cost)) return null;
   return balance >= cost;
 }
+window.actionCostText = actionCostText;
 window.pointCostText = pointCostText;
 window.canAfford = canAfford;
 window.pointBalancePreview = pointBalancePreview;
 window.rechargeNotice = rechargeNotice;
 window.accountLabel = accountLabel;
-if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview, canAfford, rechargeNotice, accountLabel };
+if (typeof module !== 'undefined') module.exports = { pointCostText, pointBalancePreview, canAfford, rechargeNotice, accountLabel, actionCostText };

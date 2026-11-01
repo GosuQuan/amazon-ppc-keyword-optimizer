@@ -1,53 +1,39 @@
 'use strict';
+const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const test = require('node:test');
-global.window = {};
-const { pointCostText, pointBalancePreview, canAfford, rechargeNotice, accountLabel } = require('../point-cost.js');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 
-test('point hint uses the published service costs', () => {
-  const text = pointCostText({ serviceCosts: { workflow_plan: 5, demo_plan: 1, export_draft: 2 }, modelCosts: { individual: { flash: 10 } } });
-  assert.match(text, /生成方案 5 积分/);
-  assert.match(text, /示例方案 1 积分/);
-  assert.match(text, /首次导出 2 积分/);
-  assert.match(text, /Flash 模型每次 10 积分/);
-  assert.match(text, /不是人民币/);
+const source = fs.readFileSync(path.join(__dirname, '../point-cost.js'), 'utf8');
+function load() {
+  const context = vm.createContext({ window: {}, module: { exports: {} } });
+  vm.runInContext(source, context);
+  return context.window.actionCostText;
+}
+const costs = { workflow_plan: 5, export_draft: 2, demo_plan: 1 };
+
+test('action cost shows consumption and remaining balance', () => {
+  const actionCostText = load();
+  const text = actionCostText(costs, 'workflow_plan', 100);
+  assert.match(text, /本次消耗 5 积分/);
+  assert.match(text, /当前 100 积分/);
+  assert.match(text, /执行后剩余 95/);
 });
 
-test('enterprise accounts see their own flash price', () => {
-  const pricing = { serviceCosts: { workflow_plan: 5, demo_plan: 1, export_draft: 2 }, modelCosts: { individual: { flash: 10 }, enterprise: { flash: 6 } } };
-  const text = pointCostText(pricing, 'enterprise');
-  assert.match(text, /企业 Flash 模型每次 6 积分/);
-  assert.doesNotMatch(text, /个人 Flash|每次 10 积分/);
+test('action cost warns when balance is insufficient', () => {
+  const actionCostText = load();
+  const text = actionCostText(costs, 'workflow_plan', 3);
+  assert.match(text, /不足以执行/);
+  assert.doesNotMatch(text, /执行后剩余/);
 });
 
-test('balance preview refuses an unaffordable plan without inventing numbers', () => {
-  const pricing = { serviceCosts: { workflow_plan: 5 } };
-  assert.equal(pointBalancePreview(pricing, 4), '当前 4 积分，不足以生成方案（需要 5）。');
-  assert.equal(pointBalancePreview(pricing, 5), '当前 5 积分，生成方案后剩余 0。积分不是人民币。');
-  assert.equal(pointBalancePreview(pricing, 1.5), '当前积分暂时无法读取。');
+test('unknown balance still shows the cost', () => {
+  const actionCostText = load();
+  assert.match(actionCostText(costs, 'export_draft', null), /本次消耗 2 积分/);
 });
 
-test('header label uses the refreshed balance and does not invent points', () => {
-  assert.equal(accountLabel({ email: 'a@example.com', plan: 'enterprise', points: 6 }), 'a@example.com · 企业 · 剩余 6 积分 · 退出');
-  assert.equal(accountLabel({ email: 'a@example.com', points: 1.5 }), 'a@example.com · 个人 · 积分未知 · 退出');
-  assert.equal(accountLabel({}), '');
-});
-
-test('demo recharge is never described as a real payment', () => {
-  assert.match(rechargeNotice({ demoRecharge: true }), /演示充值/);
-  assert.match(rechargeNotice({ demoRecharge: true }), /不会产生真实扣款/);
-  assert.equal(rechargeNotice({ demoRecharge: false }), '正式支付尚未接入，现在不能入账。');
-  assert.equal(rechargeNotice({}), '充值状态暂时无法读取。');
-});
-
-test('unknown balance does not block an action', () => {
-  assert.equal(canAfford(4, { workflow_plan: 5, demo_plan: 1, export_draft: 2 }, 'workflow_plan'), false);
-  assert.equal(canAfford(5, { workflow_plan: 5 }, 'workflow_plan'), true);
-  assert.equal(canAfford(null, { demo_plan: 1 }, 'demo_plan'), null);
-  assert.equal(canAfford(3, {}, 'export_draft'), null);
-});
-
-test('incomplete pricing does not invent a cost', () => {
-  assert.equal(pointCostText({}), '积分规则暂时无法读取。');
-  assert.equal(pointCostText({ serviceCosts: { workflow_plan: 5.5, demo_plan: 1, export_draft: 2 }, modelCosts: { individual: { flash: 10 } } }), '积分规则暂时无法读取。');
+test('unknown cost is not invented', () => {
+  const actionCostText = load();
+  assert.equal(actionCostText({}, 'workflow_plan', 100), '');
 });

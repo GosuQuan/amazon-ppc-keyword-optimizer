@@ -73,6 +73,11 @@
     ]).then(([pricing, account]) => {
       $('point-cost').textContent = window.pointCostText(pricing, account.plan);
       $('point-balance').textContent = window.pointBalancePreview(pricing, account.points);
+      $('generate-cost').textContent = window.actionCostText(pricing && pricing.serviceCosts, 'workflow_plan', Number.isInteger(account.points) ? account.points : null);
+      const repeatExport = Array.isArray(state.plan?.exports) && state.plan.exports.length > 0;
+      $('export-cost').textContent = repeatExport
+        ? '已经导出过草稿，重复下载不会产生新的积分消耗。'
+        : window.actionCostText(pricing && pricing.serviceCosts, 'export_draft', Number.isInteger(account.points) ? account.points : null);
       state.pointBalance = Number.isInteger(account.points) ? account.points : null;
       state.serviceCosts = pricing && pricing.serviceCosts || null;
       const label = window.accountLabel(account);
