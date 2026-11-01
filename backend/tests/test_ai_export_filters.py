@@ -23,3 +23,5 @@ def test_negative_export_skips_conflicts_but_keeps_brand_candidates():
     assert 'cell phone' not in text
     assert 'samsung galaxy' in text
     assert '竞品品牌候选' in text
+    assert '待复核勿上传' in text
+    assert '精准否定' not in text

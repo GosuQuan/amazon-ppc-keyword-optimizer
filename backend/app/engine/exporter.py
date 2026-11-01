@@ -63,11 +63,13 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
         if "不建议否定" in cross:
             continue
         source = "AI预判"
+        match = "精准否定"
         if "一致" in cross:
             source += "（与规则一致）"
         elif "竞品品牌" in cross:
             source += "（竞品品牌候选）"
-        rows.append(["精准否定", e["word"], "", "", source, "", "", e.get("reason", "")])
+            match = "待复核勿上传"
+        rows.append([match, e["word"], "", "", source, "", "", e.get("reason", "")])
     return csv_string(["否定方式", "否定词", "广告活动", "广告组", "来源", "点击", "花费", "理由"], rows)
 
 
