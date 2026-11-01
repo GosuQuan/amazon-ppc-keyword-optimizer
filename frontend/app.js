@@ -176,15 +176,16 @@ function renderAll() {
   renderAI();
 }
 function newWordRows() {
-  const R = state.result, rows = [];
+  const R = state.result, rows = [], seen = new Set();
+  const add = (row) => { const key = canon(row.word); if (!key || seen.has(key)) return; seen.add(key); rows.push(row); };
   for (const h of R.harvest) {
     if (h.exists) continue;
-    rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
+    add({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   }
-  for (const c of R.combos) rows.push({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
+  for (const c of R.combos) add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
-    rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason });
+    add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason });
   }
   return rows;
 }

@@ -175,6 +175,18 @@ test('brand and covered expansions stay out of the new-word list', () => {
   assert.doesNotMatch(a.node('#aiStatus').textContent, /已并入/);
 });
 
+test('the same new keyword from harvest combo and AI is listed once', () => {
+  const a = app();
+  a.state.result.harvest = [
+    { st: 'fresh term', sug: '新增精准词', camp: 'c', adg: 'g', srcMt: 'broad', sales: 2, orders: 1, acos: 0.2, exists: false },
+  ];
+  a.state.result.combos = [{ pair: 'Fresh   Term', sales: 9, orders: 2, evidence: 'combo' }];
+  a.state.ai = { expansions: [{ word: 'fresh term', reason: 'again' }], intents: [], negatives: [], insights: [], done: true };
+  const rows = a.newWordRows();
+  assert.equal(JSON.stringify(rows.map((row) => row.word)), '["fresh term"]');
+  assert.equal(String(rows[0].src), '搜索词收割');
+});
+
 test('harvest that already exists is not listed as a new keyword', () => {
   const a = app();
   a.state.result.harvest = [

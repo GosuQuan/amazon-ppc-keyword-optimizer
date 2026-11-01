@@ -15,6 +15,16 @@ def test_newword_export_skips_brand_and_covered_terms():
     assert 'foldable phone stand for desk' in text
 
 
+def test_same_new_keyword_is_exported_once():
+    rows = new_word_rows([
+        {'st': 'fresh term', 'sug': '新增精准词', 'camp': 'c', 'adg': 'g', 'srcMt': 'broad',
+         'sales': 2, 'orders': 1, 'acos': 0.2, 'exists': False},
+    ], [{'pair': 'Fresh   Term', 'sales': 9, 'orders': 2, 'evidence': 'combo'}])
+    assert [row['src'] for row in rows] == ['搜索词收割']
+    text = export_newwords(rows, [{'word': 'fresh term', 'type': 'AI', 'reason': 'again'}])
+    assert text.lower().count('fresh term') == 1
+
+
 def test_existing_harvest_is_not_exported_as_a_new_keyword():
     text = export_newwords(new_word_rows([
         {'st': 'already', 'sug': '已有精准词：核对出价与预算', 'camp': 'c', 'adg': 'g', 'srcMt': 'broad',

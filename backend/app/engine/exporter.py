@@ -4,7 +4,7 @@ import io
 import math
 from typing import Any, Dict, List
 
-from .parser import MT_LABEL
+from .parser import MT_LABEL, canon
 
 
 def _m(v) -> str:
@@ -36,15 +36,24 @@ def csv_string(headers: List[str], rows: List[List[Any]]) -> str:
 
 def new_word_rows(harvest: List[Dict[str, Any]], combos: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     rows = []
+    seen = set()
+
+    def add(row: Dict[str, Any]) -> None:
+        key = canon(row["word"])
+        if not key or key in seen:
+            return
+        seen.add(key)
+        rows.append(row)
+
     for h in harvest:
         if h.get("exists"):
             continue
-        rows.append({"src": "搜索词收割", "word": h["st"], "type": h["sug"], "camp": h["camp"],
-                     "adg": h["adg"], "sales": h["sales"], "orders": h["orders"], "acos": h["acos"],
-                     "note": f"来自{MT_LABEL[h['srcMt']]}匹配，ACOS {_p(h['acos'])}"})
+        add({"src": "搜索词收割", "word": h["st"], "type": h["sug"], "camp": h["camp"],
+             "adg": h["adg"], "sales": h["sales"], "orders": h["orders"], "acos": h["acos"],
+             "note": f"来自{MT_LABEL[h['srcMt']]}匹配，ACOS {_p(h['acos'])}"})
     for c in combos:
-        rows.append({"src": "组合挖掘", "word": c["pair"], "type": "组合新词", "camp": "", "adg": "",
-                     "sales": c["sales"], "orders": c["orders"], "acos": None, "note": c["evidence"]})
+        add({"src": "组合挖掘", "word": c["pair"], "type": "组合新词", "camp": "", "adg": "",
+             "sales": c["sales"], "orders": c["orders"], "acos": None, "note": c["evidence"]})
     return rows
 
 
@@ -77,11 +86,15 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
 
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:
     rows = [[r["word"], "精准", r["camp"], r["adg"], r["src"], r["type"], r["note"]] for r in new_rows]
+    seen = {canon(r["word"]) for r in new_rows}
     for e in (ai_expansions or []):
         if e.get("competitorBrand") or e.get("coveredByGood") or e.get("exists"):
             continue
-        note = e.get("reason", "")
-        rows.append([e["word"], "精准", "", "", "AI扩词", e.get("type", "AI"), note])
+        key = canon(e["word"])
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        rows.append([e["word"], "精准", "", "", "AI扩词", e.get("type", "AI"), e.get("reason", "")])
     return csv_string(["建议关键词", "建议匹配类型", "建议放入广告活动", "建议放入广告组", "来源", "类型", "说明"], rows)
 
 
