@@ -177,8 +177,15 @@ def build_negatives(st_rows: List[Dict[str, Any]], roots: List[Dict[str, Any]],
                     conflicts: List[Dict[str, Any]], params: Dict[str, float], aov: float) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     seen = set()
+    good_terms = {canon(s['st']) for s in st_rows
+                  if s.get('cls') in ('优秀', '良好') and valid_st(s.get('st'))}
 
     def push(o: Dict[str, Any]) -> None:
+        word = canon(o['word'])
+        if len(word) >= 4 and any(word in term or term in word for term in good_terms if len(term) >= 4):
+            original_type = o['type']
+            o['type'] = '待复核勿上传'
+            o['reason'] += f'；原建议{original_type}，与优质搜索词存在文本重叠，请核对作用范围与匹配类型'
         key = (o["type"], canon(o["word"]), o["camp"], o["adg"])
         if key in seen:
             return
