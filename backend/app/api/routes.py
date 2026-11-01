@@ -174,8 +174,13 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
             e.close()
         return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
     except urllib.error.URLError:
-        change_points(user, f'ai_chat_{plan_name}_{model_kind}_refund', cost)
-        return JSONResponse({"error": "模型服务连接失败，本次积分已退回。"}, status_code=502)
+        try:
+            refunded = change_points(user, f'ai_chat_{plan_name}_{model_kind}_refund', cost)
+        except Exception:  # noqa: BLE001
+            logging.getLogger(__name__).error('AI point refund failed')
+            refunded = False
+        message = ('平台积分已退回' if refunded else '平台积分未能确认退回，请查看积分流水或联系管理员')
+        return JSONResponse({'error': f'模型服务连接失败，{message}；上游计费状态未知。'}, status_code=502)
     except Exception:  # noqa: BLE001
         return JSONResponse({"error": "模型服务连接失败或响应格式无效，请稍后重试。"}, status_code=502)
     finally:
