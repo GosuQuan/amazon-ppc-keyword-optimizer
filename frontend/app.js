@@ -254,7 +254,8 @@ function validateAiJson(j) {
 }
 const COMPETITOR_BRANDS = ['omoton', 'samsung', 'google', 'nexus'];
 function expansionHasCompetitorBrand(word) {
-  return COMPETITOR_BRANDS.some((brand) => word.includes(brand));
+  const tokens = String(word || '').toLowerCase().match(/[a-z0-9]+/g) || [];
+  return COMPETITOR_BRANDS.some((brand) => tokens.includes(brand));
 }
 function expansionCoveredByGood(word, goodTerms) {
   if (word.length < 4) return false;
@@ -274,13 +275,13 @@ function negativeContainedInGood(word, goodTerms) {
 function mergeAiJson(j) {
   j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
-  const expansions = j.expansions.map(e => { const word = canon(e.word); return { word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good), competitorBrand: expansionHasCompetitorBrand(word) }; });
+  const expansions = j.expansions.map(e => { const word = canon(e.word); return { word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good), competitorBrand: expansionHasCompetitorBrand(e.word) }; });
   const intents = j.intents;
   const negatives = j.negativeHints.map(e => {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
     if (good.has(w) || negativeContainedInGood(w, good)) cross = '⚠ 与优质数据冲突，不建议否定';
     else if (waste.has(w) || loss.has(w)) cross = '与规则一致（高置信）';
-    else if (expansionHasCompetitorBrand(w)) cross = '竞品品牌，可作为否定候选，仍需确认不会误伤自有词';
+    else if (expansionHasCompetitorBrand(e.word)) cross = '竞品品牌，可作为否定候选，仍需确认不会误伤自有词';
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };

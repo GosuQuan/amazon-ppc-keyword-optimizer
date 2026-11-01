@@ -230,6 +230,13 @@ test('an expansion that already exists as an exact keyword stays out of the new-
   assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
 });
 
+test('brand detection does not treat an embedded letter sequence as a brand', () => {
+  const a = app();
+  a.mergeAiJson({ expansions: [{ word: 'googley eyes phone stand' }, { word: 'phone stand for samsung galaxy' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].competitorBrand, false);
+  assert.equal(a.state.ai.expansions[1].competitorBrand, true);
+});
+
 test('an expansion with a competitor brand is flagged', () => {
   const a = app();
   a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung galaxy tab' }, { word: 'foldable phone stand for desk' }], negativeHints: [], intents: [], insights: [] });
