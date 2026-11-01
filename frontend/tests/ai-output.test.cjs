@@ -154,6 +154,15 @@ for (const text of ['```json\n[{"expansions":[]}]\n```', '```json\n{"expansions"
   });
 }
 
+test('good-term conflicts override waste and loss evidence before AI export', () => {
+  const a = app();
+  a.state.result.st.push({ st: 'cell phone', cls: '无效' }, { st: 'cell phone stand', cls: '优秀' });
+  a.state.result.roots.push({ tok: 'cell phone', type: '亏损' });
+  a.mergeAiJson({ expansions: [], negativeHints: [{ word: 'cell phone' }], intents: [], insights: [] });
+  assert.match(a.state.ai.negatives[0].cross, /不建议否定/);
+  assert.equal(a.aiNegativeExportRows([], a.state.ai.negatives).length, 0);
+});
+
 test('a competitor brand negative stays a candidate unless it covers a good term', () => {
   const a = app();
   a.state.result.st.push({ st: 'cell phone stand', cls: '优秀', sales: 20 });
