@@ -212,6 +212,7 @@
     root.replaceChildren();
     const all = actions();
     $('action-count').textContent = `${all.length} 项 · 已批准 ${all.filter((a) => a.status === 'approved').length} 项`;
+    $('action-conclusion').textContent = window.conclusionText(window.actionConclusion(all), kinds);
     if (!all.length) root.append(node('p', '本次没有生成动作。请查看警告与报告数据。', 'muted'));
     all.forEach((action) => {
       const card = node('article', undefined, 'action-card');
