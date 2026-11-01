@@ -478,6 +478,9 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             protected = any(norm(r['camp']) == norm(old['camp']) and norm(r['adg']) == norm(old['adg']) and norm(r['st']) == norm(old['word']) and r['orders'] > 0 for r in records)
             a = make_action('negative', old['word'], old['camp'], old['adg'], 'negativeExact', None, None, old['reason'], 'P1', {'clicks': old['clk'], 'spend': old['spend']}, source)
             a['spend_group'] = key
+            if old.get('type') == '待复核勿上传':
+                a['blocking_reasons'].append('规则否定与优质搜索词文本重叠，需人工复核')
+                a['exportable'] = False
             if protected:
                 a['blocking_reasons'].append('同组存在该搜索词的有订单记录，保护优质词')
                 a['exportable'] = False

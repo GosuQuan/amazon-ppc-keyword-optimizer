@@ -337,6 +337,28 @@ def test_real_bid_above_ceiling_is_decreased_not_increased(client):
     assert '真实出价' in action['reason']
 
 
+def test_rule_negative_marked_review_cannot_enter_export(client, monkeypatch):
+    from app.workflow import service
+    original = service.run_analysis
+    def mark_review(*args, **kwargs):
+        result = original(*args, **kwargs)
+        for item in result['negatives']:
+            item['type'] = '待复核勿上传'
+        return result
+    monkeypatch.setattr(service, 'run_analysis', mark_review)
+    text = report(**{'Match Type': 'Broad', 'Orders': '0', 'Sales': '0'})
+    response = create(client, text)
+    assert response.status_code == 200, response.text
+    plan = response.json()
+    actions = [a for a in plan['actions'] if a['kind'] == 'negative']
+    assert actions
+    assert all(not a['exportable'] and any('复核' in reason for reason in a['blocking_reasons']) for a in actions)
+    url = '/api/workflow/plans/' + plan['id']
+    for action in actions:
+        client.patch(url + '/actions/' + action['id'], json={'status': 'approved'})
+    assert client.post(url + '/export').status_code == 422
+
+
 def test_missing_asin_warns_and_negative_protects_good_term(client):
     original = report()
     rows = list(csv.reader(io.StringIO(original)))
