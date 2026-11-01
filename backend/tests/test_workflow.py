@@ -55,6 +55,24 @@ def create(client, text=None, bulk=BULK, products=None, placements=None, **data)
     return client.post('/api/workflow/plans', data=fields, files=files)
 
 
+def test_export_charges_once_and_repeat_export_is_free(client):
+    from app.workflow.store import POINT_COSTS
+    plan = create(client).json()
+    url = '/api/workflow/plans/' + plan['id']
+    action = next(a for a in plan['actions'] if a['exportable'])
+    client.patch(url + '/actions/' + action['id'], json={'status': 'approved'})
+    before = client.get('/api/auth/me').json()['points']
+    first = client.post(url + '/export')
+    assert first.status_code == 200, first.text
+    after_first = client.get('/api/auth/me').json()['points']
+    second = client.post(url + '/export')
+    assert second.status_code == 200, second.text
+    after_second = client.get('/api/auth/me').json()['points']
+    assert before - after_first == POINT_COSTS['export_draft'], f'first export charged {before - after_first}'
+    assert after_second == after_first, 'repeat export must not charge again'
+    assert first.content == second.content, 'repeat export must return identical bytes'
+
+
 def test_failed_plan_creation_refunds_points(client):
     before = client.get('/api/auth/me').json()['points']
     response = create(client, text='Campaign,Ad Group\nA,B\n')
