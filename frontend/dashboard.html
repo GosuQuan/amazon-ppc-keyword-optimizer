@@ -17,12 +17,21 @@
     <h1 id="welcome">仪表盘</h1>
     <p id="account" class="muted">正在读取账号…</p>
     <p id="recharge-notice" class="callout">正在读取充值状态…</p>
+    <div class="action-cards">
+      <a class="action-card primary-card" href="/workflow.html">
+        <b>开始新方案</b><small>上传搜索词报告，生成可审核的优化动作</small>
+      </a>
+      <a class="action-card" href="/workflow.html" id="continue-card">
+        <b>继续最近的方案</b><small id="continue-note">从上次进度接着审核</small>
+      </a>
+      <a class="action-card" href="/workflow.html?demo=1">
+        <b>载入示例</b><small>不导报表，先看完整调用过程</small>
+      </a>
+    </div>
     <div id="summary" class="metrics"></div>
-    <p><a class="primary" href="/workflow.html">进入广告优化核心功能</a> <a href="/points.html">管理积分与充值</a></p>
   </section>
   <section class="panel">
     <h2>最近方案</h2>
-    <p class="muted">可核对历史花费来自已经发生的搜索词，不是已节省广告费，也不会从总花费里扣除。</p>
     <div id="plans"><p class="muted">正在加载…</p></div>
   </section>
 </main>

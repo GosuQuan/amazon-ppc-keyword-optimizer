@@ -266,6 +266,7 @@
     $('empty-plan').hidden = true;
     $('plan-content').hidden = false;
     $('plan-meta').textContent = `方案 ${plan.id} · ${dateText(plan.created_at)} · ${statuses[plan.status] || valueText(plan.status)}`;
+    syncSteps();
     const context = $('context-summary');
     context.replaceChildren();
     [['账户', 'account'], ['站点', 'marketplace'], ['币种', 'currency'], ['ASIN', 'asin']].forEach(([label, key]) => context.append(node('span', `${label}：${valueText(plan.context?.[key])}`)));
@@ -341,6 +342,28 @@
     }
     if (!extensions.some((ext) => file.name.toLowerCase().endsWith(ext))) throw new Error(`${label}仅支持 ${extensions.join(' / ')} 文件。`);
   }
+  function syncSteps() {
+    const items = document.querySelectorAll('.steps li');
+    let stage = 0;
+    if (state.plan) stage = 1;
+    if (state.plan?.exports?.length) stage = 2;
+    if (state.plan?.execution) stage = 3;
+    if (state.plan?.review) stage = 4;
+    if (state.plan?.review && state.plan.review.period) stage = 5;
+    items.forEach((item, index) => {
+      item.classList.toggle('done', index < stage);
+      item.classList.toggle('now', index === stage);
+      item.setAttribute('aria-current', index === stage ? 'step' : 'false');
+    });
+  }
+  document.querySelectorAll('.steps li').forEach((item) => {
+    item.addEventListener('click', () => {
+      const targets = ['import-form', 'actions', 'export-title', 'execution-title', 'review-title'];
+      const id = targets[Array.from(item.parentNode.children).indexOf(item)];
+      const target = id && document.getElementById(id);
+      if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
+    });
+  });
   function renderTrace(lines) {
     const list = $('demo-trace');
     list.replaceChildren();
@@ -354,6 +377,9 @@
     await refreshPointPreview();
     notice('示例方案已显示。没有 Bulk 时，动作只供查看，不能导出。');
   }));
+  if (new URLSearchParams(location.search).get('demo') === '1' && sessionStorage.getItem('ppc_token')) {
+    $('load-demo').click();
+  }
   $('import-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget;

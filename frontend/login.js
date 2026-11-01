@@ -2,6 +2,7 @@
 (() => {
   const form = document.getElementById('login-form');
   const status = document.getElementById('login-status');
+  const wantsDemo = () => new URLSearchParams(location.search).get('demo') === '1';
   async function submit(path) {
     const data = new FormData(form);
     const response = await fetch(path, {
@@ -12,7 +13,7 @@
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.detail || '登录失败');
     sessionStorage.setItem('ppc_token', body.token);
-    location.replace('/dashboard.html');
+    location.replace(wantsDemo() ? '/workflow.html?demo=1' : '/dashboard.html');
   }
   fetch('/api/auth/pricing').then((response) => response.json()).then((data) => {
     const model = data.modelCosts || {};
