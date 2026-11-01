@@ -175,6 +175,17 @@ test('brand and covered expansions stay out of the new-word list', () => {
   assert.doesNotMatch(a.node('#aiStatus').textContent, /已并入/);
 });
 
+test('harvest that already exists is not listed as a new keyword', () => {
+  const a = app();
+  a.state.result.harvest = [
+    { st: 'already', sug: '已有精准词：核对出价与预算', camp: 'c', adg: 'g', srcMt: 'broad', sales: 1, orders: 1, acos: 0.2, exists: true },
+    { st: 'fresh term', sug: '新增精准词', camp: 'c', adg: 'g', srcMt: 'broad', sales: 2, orders: 1, acos: 0.2, exists: false },
+  ];
+  a.state.result.combos = [];
+  a.state.ai.expansions = [];
+  assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["fresh term"]');
+});
+
 test('an expansion that already exists as an exact keyword stays out of the new-word list', () => {
   const a = app();
   a.state.result.harvest = [];

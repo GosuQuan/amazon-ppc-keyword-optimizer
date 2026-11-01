@@ -177,7 +177,10 @@ function renderAll() {
 }
 function newWordRows() {
   const R = state.result, rows = [];
-  for (const h of R.harvest) rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
+  for (const h of R.harvest) {
+    if (h.exists) continue;
+    rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
+  }
   for (const c of R.combos) rows.push({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;

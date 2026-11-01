@@ -1,5 +1,5 @@
 """AI export omits brand expansions, covered fragments, and conflicting negatives."""
-from app.engine.exporter import export_negatives, export_newwords
+from app.engine.exporter import export_negatives, export_newwords, new_word_rows
 
 
 def test_newword_export_skips_brand_and_covered_terms():
@@ -13,6 +13,17 @@ def test_newword_export_skips_brand_and_covered_terms():
     assert 'cell phone' not in text
     assert 'existing keyword' not in text
     assert 'foldable phone stand for desk' in text
+
+
+def test_existing_harvest_is_not_exported_as_a_new_keyword():
+    text = export_newwords(new_word_rows([
+        {'st': 'already', 'sug': '已有精准词：核对出价与预算', 'camp': 'c', 'adg': 'g', 'srcMt': 'broad',
+         'sales': 1, 'orders': 1, 'acos': 0.2, 'exists': True},
+        {'st': 'fresh term', 'sug': '新增精准词', 'camp': 'c', 'adg': 'g', 'srcMt': 'broad',
+         'sales': 2, 'orders': 1, 'acos': 0.2, 'exists': False},
+    ], []), [])
+    assert 'already' not in text
+    assert 'fresh term' in text
 
 
 def test_negative_export_skips_conflicts_but_keeps_brand_candidates():

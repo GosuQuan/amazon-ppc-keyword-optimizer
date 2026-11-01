@@ -37,6 +37,8 @@ def csv_string(headers: List[str], rows: List[List[Any]]) -> str:
 def new_word_rows(harvest: List[Dict[str, Any]], combos: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     rows = []
     for h in harvest:
+        if h.get("exists"):
+            continue
         rows.append({"src": "搜索词收割", "word": h["st"], "type": h["sug"], "camp": h["camp"],
                      "adg": h["adg"], "sales": h["sales"], "orders": h["orders"], "acos": h["acos"],
                      "note": f"来自{MT_LABEL[h['srcMt']]}匹配，ACOS {_p(h['acos'])}"})
