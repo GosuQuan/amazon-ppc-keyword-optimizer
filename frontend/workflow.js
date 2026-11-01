@@ -119,7 +119,11 @@
     notice(message, 'loading');
     try { await work(); }
     catch (error) {
-      const messageText = error.message || String(error);
+      const raw = error.message || String(error);
+      const transient = /HTTP 5\d\d|fetch|网络|超时|timeout|连接/i.test(raw);
+      const messageText = transient
+        ? `${raw}\n服务暂时无法完成这次操作，任务已停止，请稍后重试；积分不会因失败调用被扣（模型调用除外，其退款以流水为准）。`
+        : raw;
       notice(messageText, 'error');
       if (exportTask) {
         $('export-error').textContent = messageText;

@@ -30,10 +30,11 @@
           <label>账户<input name="account" required maxlength="200" placeholder="例如：品牌主账户"></label>
           <label>站点<input name="marketplace" required maxlength="80" placeholder="例如：US / 美国"></label>
           <label>币种<input name="currency" required maxlength="12" placeholder="例如：USD"></label>
-          <label>商品 ASIN<input name="asin" required maxlength="100" placeholder="请输入该商品 ASIN"></label>
+          <label>商品 ASIN<input name="asin" required maxlength="100" placeholder="例如：B0BVMQ2WJ1"></label>
           <label>目标 ACOS（%）<input name="target_acos" type="number" required min="0.01" step="0.01" value="25"></label>
-          <label>每日预算<input name="daily_budget" type="number" required min="0.01" step="0.01" placeholder="账户币种金额"></label>
-          <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告</small></label>
+          <label>每日预算<input name="daily_budget" type="number" required min="0.01" step="0.01" placeholder="例如：50（账户币种金额）"></label>
+          <p class="callout" id="import-scope">本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）；推广商品报告只用于确认广告组 ASIN，花费不并入搜索词；广告位报告按活动单独展示，不生成调价动作。生成方案消耗积分，导入前会在上方显示当前余额。</p>
+          <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告，示例：亚马逊搜索词报告-示例.csv</small></label>
           <label class="file-field">批量广告报告 · 可选 CSV / TSV<input name="bulk" type="file" accept=".csv,.tsv"><small>用于匹配广告实体及可执行动作</small></label>
           <label class="file-field">推广商品报告 · 可选 CSV<input name="advertised_products" type="file" accept=".csv"><small>只用于确认广告组里的 ASIN，花费不并入搜索词</small></label>
           <label class="file-field">广告位报告 · 可选 CSV<input name="placements" type="file" accept=".csv"><small>按活动单独展示，不生成调价动作</small></label>
