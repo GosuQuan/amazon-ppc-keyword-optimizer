@@ -478,6 +478,17 @@ def build_plan(raw, bulk_raw, context, target, budget, products_raw=None, placem
             protected = any(norm(r['camp']) == norm(old['camp']) and norm(r['adg']) == norm(old['adg']) and norm(r['st']) == norm(old['word']) and r['orders'] > 0 for r in records)
             a = make_action('negative', old['word'], old['camp'], old['adg'], 'negativeExact', None, None, old['reason'], 'P1', {'clicks': old['clk'], 'spend': old['spend']}, source)
             a['spend_group'] = key
+            candidate = norm(old['word'])
+            cross_source_overlap = len(candidate) >= 4 and any(
+                norm(r['camp']) == norm(old['camp']) and norm(r['adg']) == norm(old['adg'])
+                and entity_key(r['camp'], r['adg'], r['kw'], r['mt']) != key
+                and r['orders'] > 0 and len(norm(r['st'])) >= 4
+                and (candidate in norm(r['st']) or norm(r['st']) in candidate)
+                for r in records
+            )
+            if cross_source_overlap:
+                a['blocking_reasons'].append('同广告组跨来源有订单搜索词存在文本重叠，需人工复核')
+                a['exportable'] = False
             if old.get('type') == '待复核勿上传':
                 a['blocking_reasons'].append('规则否定与优质搜索词文本重叠，需人工复核')
                 a['exportable'] = False

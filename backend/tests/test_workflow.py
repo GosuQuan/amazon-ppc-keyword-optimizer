@@ -337,6 +337,26 @@ def test_real_bid_above_ceiling_is_decreased_not_increased(client):
     assert '真实出价' in action['reason']
 
 
+def test_cross_source_good_search_term_requires_review(client):
+    bad = report(**{'Keyword': 'source a', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0'})
+    good = report(**{'Keyword': 'source b', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe stand', 'Spend': '1', 'Sales': '100', 'Orders': '2'})
+    response = create(client, bad + good.splitlines()[1] + '\n')
+    assert response.status_code == 200, response.text
+    negatives = [a for a in response.json()['actions'] if a['kind'] == 'negative' and a['keyword'] == 'red shoe']
+    assert negatives
+    assert all(not a['exportable'] and any('跨来源' in reason for reason in a['blocking_reasons']) for a in negatives)
+
+
+def test_cross_source_overlap_in_other_ad_group_does_not_trigger_guard(client):
+    bad = report(**{'Keyword': 'source a', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0'})
+    good = report(**{'Ad Group': 'Other', 'Keyword': 'source b', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe stand', 'Spend': '1', 'Sales': '100', 'Orders': '2'})
+    response = create(client, bad + good.splitlines()[1] + '\n')
+    assert response.status_code == 200, response.text
+    negatives = [a for a in response.json()['actions'] if a['kind'] == 'negative' and a['keyword'] == 'red shoe']
+    assert negatives
+    assert all(not any('跨来源' in reason for reason in a['blocking_reasons']) for a in negatives)
+
+
 def test_real_rule_overlap_blocks_workflow_negative(client):
     bad = report(**{'Keyword': 'source', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0'})
     good = report(**{'Keyword': 'source', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe stand', 'Spend': '1', 'Sales': '100', 'Orders': '2'})
