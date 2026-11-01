@@ -39,6 +39,47 @@ test('spend without orders is surfaced as negative candidates', () => {
   assert.match(text, /否定与观察候选/);
 });
 
+test('missing review is not invented', () => {
+  const { reviewConclusion } = load();
+  assert.match(reviewConclusion(null), /还没有可解读/);
+});
+
+test('review describes direction without claiming savings', () => {
+  const { reviewConclusion } = load();
+  const text = reviewConclusion({
+    before: { spend: 100, sales: 200, orders: 5, acos: 50 },
+    after: { spend: 60, sales: 240, orders: 8, acos: 25 },
+    comparison: { baseline_days: 10, declared_review_days: 10 },
+  });
+  assert.match(text, /花费由 100\.00 变为 60\.00/);
+  assert.match(text, /ACOS 由 50\.0% 变为 25\.0%/);
+  assert.match(text, /订单由 5 变为 8/);
+  assert.match(text, /不能证明调整造成了结果/);
+  assert.doesNotMatch(text, /节省 [0-9]|已节省 ?[0-9]|带来 [0-9]|提升 [0-9]/);
+});
+
+test('unequal period lengths are called out', () => {
+  const { reviewConclusion } = load();
+  const text = reviewConclusion({
+    before: { spend: 100, sales: 200, orders: 5, acos: 50 },
+    after: { spend: 60, sales: 240, orders: 8, acos: 25 },
+    comparison: { baseline_days: 10, declared_review_days: 30 },
+  });
+  assert.match(text, /两个周期长度不同/);
+  assert.match(text, /基线 10 天/);
+  assert.match(text, /复盘 30 天/);
+});
+
+test('review always carries the non-causal disclaimer', () => {
+  const { reviewConclusion } = load();
+  const text = reviewConclusion({
+    before: { spend: 100, sales: 200, orders: 5, acos: 50 },
+    after: { spend: 60, sales: 240, orders: 8, acos: 25 },
+  });
+  assert.match(text, /不能证明调整造成了结果/);
+  assert.match(text, /不构成已节省的广告费/);
+});
+
 test('reading never claims savings or causality', () => {
   const { metricsReading } = load();
   const text = metricsReading({ spend: 100, sales: 500, orders: 10, acos: 20 }, 25, 'USD');

@@ -337,6 +337,7 @@
           : '暂不能导出：尚无已批准且可执行的动作。请先逐项审核。';
     renderRecord('execution-record', '执行记录', plan.execution);
     renderRecord('review-record', '周期复盘结果', plan.review);
+    $('review-conclusion').textContent = window.reviewConclusion(plan.review);
     $('review-gate').textContent = plan.execution ? '已记录执行，可上传执行后周期报告。' : '请先在广告后台执行并保存执行记录，再上传周期复盘报告。';
     const executionForm = $('execution-form');
     executionForm.reset();
