@@ -19,7 +19,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(source + '\nrenderAI = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows };', context);
+  vm.runInContext(source + '\nrenderAI = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -173,6 +173,20 @@ test('brand and covered expansions stay out of the new-word list', () => {
   assert.match(a.node('#aiStatus').textContent, /1 个进入新词清单/);
   assert.match(a.node('#aiStatus').textContent, /2 个因竞品品牌、已包含或已有精准词未进入清单/);
   assert.doesNotMatch(a.node('#aiStatus').textContent, /已并入/);
+});
+
+test('browser negative export follows the same rule and brand guards', () => {
+  const a = app();
+  const rows = a.aiNegativeExportRows(
+    [{ word: 'samsung galaxy' }],
+    [{ word: 'Samsung   Galaxy', cross: '竞品品牌，可作为否定候选', reason: 'brand' },
+     { word: 'cell phone', cross: '不建议否定', reason: 'bad' },
+     { word: 'google nexus', cross: '竞品品牌，可作为否定候选', reason: 'brand' },
+     { word: 'desk lamp', cross: '仅 AI 建议，需人工复核', reason: 'maybe' }],
+  );
+  assert.equal(JSON.stringify(rows.map((row) => row[1])), '["google nexus","desk lamp"]');
+  assert.equal(rows[0][0], '待复核勿上传');
+  assert.equal(rows[1][0], '精准否定');
 });
 
 test('the same new keyword from harvest combo and AI is listed once', () => {
