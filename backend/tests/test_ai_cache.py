@@ -51,6 +51,22 @@ def test_message_temperature_and_errors_do_not_reuse_cache(monkeypatch):
     assert len(calls) == 4
 
 
+def test_cache_separates_credentials_and_endpoint_ports(monkeypatch):
+    calls = []
+    def upstream(request, **kwargs):
+        calls.append(1)
+        return Upstream(json.dumps({'choices': [{'message': {'content': str(len(calls))}}]}))
+    install(monkeypatch, upstream)
+    base = {'messages': [{'role': 'user', 'content': 'isolation'}], 'api_key': 'key-a'}
+    first = client.post('/api/ai/chat', json=base)
+    repeat = client.post('/api/ai/chat', json=base)
+    other_key = client.post('/api/ai/chat', json={**base, 'api_key': 'key-b'})
+    other_port = client.post('/api/ai/chat', json={**base, 'base_url': 'https://provider.example:8443/v1/chat/completions'})
+    assert [r.headers['x-ppc-cache'] for r in (first, repeat, other_key, other_port)] == ['miss', 'hit', 'miss', 'miss']
+    assert len(calls) == 3
+    assert all('key-a' not in key and 'key-b' not in key for key in routes.ai_cache._entries)
+
+
 def test_cache_is_not_shared_between_users(monkeypatch):
     calls = []
     install(monkeypatch, lambda request, **kwargs: calls.append(1) or Upstream('{"choices":[{"message":{"content":"ok"}}]}'))

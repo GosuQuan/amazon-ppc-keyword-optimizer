@@ -31,12 +31,16 @@ def _ttl():
         return 600
 
 
-def _key(upstream, payload, user_id):
+def _key(upstream, payload, user_id, credential):
     parts = urlsplit(upstream)
     canonical = {
         'user_id': int(user_id),
+        'scheme': parts.scheme,
         'host': parts.hostname,
+        'port': parts.port,
         'path': parts.path,
+        'query_hash': hashlib.sha256(parts.query.encode()).hexdigest(),
+        'credential_hash': hashlib.sha256(credential.encode()).hexdigest(),
         'model': payload.get('model'),
         'temperature': payload.get('temperature'),
         'max_tokens': payload.get('max_tokens'),
@@ -47,11 +51,11 @@ def _key(upstream, payload, user_id):
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def get(upstream, payload, user_id):
+def get(upstream, payload, user_id, credential):
     ttl = _ttl()
     if ttl == 0:
         return None
-    key = _key(upstream, payload, user_id)
+    key = _key(upstream, payload, user_id, credential)
     now = time.monotonic()
     with _lock:
         item = _entries.get(key)
@@ -65,11 +69,11 @@ def get(upstream, payload, user_id):
         return json.loads(json.dumps(item[1]))
 
 
-def put(upstream, payload, result, user_id):
+def put(upstream, payload, result, user_id, credential):
     ttl = _ttl()
     if ttl == 0 or not isinstance(result, dict):
         return
-    key = _key(upstream, payload, user_id)
+    key = _key(upstream, payload, user_id, credential)
     with _lock:
         _entries[key] = (time.monotonic() + ttl, json.loads(json.dumps(result)))
         _entries.move_to_end(key)

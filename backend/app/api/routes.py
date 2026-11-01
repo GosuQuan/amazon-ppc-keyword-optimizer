@@ -131,7 +131,8 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
         payload["thinking"] = {"type": "enabled"}
     if "max_tokens" in body:
         payload["max_tokens"] = body["max_tokens"]
-    cached = ai_cache.get(upstream, payload, user)
+    cache_credential = str(body.get('api_key') or os.environ.get('AI_API_KEY') or '').strip()
+    cached = ai_cache.get(upstream, payload, user, cache_credential) if cache_credential else None
     if cached is not None:
         response = JSONResponse(cached)
         response.headers['X-PPC-Cache'] = 'hit'
@@ -159,7 +160,8 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
             response = JSONResponse(result)
             success = status is not None and 200 <= status < 300
             if success:
-                ai_cache.put(upstream, payload, result, user)
+                if cache_credential:
+                    ai_cache.put(upstream, payload, result, user, cache_credential)
                 response.headers['X-PPC-Cache'] = 'miss'
             return response
     except urllib.error.HTTPError as e:
