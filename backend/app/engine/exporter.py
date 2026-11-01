@@ -69,10 +69,15 @@ def export_actions(actions: List[Dict[str, Any]]) -> str:
 def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[str, Any]] | None = None) -> str:
     rows = [[n["type"], n["word"], n["camp"], n["adg"], n["source"], _n(n["clk"]), _m(n["spend"]), n["reason"]]
             for n in negatives]
+    seen = {canon(n["word"]) for n in negatives}
     for e in (ai_negatives or []):
         cross = e.get("cross", "")
         if "不建议否定" in cross:
             continue
+        key = canon(e.get("word"))
+        if not key or key in seen:
+            continue
+        seen.add(key)
         source = "AI预判"
         match = "精准否定"
         if "一致" in cross:

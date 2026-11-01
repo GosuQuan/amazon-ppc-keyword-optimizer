@@ -36,6 +36,18 @@ def test_existing_harvest_is_not_exported_as_a_new_keyword():
     assert 'fresh term' in text
 
 
+def test_ai_negative_already_covered_by_a_rule_is_not_repeated():
+    text = export_negatives(
+        [{'type': '精准否定', 'word': 'samsung galaxy', 'camp': 'c', 'adg': 'g', 'source': '规则',
+          'clk': 3, 'spend': 1.5, 'reason': 'waste'}],
+        [{'word': 'Samsung   Galaxy', 'cross': '竞品品牌，可作为否定候选', 'reason': 'brand'},
+         {'word': 'samsung galaxy', 'cross': '与规则一致（高置信）', 'reason': 'again'}],
+    )
+    assert text.lower().count('samsung galaxy') == 1
+    assert '规则' in text
+    assert 'AI预判' not in text
+
+
 def test_negative_export_skips_conflicts_but_keeps_brand_candidates():
     text = export_negatives([], [
         {'word': 'cell phone', 'cross': '⚠ 与优质数据冲突，不建议否定', 'reason': 'bad'},
