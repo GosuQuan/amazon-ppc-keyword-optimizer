@@ -171,8 +171,17 @@ test('brand and covered expansions stay out of the new-word list', () => {
   a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung' }, { word: 'cell phone' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
   assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
   assert.match(a.node('#aiStatus').textContent, /1 个进入新词清单/);
-  assert.match(a.node('#aiStatus').textContent, /2 个因竞品品牌或已包含未进入清单/);
+  assert.match(a.node('#aiStatus').textContent, /2 个因竞品品牌、已包含或已有精准词未进入清单/);
   assert.doesNotMatch(a.node('#aiStatus').textContent, /已并入/);
+});
+
+test('an expansion that already exists as an exact keyword stays out of the new-word list', () => {
+  const a = app();
+  a.state.result.harvest = [];
+  a.state.result.combos = [];
+  a.mergeAiJson({ expansions: [{ word: 'existing' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].exists, true);
+  assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
 });
 
 test('an expansion with a competitor brand is flagged', () => {

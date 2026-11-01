@@ -6,10 +6,12 @@ def test_newword_export_skips_brand_and_covered_terms():
     text = export_newwords([], [
         {'word': 'phone stand for samsung', 'type': 'AI', 'reason': 'x', 'competitorBrand': True},
         {'word': 'cell phone', 'reason': 'y', 'coveredByGood': True},
+        {'word': 'existing keyword', 'type': 'AI', 'reason': 'dup', 'exists': True},
         {'word': 'foldable phone stand for desk', 'type': '长尾', 'reason': 'ok'},
     ])
     assert 'samsung' not in text
     assert 'cell phone' not in text
+    assert 'existing keyword' not in text
     assert 'foldable phone stand for desk' in text
 
 

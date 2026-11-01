@@ -74,9 +74,9 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:
     rows = [[r["word"], "精准", r["camp"], r["adg"], r["src"], r["type"], r["note"]] for r in new_rows]
     for e in (ai_expansions or []):
-        if e.get("competitorBrand") or e.get("coveredByGood"):
+        if e.get("competitorBrand") or e.get("coveredByGood") or e.get("exists"):
             continue
-        note = e.get("reason", "") + ("（已有精准词，注意去重）" if e.get("exists") else "")
+        note = e.get("reason", "")
         rows.append([e["word"], "精准", "", "", "AI扩词", e.get("type", "AI"), note])
     return csv_string(["建议关键词", "建议匹配类型", "建议放入广告活动", "建议放入广告组", "来源", "类型", "说明"], rows)
 

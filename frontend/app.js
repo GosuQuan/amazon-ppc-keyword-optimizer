@@ -180,8 +180,8 @@ function newWordRows() {
   for (const h of R.harvest) rows.push({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   for (const c of R.combos) rows.push({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
   for (const e of state.ai.expansions) {
-    if (e.competitorBrand || e.coveredByGood) continue;
-    rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason + (e.exists ? '（已有精准词，注意去重）' : '') });
+    if (e.competitorBrand || e.coveredByGood || e.exists) continue;
+    rows.push({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason });
   }
   return rows;
 }
@@ -280,8 +280,8 @@ function mergeAiJson(j) {
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
-  const heldBack = expansions.filter((item) => item.competitorBrand || item.coveredByGood).length;
-  aiStatus(`已合并：扩词 ${expansions.length} 个，其中 ${expansions.length - heldBack} 个进入新词清单，${heldBack} 个因竞品品牌或已包含未进入清单。意图分组 ${intents.length} 组，否定预判 ${negatives.length} 个，洞察 ${j.insights.length} 条。`, 'ok');
+  const heldBack = expansions.filter((item) => item.competitorBrand || item.coveredByGood || item.exists).length;
+  aiStatus(`已合并：扩词 ${expansions.length} 个，其中 ${expansions.length - heldBack} 个进入新词清单，${heldBack} 个因竞品品牌、已包含或已有精准词未进入清单。意图分组 ${intents.length} 组，否定预判 ${negatives.length} 个，洞察 ${j.insights.length} 条。`, 'ok');
   renderAI(); switchTab('pane-ai');
 }
 function importExpertJson(file) {
