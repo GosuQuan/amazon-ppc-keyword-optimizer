@@ -13,6 +13,7 @@ function app() {
     if (!nodes.has(id)) nodes.set(id, { value: '', style: {}, classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {} });
     return nodes.get(id);
   };
+  node('#aiBrands').value = 'omoton, samsung, google, nexus';
   const context = vm.createContext({
     document: { querySelector: node, querySelectorAll: () => [] },
     window: { addEventListener() {} }, localStorage: { getItem: () => null },
@@ -195,7 +196,7 @@ test('browser negative export follows the same rule and brand guards', () => {
   );
   assert.equal(JSON.stringify(rows.map((row) => row[1])), '["google nexus","desk lamp"]');
   assert.equal(rows[0][0], '待复核勿上传');
-  assert.equal(rows[1][0], '精准否定');
+  assert.equal(rows[1][0], '待复核勿上传');
 });
 
 test('the same new keyword from harvest combo and AI is listed once', () => {
@@ -228,6 +229,13 @@ test('an expansion that already exists as an exact keyword stays out of the new-
   a.mergeAiJson({ expansions: [{ word: 'existing' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
   assert.equal(a.state.ai.expansions[0].exists, true);
   assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
+});
+
+test('empty configured brand list does not classify compatible device names', () => {
+  const a = app();
+  a.node('#aiBrands').value = '';
+  a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung galaxy' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].competitorBrand, false);
 });
 
 test('brand detection does not treat an embedded letter sequence as a brand', () => {

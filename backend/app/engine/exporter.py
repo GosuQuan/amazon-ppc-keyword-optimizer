@@ -79,7 +79,7 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
             continue
         seen.add(key)
         source = "AI预判"
-        match = "精准否定"
+        match = "待复核勿上传"
         if "一致" in cross:
             source += "（与规则一致）"
         elif "竞品品牌" in cross:

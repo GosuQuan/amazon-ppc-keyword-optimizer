@@ -252,10 +252,13 @@ function validateAiJson(j) {
   }
   return result;
 }
-const COMPETITOR_BRANDS = ['omoton', 'samsung', 'google', 'nexus'];
 function expansionHasCompetitorBrand(word) {
   const tokens = String(word || '').toLowerCase().match(/[a-z0-9]+/g) || [];
-  return COMPETITOR_BRANDS.some((brand) => tokens.includes(brand));
+  const configured = ($('#aiBrands').value || '').toLowerCase().split(/[,，\n]+/);
+  return configured.some((brand) => {
+    const parts = brand.match(/[a-z0-9]+/g) || [];
+    return parts.length > 0 && tokens.some((_, start) => parts.every((part, i) => tokens[start + i] === part));
+  });
 }
 function expansionCoveredByGood(word, goodTerms) {
   if (word.length < 4) return false;
@@ -358,7 +361,7 @@ function aiNegativeExportRows(ruleNegatives, aiNegatives) {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     let source = 'AI预判';
-    let match = '精准否定';
+    let match = '待复核勿上传';
     if (cross.indexOf('一致') >= 0) source += '（与规则一致）';
     else if (cross.indexOf('竞品品牌') >= 0) { source += '（竞品品牌候选）'; match = '待复核勿上传'; }
     rows.push([match, item.word, '', '', source, '', '', item.reason || '']);
@@ -404,6 +407,12 @@ let lastFiles = null;
 const _origAnalyze = analyzeWithFiles;
 analyzeWithFiles = async function (files) { lastFiles = files; return _origAnalyze(files); };
 function analyzeLastFiles() { if (lastFiles) analyzeWithFiles(lastFiles); else analyzeDemo(); }
+$('#aiBrands').addEventListener('input', () => {
+  if (!state.ai.done) return;
+  state.ai = { expansions: [], intents: [], negatives: [], insights: [], done: false };
+  if (state.result) renderAll();
+  aiStatus('品牌设置已更改，请重新导入或运行 AI。', '');
+});
 $('#btnAI').onclick = runAiOnline;
 $('#btnExportKw').onclick = exportKwForExpert;
 $('#aiImportFile').onchange = e => { if (e.target.files.length) importExpertJson(e.target.files[0]); e.target.value = ''; };
