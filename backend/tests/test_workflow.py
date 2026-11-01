@@ -337,6 +337,16 @@ def test_real_bid_above_ceiling_is_decreased_not_increased(client):
     assert '真实出价' in action['reason']
 
 
+def test_real_rule_overlap_blocks_workflow_negative(client):
+    bad = report(**{'Keyword': 'source', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe', 'Orders': '0', 'Sales': '0'})
+    good = report(**{'Keyword': 'source', 'Match Type': 'Broad', 'Customer Search Term': 'red shoe stand', 'Spend': '1', 'Sales': '100', 'Orders': '2'})
+    response = create(client, bad + good.splitlines()[1] + '\n')
+    assert response.status_code == 200, response.text
+    negatives = [a for a in response.json()['actions'] if a['kind'] == 'negative' and a['keyword'] == 'red shoe']
+    assert negatives
+    assert all(not a['exportable'] and any('复核' in reason for reason in a['blocking_reasons']) for a in negatives)
+
+
 def test_rule_negative_marked_review_cannot_enter_export(client, monkeypatch):
     from app.workflow import service
     original = service.run_analysis
