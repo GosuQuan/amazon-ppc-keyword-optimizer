@@ -85,6 +85,18 @@ def test_connection_failure_refunds_credit_but_http_error_does_not(monkeypatch):
     assert client.get('/api/auth/me').json()['aiCredits'] == before - 10
 
 
+def test_direct_timeout_refunds_platform_points_and_reports_unknown_provider_cost(monkeypatch):
+    def timed_out(request, **kwargs):
+        raise TimeoutError('upstream timed out')
+    install(monkeypatch, timed_out)
+    before = client.get('/api/auth/me').json()['points']
+    response = client.post('/api/ai/chat', json={'messages': [{'content': 'direct timeout'}]})
+    assert response.status_code == 502
+    assert '平台积分已退回' in response.text
+    assert '上游计费状态未知' in response.text
+    assert client.get('/api/auth/me').json()['points'] == before
+
+
 def test_failed_refund_does_not_claim_credit_was_returned(monkeypatch):
     import urllib.error
     def offline(request, **kwargs):

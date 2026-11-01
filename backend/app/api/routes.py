@@ -173,7 +173,7 @@ def ai_chat(body: dict, user: int = Depends(bind_user)):
         finally:
             e.close()
         return JSONResponse({"error": {"code": e.code, "message": "模型服务拒绝请求，请检查接口配置、密钥、模型和额度。"}}, status_code=e.code)
-    except urllib.error.URLError:
+    except (urllib.error.URLError, TimeoutError):
         try:
             refunded = change_points(user, f'ai_chat_{plan_name}_{model_kind}_refund', cost)
         except Exception:  # noqa: BLE001
