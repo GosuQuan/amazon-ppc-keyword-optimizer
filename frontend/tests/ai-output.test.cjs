@@ -10,7 +10,7 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 function app() {
   const nodes = new Map();
   const node = id => {
-    if (!nodes.has(id)) nodes.set(id, { value: '', style: {}, classList: { add() {}, remove() {}, toggle() {} }, addEventListener() {} });
+    if (!nodes.has(id)) nodes.set(id, { value: '', style: {}, listeners: {}, classList: { add() {}, remove() {}, toggle() {} }, addEventListener(name, fn) { this.listeners[name] = fn; } });
     return nodes.get(id);
   };
   node('#aiBrands').value = 'omoton, samsung, google, nexus';
@@ -20,7 +20,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(source + '\nrenderAI = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
+  vm.runInContext(source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -229,6 +229,18 @@ test('an expansion that already exists as an exact keyword stays out of the new-
   a.mergeAiJson({ expansions: [{ word: 'existing' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
   assert.equal(a.state.ai.expansions[0].exists, true);
   assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
+});
+
+test('changing brand configuration clears previously merged AI rows', () => {
+  const a = app();
+  a.state.result.harvest = []; a.state.result.combos = [];
+  a.mergeAiJson({ expansions: [{ word: 'desk holder' }], negativeHints: [{ word: 'unrelated' }], intents: [], insights: [] });
+  a.node('#aiBrands').value = 'new brand';
+  a.node('#aiBrands').listeners.input();
+  assert.equal(a.state.ai.done, false);
+  assert.equal(a.newWordRows().length, 0);
+  assert.equal(a.aiNegativeExportRows([], a.state.ai.negatives).length, 0);
+  assert.match(a.node('#aiStatus').textContent, /重新导入/);
 });
 
 test('empty configured brand list does not classify compatible device names', () => {
