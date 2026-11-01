@@ -34,6 +34,19 @@ test('counts by kind, blockers and exportable', () => {
   assert.equal(c.approved, 1);
 });
 
+test('top blocking reasons are named in the conclusion', () => {
+  const { actionConclusion, conclusionText } = load();
+  const c = actionConclusion([
+    { kind: 'bid', exportable: false, blocking_reasons: ['缺少真实出价'], status: 'pending' },
+    { kind: 'bid', exportable: false, blocking_reasons: ['缺少真实出价'], status: 'pending' },
+    { kind: 'pause', exportable: false, blocking_reasons: ['没有确定广告组'], status: 'pending' },
+  ]);
+  assert.equal(JSON.stringify(c.reasons[0]), JSON.stringify({ text: '缺少真实出价', count: 2 }));
+  const text = conclusionText(c);
+  assert.match(text, /缺少真实出价 2 项/);
+  assert.match(text, /没有确定广告组 1 项/);
+});
+
 test('blocked actions are the first thing to review', () => {
   const { actionConclusion, conclusionText } = load();
   const text = conclusionText(actionConclusion([
