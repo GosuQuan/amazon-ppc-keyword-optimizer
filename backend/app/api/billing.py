@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from ..auth import bind_user
-from ..workflow.store import RECHARGE_PACKS, change_points, database
+from ..workflow.store import RECHARGE_PACKS, apply_points, database
 
 router = APIRouter(prefix='/api/billing', tags=['billing'])
 
@@ -39,9 +39,8 @@ def recharge(body: Recharge, user: int = Depends(bind_user)):
             (user, body.pack, 'demo_no_payment')).fetchone()
         if existing:
             raise HTTPException(409, '该档位已经演示入账，不能重复充值')
-    if not change_points(user, 'recharge_' + body.pack, pack['points']):
-        raise HTTPException(404, '账号不存在')
-    with database() as connection:
+        if not apply_points(connection, user, 'recharge_' + body.pack, pack['points']):
+            raise HTTPException(404, '账号不存在')
         if pack['plan'] == 'enterprise':
             connection.execute("UPDATE users SET account_plan='enterprise' WHERE id=?", (user,))
         connection.execute(
