@@ -349,7 +349,7 @@ function renderAI() {
   $('#aiIntent').innerHTML = state.ai.intents.map((g, i) => `<div class="intent-card"><b>${i + 1}. ${esc(g.intent)}</b><div>${g.keywords.map(k => `<span class="kwchip">${esc(k)}</span>`).join('')}</div></div>`).join('') || '<p class="hint">无意图分组。</p>';
   $('#aiInsight').innerHTML = state.ai.insights.map(x => `<div class="insight-card"><b>${esc(x.title || '洞察')}</b>　${esc(x.detail || '')}</div>`).join('') || '<p class="hint">无洞察。</p>';
   mkTable('aiNeg', { name: 'AI否定预判', rows: () => state.ai.negatives, max: 200, cols: [
-    { k: 'word', label: 'AI 判定无关词' }, { k: 'cross', label: '与规则交叉验证' }, { k: 'reason', label: '理由', fmt: esc }] });
+    { k: 'word', label: 'AI 否定候选（需复核）' }, { k: 'cross', label: '与规则交叉验证' }, { k: 'reason', label: '理由', fmt: esc }] });
 }
 function aiNegativeExportRows(ruleNegatives, aiNegatives) {
   const seen = new Set((ruleNegatives || []).map((row) => canon(row.word)));
