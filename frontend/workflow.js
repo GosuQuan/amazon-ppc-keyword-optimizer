@@ -287,6 +287,7 @@
       tile.append(node('span', label), node('strong', monetary ? money(plan.metrics?.[key]) : number(plan.metrics?.[key])));
       metrics.append(tile);
     });
+    $('metrics-reading').textContent = window.metricsReading(plan.metrics, plan.target_acos, plan.context?.currency);
     const warningRoot = $('warnings');
     warningRoot.replaceChildren();
     if (plan.claimable_observed_spend != null) warningRoot.append(node('p', `主动作可认领的已发生花费 ${money(plan.claimable_observed_spend)}。共享引用中的同一笔花费没有重复加入，这不是已节省广告费。`));

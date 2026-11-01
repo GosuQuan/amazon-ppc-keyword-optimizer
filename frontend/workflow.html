@@ -8,6 +8,7 @@
   <script src="/plan-link.js"></script>
   <script src="/point-cost.js"></script>
   <script src="/conclusion.js"></script>
+  <script src="/reading.js"></script>
   <script src="/workflow.js" defer></script>
   <script src="/usage.js" defer></script>
   <script src="/cost.js" defer></script>
@@ -45,7 +46,7 @@
         <form id="review-time-form"><div class="form-grid"><label>本次审核分钟<input name="minutes" type="number" min="1" max="1440" step="1" required></label><label>备注<input name="note" maxlength="200" placeholder="例如：核对了 12 个阻断项"></label></div><button type="submit">记录审核耗时</button><p id="cost-status" class="muted"></p></form></section>
       <section id="empty-plan" class="panel empty"><h2>让每次调整都有记录</h2><p>导入报告生成新方案，或从左侧打开历史方案。</p></section>
       <div id="plan-content" hidden>
-        <section class="panel" aria-labelledby="analysis-title"><div class="section-head"><div><p class="eyebrow">02 / 分析看板</p><h2 id="analysis-title">当前方案</h2></div><button id="reload-plan" type="button" class="quiet">重新获取</button></div><p id="plan-meta" class="muted"></p><div id="context-summary" class="context-summary"></div><div id="metrics" class="metrics"></div><div id="report-facts"></div><div id="warnings"></div></section>
+        <section class="panel" aria-labelledby="analysis-title"><div class="section-head"><div><p class="eyebrow">02 / 分析看板</p><h2 id="analysis-title">当前方案</h2></div><button id="reload-plan" type="button" class="quiet">重新获取</button></div><p id="plan-meta" class="muted"></p><div id="context-summary" class="context-summary"></div><div id="metrics" class="metrics"></div><p id="metrics-reading" class="callout"></p><div id="report-facts"></div><div id="warnings"></div></section>
         <section class="panel" aria-labelledby="actions-title"><div class="section-head"><h2 id="actions-title">逐项审核优化动作</h2><span id="action-count" class="badge"></span></div><p class="muted">批准表示同意纳入草稿。估算出价须结合实际广告后台核实；存在阻断原因的动作不能导出。</p><p id="action-conclusion" class="callout"></p><div id="actions" class="actions"></div></section>
         <section class="panel" aria-labelledby="budget-title"><div class="section-head"><h2 id="budget-title">每日预算分配建议</h2><span class="badge">仅建议</span></div><p class="callout">预算不会自动修改广告后台，也不会随动作草稿自动执行，请人工确认后调整。</p><p id="budget-total"></p><div id="budget-allocations"></div></section>
         <section class="panel" aria-labelledby="export-title"><p class="eyebrow">03 / 下载并核对</p><h2 id="export-title">导出已批准的可执行草稿</h2><p>仅包含 approved 且可执行的动作。批量上传草稿尚未与实际站点模板完成对标验证，上传前请核对列名、实体 ID、匹配类型与站点模板。</p><p id="export-eligibility" class="muted"></p><p id="export-cost" class="muted"></p><button id="export-plan" type="button" class="primary">下载 TSV 批量草稿</button><p id="export-error" class="inline-error" role="alert" hidden></p></section>
