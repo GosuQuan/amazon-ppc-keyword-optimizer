@@ -55,6 +55,14 @@ def create(client, text=None, bulk=BULK, products=None, placements=None, **data)
     return client.post('/api/workflow/plans', data=fields, files=files)
 
 
+def test_failed_plan_creation_refunds_points(client):
+    before = client.get('/api/auth/me').json()['points']
+    response = create(client, text='Campaign,Ad Group\nA,B\n')
+    assert response.status_code == 422, response.text
+    after = client.get('/api/auth/me').json()['points']
+    assert after == before, f'points changed on failure: {before} -> {after}'
+
+
 def test_full_loop_persistence_and_idempotent_export(client):
     response = create(client)
     assert response.status_code == 200, response.text
