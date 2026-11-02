@@ -1,0 +1,41 @@
+/* Mobile fixes for the React prototype: touch targets and table fit. Desktop untouched. */
+@media (max-width: 720px) {
+  /* Comfortable touch targets (was 17-19px on nav links and table links). */
+  .topbar nav a,
+  .topbar nav button,
+  .action-card,
+  td a,
+  .steps li {
+    min-height: 44px;
+  }
+  .topbar nav a,
+  td a {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Let tables fit instead of overflowing their container. */
+  table {
+    width: 100%;
+    font-size: 12px;
+  }
+  th, td {
+    padding: 8px 6px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  /* Two metric tiles per row so numbers stay readable. */
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Buttons span comfortably and stay thumb-friendly. */
+  button, .primary {
+    min-height: 44px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
