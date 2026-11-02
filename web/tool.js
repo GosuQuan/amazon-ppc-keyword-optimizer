@@ -83,6 +83,106 @@ function ToolView({ token, account }) {
     ['销售额', kpi.sales], ['订单', kpi.orders], ['整体 ACOS', pct(kpi.acos)], ['搜索词数', kpi.stCount],
   ] : [];
 
+  const [ai, setAi] = useState({
+    mode: 'expert', baseUrl: '', model: '', apiKey: '', desc: '', brands: '',
+  });
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiResult, setAiResult] = useState(null);
+
+  const updateAi = (key) => (event) => setAi((prev) => Object.assign({}, prev, { [key]: event.target.value }));
+
+  const stripFence = (text) => {
+    const trimmed = String(text || '').trim();
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const body = fenced ? fenced[1] : trimmed;
+    try { return JSON.parse(body); } catch (e) { /* fall through */ }
+    const start = body.indexOf('{');
+    const end = body.lastIndexOf('}');
+    if (start >= 0 && end > start) return JSON.parse(body.slice(start, end + 1));
+    throw new Error('模型最终内容不是完整 JSON，本次结果未合并');
+  };
+
+  const acceptAiJson = (parsed) => {
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('AI 结果必须是对象');
+    const keys = ['expansions', 'intents', 'negativeHints', 'insights'];
+    if (!keys.some((k) => Object.prototype.hasOwnProperty.call(parsed, k))) {
+      throw new Error('AI 结果至少需要 expansions/intents/negativeHints/insights 中一个数组');
+    }
+    setAiResult(parsed);
+  };
+
+  const brandTokens = () => String(ai.brands || '').toLowerCase().split(/[,，\n]+/)
+    .map((s) => s.trim()).filter(Boolean);
+  const hitsBrand = (word) => {
+    const tokens = String(word || '').toLowerCase().match(/[a-z0-9]+/g) || [];
+    return brandTokens().some((brand) => tokens.includes(brand));
+  };
+
+  const importExpert = (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    setAiError('');
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { acceptAiJson(JSON.parse(String(reader.result || ''))); }
+      catch (e) { setAiError('导入失败：' + (e.message || '不是合法 JSON')); }
+    };
+    reader.readAsText(file);
+  };
+
+  const runOnline = async () => {
+    setAiBusy(true); setAiError('');
+    try {
+      if (!result) throw new Error('请先完成一次报表分析，AI 挖掘需要基于分析结果');
+      const top = (result.st || []).filter((s) => s.cls === '优秀' || s.cls === '良好')
+        .slice(0, 40).map((s) => s.st);
+      const body = {
+        messages: [
+          { role: 'system', content: '你是亚马逊广告关键词专家。输出严格 JSON（无 markdown）：{"expansions":[{"word":"","type":"长尾|场景|人群|规格","reason":""}],"intents":[{"intent":"","keywords":[""]}],"negativeHints":[{"word":"","reason":""}],"insights":[{"title":"","detail":""}]}。不要把历史花费写成已节省金额。' },
+          { role: 'user', content: `【产品信息】${ai.desc || '（未填写）'}\n【优秀搜索词】\n${top.join('\n')}` },
+        ],
+        temperature: 0.3,
+        thinking: false,
+      };
+      if (ai.model) body.model = ai.model;
+      if (ai.baseUrl) body.base_url = ai.baseUrl;
+      if (ai.apiKey) body.api_key = ai.apiKey;
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify(body),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.error || 'AI 调用失败');
+      const choice = (payload.choices || [])[0] || {};
+      if (choice.finish_reason === 'length') throw new Error('模型输出已截断，本次结果未合并');
+      acceptAiJson(stripFence(choice.message && choice.message.content));
+    } catch (e) {
+      setAiError(e.message || 'AI 挖掘失败');
+    } finally { setAiBusy(false); }
+  };
+
+  const exportTopKeywords = () => {
+    if (!result) return;
+    const top = (result.st || []).filter((s) => s.cls === '优秀' || s.cls === '良好').slice(0, 40);
+    const roots = (result.roots || []).filter((r) => r.type === '盈利' || r.type === '加分').slice(0, 15).map((r) => r.tok);
+    const lines = ['【产品信息】' + (ai.desc || '（未填写）'), '', '【优秀搜索词】', ...top.map((s) => `${s.st}（订单 ${s.orders ?? '—'}）`), '', '【盈利词根】' + roots.join(', ')];
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '优秀关键词-喂给专家.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const aiExpansions = (aiResult && aiResult.expansions) || [];
+  const aiIntents = (aiResult && aiResult.intents) || [];
+  const aiNegatives = (aiResult && aiResult.negativeHints) || [];
+  const aiInsights = (aiResult && aiResult.insights) || [];
+
   return t('main', null,
     t('section', { className: 'panel anim-fade-up' },
       t('p', { className: 'eyebrow' }, '旧工具页 · 报表分析'),
@@ -127,11 +227,47 @@ function ToolView({ token, account }) {
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
     }) : null,
-    result ? t(DataTable, {
-      title: '互搏检测', rows: result.conflicts, max: 50, file: '亚马逊投流-互搏检测.csv',
-      cols: [{ k: 'st', label: '搜索词' }, { k: 'locs', label: '位置数' }, { k: 'totClk', label: '总点击' },
-        { k: 'winner', label: '最优位置' }],
-    }) : null);
+    aiResult ? t('section', { className: 'panel anim-fade-up stagger-3' },
+      t('h3', null, 'AI 结果（仅供参考，需人工复核）'),
+      aiExpansions.length ? t(DataTable, {
+        title: 'AI 扩词', rows: aiExpansions, max: 50,
+        cols: [{ k: 'word', label: '关键词' }, { k: 'type', label: '类型' },
+          { k: 'reason', label: '理由' },
+          { k: 'word', label: '命中复核品牌', get: (r) => (hitsBrand(r.word) ? '是' : '') }],
+      }) : null,
+      aiIntents.length ? t('div', { className: 'panel' },
+        t('h3', null, '意图分组'),
+        aiIntents.map((group, index) => t('p', { key: index },
+          `${index + 1}. ${group.intent}：${(group.keywords || []).join('、')}`))) : null,
+      aiNegatives.length ? t('div', { className: 'panel' },
+        t('h3', null, '否定预判（需确认不会误伤自有词）'),
+        aiNegatives.map((item, index) => t('p', { key: index }, `${item.word} —— ${item.reason || ''}`))) : null,
+      aiInsights.length ? t('div', { className: 'panel' },
+        t('h3', null, '专家洞察'),
+        aiInsights.map((item, index) => t('p', { key: index }, `${item.title || '洞察'}：${item.detail || ''}`))) : null) : null,
+    result ? t('section', { className: 'panel anim-fade-up stagger-4' },
+      t('p', { className: 'eyebrow' }, 'AI 挖掘'),
+      t('h2', null, '在线挖掘或导入专家结果'),
+      t('p', { className: 'callout' }, '在线模式会调用模型并消耗积分；专家导入不调用模型。品牌复核名单只在当前页面有效，修改后会清除已合并的 AI 结果。'),
+      t('div', { className: 'form-grid' },
+        t('label', null, '接入方式',
+          t('select', { value: ai.mode, onChange: updateAi('mode') },
+            t('option', { value: 'expert' }, '专家导入（推荐，无需 Key）'),
+            t('option', { value: 'proxy' }, '本机在线代理'),
+            t('option', { value: 'direct' }, '直连（需 Key）'),
+            t('option', { value: 'off' }, '关闭'))),
+        t('label', null, '接口地址', t('input', { value: ai.baseUrl, onChange: updateAi('baseUrl'), placeholder: '默认使用本机配置' })),
+        t('label', null, '模型', t('input', { value: ai.model, onChange: updateAi('model'), placeholder: '默认使用本机配置' })),
+        t('label', null, 'API Key（不落盘）', t('input', { type: 'password', value: ai.apiKey, onChange: updateAi('apiKey'), placeholder: 'sk-...' })),
+        t('label', null, '产品 / 品类信息', t('input', { value: ai.desc, onChange: updateAi('desc'), placeholder: '例：无线充电器，适用 iPhone 15' })),
+        t('label', null, '需复核品牌（逗号分隔，可留空）', t('input', { value: ai.brands, onChange: (e) => { updateAi('brands')(e); setAiResult(null); }, placeholder: '例：品牌A, 品牌B' }))),
+      t('div', { className: 'row' },
+        t('button', { type: 'button', onClick: exportTopKeywords }, '导出优秀关键词'),
+        t('label', { className: 'file-field' }, '导入专家结果 JSON', t('input', { type: 'file', accept: '.json', onChange: importExpert })),
+        t('button', {
+          type: 'button', className: 'primary', onClick: runOnline, disabled: aiBusy || ai.mode === 'off',
+        }, aiBusy ? '正在调用模型…' : '在线 AI 挖掘', aiBusy ? t('span', { className: 'spinner' }) : null)),
+      aiError ? t('p', { className: 'error', role: 'alert' }, aiError) : null) : null);
 }
 
 window.ToolView = ToolView;
