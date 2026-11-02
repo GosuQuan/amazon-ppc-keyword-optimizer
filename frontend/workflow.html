@@ -35,7 +35,13 @@
           <label>商品 ASIN<input name="asin" required maxlength="100" placeholder="例如：B0BVMQ2WJ1"></label>
           <label>目标 ACOS（%）<input name="target_acos" type="number" required min="0.01" step="0.01" value="25"></label>
           <label>每日预算<input name="daily_budget" type="number" required min="0.01" step="0.01" placeholder="例如：50（账户币种金额）"></label>
-          <p class="callout" id="import-scope">本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）；推广商品报告只用于确认广告组 ASIN，花费不并入搜索词；广告位报告按活动单独展示，不生成调价动作。生成方案消耗积分，导入前会在上方显示当前余额。</p>
+          <details id="import-help"><summary>不知道怎么导报表？先看这里（列名与约束）</summary>
+          <p>搜索词报告<b>必须</b>包含这些列（中英文表头都认）：客户搜索词 / Customer Search Term、广告活动 / Campaign、广告组 / Ad Group、关键词 / Keyword、匹配类型 / Match Type、花费 / Spend、销售额 / Sales、订单 / Orders、点击 / Clicks。</p>
+          <p>可选但有用：日期 / Date（或开始日期 / 结束日期），用于确定周期；账户 / Account、站点 / Marketplace、币种 / Currency、ASIN，用于和上方填写的上下文核对——报告里有这些列时会和要求的值逐一比对，不一致会直接失败。</p>
+          <p>约束：请先按<b>单个 ASIN</b> 筛选再导出，本工作台一次只分析一个商品；周期建议 30–60 天且区间连续；不要提交同维度同周期的重复行（会被拒绝）。</p>
+          <p><b>后台路径请以你自己账户的 Seller Central 为准</b>：不同站点、语言和改版后菜单位置会变化，我们无法替你确认；导出的 CSV 若缺列，系统会明确列出缺少哪些列。</p>
+        </details>
+        <p class="callout" id="import-scope">本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）；推广商品报告只用于确认广告组 ASIN，花费不并入搜索词；广告位报告按活动单独展示，不生成调价动作。生成方案消耗积分，导入前会在上方显示当前余额。</p>
           <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告，示例：亚马逊搜索词报告-示例.csv</small></label>
           <label class="file-field">批量广告报告 · 可选 CSV / TSV<input name="bulk" type="file" accept=".csv,.tsv"><small>用于匹配广告实体及可执行动作</small></label>
           <label class="file-field">推广商品报告 · 可选 CSV<input name="advertised_products" type="file" accept=".csv"><small>只用于确认广告组里的 ASIN，花费不并入搜索词</small></label>
