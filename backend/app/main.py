@@ -35,6 +35,11 @@ app.include_router(billing_router)
 app.include_router(router)
 app.include_router(workflow_router)
 
-_FRONTEND = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend")
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_WEB = os.path.join(_ROOT, "web")
+if os.path.isdir(_WEB):
+    app.mount("/web", StaticFiles(directory=_WEB, html=True), name="web")
+
+_FRONTEND = os.path.join(_ROOT, "frontend")
 if os.path.isdir(_FRONTEND):
     app.mount("/", StaticFiles(directory=_FRONTEND, html=True), name="frontend")

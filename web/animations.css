@@ -1,0 +1,42 @@
+/* Motion layer for the React prototype. Prefers-reduced-motion is respected. */
+:root { --ease: cubic-bezier(.22, .61, .36, 1); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+.anim-fade-up { animation: fadeUp .45s var(--ease) both; }
+[data-shake='yes'] { animation: shake .5s var(--ease); }
+
+.stagger-1 { animation-delay: .05s; }
+.stagger-2 { animation-delay: .12s; }
+.stagger-3 { animation-delay: .19s; }
+.stagger-4 { animation-delay: .26s; }
+
+.auth-card { transition: box-shadow .25s var(--ease), transform .25s var(--ease); }
+.auth-card:hover { box-shadow: 0 10px 30px rgba(23, 44, 59, .10); }
+
+.action-card { transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease); }
+.action-card:hover:not(.disabled-card) { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(23, 44, 59, .12); border-color: #b9d4cd; }
+
+button, .primary { transition: transform .15s var(--ease), box-shadow .15s var(--ease), background-color .15s var(--ease), opacity .15s var(--ease); }
+button:hover:not(:disabled), .primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(23, 44, 59, .12); }
+button:active:not(:disabled) { transform: translateY(0) scale(.985); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+.spinner {
+  display: inline-block; width: 12px; height: 12px; margin-left: 8px; vertical-align: -1px;
+  border: 2px solid rgba(255, 255, 255, .45); border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.error { color: var(--danger, #a12c2c); animation: fadeUp .3s var(--ease) both; }
+.muted.small { animation: fadeUp .5s var(--ease) both; }
+
+tbody tr { transition: background-color .15s var(--ease); }
+tbody tr:hover { background: #f6faf9; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+}
