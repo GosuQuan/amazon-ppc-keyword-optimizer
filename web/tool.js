@@ -178,7 +178,9 @@ function ToolView({ token, account }) {
   const evidenceMap = (typeof React.useMemo === 'function')
     ? React.useMemo(() => (window.buildReportEvidence ? window.buildReportEvidence((result && result.st) || []) : null), [result])
     : null;
-  const aiExpansions = (aiResult && aiResult.expansions) || [];
+  const aiExpansions = (typeof window.sortByEvidence === 'function')
+    ? window.sortByEvidence((aiResult && aiResult.expansions) || [])
+    : ((aiResult && aiResult.expansions) || []);
   const aiIntents = (aiResult && aiResult.intents) || [];
   const aiNegatives = (aiResult && aiResult.negativeHints) || [];
   const aiInsights = (aiResult && aiResult.insights) || [];

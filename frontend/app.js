@@ -362,7 +362,7 @@ async function runAiOnline() {
 }
 function renderAI() {
   if (!state.ai.done) { $('#aiExp').innerHTML = '<p class="hint">三种方式：① <b>专家导入（推荐，无需 Key）</b>——导出优秀关键词发给「亚马逊数据挖掘专家」Agent，把返回 JSON 导入；② 在线代理/直连；③ 关闭仅用规则。</p>'; $('#aiIntent').innerHTML = ''; $('#aiNeg').innerHTML = ''; $('#aiInsight').innerHTML = ''; return; }
-  mkTable('aiExp', { name: 'AI扩词', rows: () => state.ai.expansions, max: 200, cols: [
+  mkTable('aiExp', { name: 'AI扩词', rows: () => (window.sortByEvidence ? window.sortByEvidence(state.ai.expansions) : state.ai.expansions), max: 200, cols: [
     { k: 'word', label: 'AI 建议关键词' }, { k: 'type', label: '类型', fmt: v => `<span class="badge b-ai">${esc(v)}</span>`, csv: r => r.type },
     { k: 'exists', label: '查重', get: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词，注意去重' : r.coveredByGood ? '已包含在优质词中' : '新词', csv: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词' : r.coveredByGood ? '已包含在优质词中' : '新词' },
     { k: 'reportRows', label: '本报表出现', get: r => (r.reportRows ? `${r.reportRows} 条` : '未出现'), csv: r => String(r.reportRows || 0) },

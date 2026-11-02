@@ -265,6 +265,20 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
+test('evidence sorting puts the best supported suggestions first and stays stable', () => {
+  const a = app();
+  const sort = a.context.window.sortByEvidence;
+  const list = [
+    { word: 'no evidence' },
+    { word: 'one row' , reportRows: 1, reportOrders: 0 },
+    { word: 'ordered', reportRows: 2, reportOrders: 3 },
+    { word: 'also one row', reportRows: 1, reportOrders: 0 },
+  ];
+  const sorted = sort(list);
+  assert.equal(JSON.stringify(sorted.map((x) => x.word)), '["ordered","one row","also one row","no evidence"]');
+  assert.equal(list[0].word, 'no evidence', 'original list must not be mutated');
+});
+
 test('expansions carry evidence counts from our own report', () => {
   const a = app();
   a.state.result.harvest = []; a.state.result.combos = [];
