@@ -13,10 +13,11 @@
   <script src="/plan-link.js"></script>
   <script src="/web/vendor/react.production.min.js"></script>
   <script src="/web/vendor/react-dom.production.min.js"></script>
-  <script src="/web/vendor/babel.min.js"></script>
 </head>
 <body>
   <div id="root"><p class="muted" style="padding:32px">正在加载 React 工作台…</p></div>
-  <script type="text/babel" data-presets="react" src="/web/app.jsx"></script>
+  <!-- Plain scripts: no JSX, no Babel, no build step. -->
+  <script src="/web/workflow.js"></script>
+  <script src="/web/app.js"></script>
 </body>
 </html>
