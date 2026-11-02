@@ -262,6 +262,21 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
+test('a good search term that is also a substring stays an independent candidate', () => {
+  const a = app();
+  a.state.result.harvest = []; a.state.result.combos = [];
+  a.state.result.st.push(
+    { st: 'cell phone stand', cls: '优秀', sales: 20 },
+    { st: 'cell phone', cls: '优秀', sales: 15 },
+  );
+  a.mergeAiJson({ expansions: [{ word: 'cell phone' }, { word: 'phone' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].coveredByGood, false);
+  assert.equal(a.state.ai.expansions[1].coveredByGood, true);
+  assert.equal(a.state.ai.expansions[2].coveredByGood, false);
+  const words = a.newWordRows().filter((row) => row.src === 'AI扩词').map((row) => row.word);
+  assert.equal(JSON.stringify(words), '["cell phone","desk trip"]');
+});
+
 test('an expansion with a competitor brand is flagged', () => {
   const a = app();
   a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung galaxy tab' }, { word: 'foldable phone stand for desk' }], negativeHints: [], intents: [], insights: [] });

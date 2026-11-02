@@ -257,6 +257,10 @@ function expansionHasCompetitorBrand(word) {
 }
 function expansionCoveredByGood(word, goodTerms) {
   if (word.length < 4) return false;
+  // A term that is itself a good search term is an independent entry point, not just
+  // a fragment of a longer one (YICOPY ranks "cell phone" #1 while it is a substring
+  // of "cell phone stand").
+  if (typeof goodTerms.has === 'function' && goodTerms.has(word)) return false;
   for (const term of goodTerms) {
     if (term.length > word.length && term.includes(word)) return true;
   }
