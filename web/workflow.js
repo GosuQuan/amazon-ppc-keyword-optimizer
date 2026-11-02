@@ -39,10 +39,23 @@ function WorkflowView({ token }) {
   const [error, setError] = useState('');
   const [exportBusy, setExportBusy] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [executionDate, setExecutionDate] = useState('');
+  const [executionNotes, setExecutionNotes] = useState('');
+  const [executionBusy, setExecutionBusy] = useState(false);
+  const [executionError, setExecutionError] = useState('');
+  const [reviewStart, setReviewStart] = useState('');
+  const [reviewEnd, setReviewEnd] = useState('');
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [reviewError, setReviewError] = useState('');
   const [files, setFiles] = useState({});
   const [plan, setPlan] = useState(null);
 
   const update = (key) => (event) => setForm((prev) => Object.assign({}, prev, { [key]: event.target.value }));
+
+  const reload = useCallback((id) => {
+    return fetch('/api/workflow/plans/' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + token } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('方案重新获取失败'))));
+  }, [token]);
 
   const runCheck = useCallback((name, header) => {
     if (!header) return '';
@@ -74,14 +87,48 @@ function WorkflowView({ token }) {
   const actions = plan && Array.isArray(plan.actions) ? plan.actions : [];
   const conclusion = plan ? window.actionConclusion(actions) : null;
 
+  const doExecution = useCallback(async (event) => {
+    event.preventDefault();
+    if (!plan) return;
+    setExecutionBusy(true); setExecutionError('');
+    try {
+      const res = await fetch('/api/workflow/plans/' + encodeURIComponent(plan.id) + '/execution', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ executed_at: executionDate, notes: executionNotes }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.detail || '执行记录保存失败');
+      setPlan(await reload(plan.id));
+    } catch (e) {
+      setExecutionError(e.message || '执行记录保存失败');
+    } finally { setExecutionBusy(false); }
+  }, [plan, token, reload, executionDate, executionNotes]);
+
+  const doReview = useCallback(async (event) => {
+    event.preventDefault();
+    if (!plan) return;
+    setReviewBusy(true); setReviewError('');
+    try {
+      const data = new FormData();
+      data.append('period_start', reviewStart);
+      data.append('period_end', reviewEnd);
+      const file = files.review_search_terms;
+      if (!file) throw new Error('请选择执行后的搜索词报告');
+      data.append('search_terms', file);
+      const res = await fetch('/api/workflow/plans/' + encodeURIComponent(plan.id) + '/review', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: data,
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.detail || '复盘失败');
+      setPlan(await reload(plan.id));
+    } catch (e) {
+      setReviewError(e.message || '复盘失败');
+    } finally { setReviewBusy(false); }
+  }, [plan, token, reload, reviewStart, reviewEnd, files]);
+
   const onFilePicked = useCallback((name, file) => {
     setFiles((prev) => Object.assign({}, prev, { [name]: file }));
   }, []);
-
-  const reload = useCallback((id) => {
-    return fetch('/api/workflow/plans/' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + token } })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('方案重新获取失败'))));
-  }, [token]);
 
   const setStatus = useCallback(async (actionId, status) => {
     if (!plan) return;
@@ -144,9 +191,19 @@ function WorkflowView({ token }) {
     } finally { setExportBusy(false); }
   }, [plan, token, reload]);
 
+  const stage = !plan ? 0 : plan.review ? 4 : plan.execution ? 3 : (plan.exports && plan.exports.length) ? 2 : 1;
+  const stepLabels = ['01 导入报告', '02 分析与审核', '03 导出草稿', '04 记录执行', '05 周期复盘'];
+
   return React.createElement(
     'main',
     null,
+    React.createElement(
+      'ol',
+      { className: 'steps' },
+      stepLabels.map((label, index) => React.createElement('li', {
+        key: label,
+        className: index < stage ? 'done' : (index === stage ? 'now' : ''),
+      }, label))),
     React.createElement(
       'section',
       { className: 'panel anim-fade-up' },
@@ -223,6 +280,52 @@ function WorkflowView({ token }) {
         className: 'primary', type: 'button', disabled: exportBusy || !canExport(), onClick: doExport,
       }, exportBusy ? '正在生成草稿…' : '下载 TSV 批量草稿',
         exportBusy ? React.createElement('span', { className: 'spinner' }) : null)
+    ) : null,
+    plan ? React.createElement(
+      'section',
+      { className: 'panel anim-fade-up stagger-4' },
+      React.createElement('p', { className: 'eyebrow' }, '04 / 人工执行留痕'),
+      React.createElement('h2', null, '记录广告后台执行'),
+      React.createElement('p', { className: 'callout' }, plan.execution
+        ? `已记录执行日期 ${plan.execution.executed_at}${plan.execution.notes ? '，备注：' + plan.execution.notes : ''}。下载草稿本身不会执行广告调整。`
+        : '请在广告后台完成操作后记录。下载草稿本身不会执行广告调整。'),
+      executionError ? React.createElement('p', { className: 'error', role: 'alert' }, executionError) : null,
+      React.createElement('form', { onSubmit: doExecution },
+        React.createElement('div', { className: 'form-grid' },
+          Field({ label: '实际执行日期', children: React.createElement('input', {
+            type: 'date', value: executionDate, onChange: (e) => setExecutionDate(e.target.value), required: true,
+          }) }),
+          Field({ label: '执行备注', children: React.createElement('textarea', {
+            rows: 3, value: executionNotes, onChange: (e) => setExecutionNotes(e.target.value),
+            placeholder: '记录已执行的操作、未执行项或后台反馈',
+          }) })),
+        React.createElement('button', { className: 'primary', type: 'submit', disabled: executionBusy },
+          executionBusy ? '正在保存…' : (plan.execution ? '更新执行记录' : '保存执行记录'),
+          executionBusy ? React.createElement('span', { className: 'spinner' }) : null))
+    ) : null,
+    plan ? React.createElement(
+      'section',
+      { className: 'panel anim-fade-up stagger-4' },
+      React.createElement('p', { className: 'eyebrow' }, '05 / 下一周期验证'),
+      React.createElement('h2', null, '上传执行后报告，复盘效果'),
+      React.createElement('p', { className: 'callout' }, plan.execution
+        ? '已记录执行，可上传执行后周期报告。'
+        : '请先在广告后台执行并保存执行记录，再上传周期复盘报告。'),
+      plan.review
+        ? React.createElement('p', { className: 'callout' }, window.reviewConclusion(plan.review)) : null,
+      reviewError ? React.createElement('p', { className: 'error', role: 'alert' }, reviewError) : null,
+      React.createElement('form', { onSubmit: doReview },
+        React.createElement('div', { className: 'form-grid' },
+          Field({ label: '周期开始', children: React.createElement('input', {
+            type: 'date', value: reviewStart, onChange: (e) => setReviewStart(e.target.value), required: true,
+          }) }),
+          Field({ label: '周期结束', children: React.createElement('input', {
+            type: 'date', value: reviewEnd, onChange: (e) => setReviewEnd(e.target.value), required: true,
+          }) }),
+          React.createElement(FileField, { label: '执行后搜索词报告 · CSV', name: 'review_search_terms', accept: '.csv', required: true, onFile: onFilePicked })),
+        React.createElement('button', { className: 'primary', type: 'submit', disabled: reviewBusy },
+          reviewBusy ? '正在生成复盘…' : '生成周期复盘',
+          reviewBusy ? React.createElement('span', { className: 'spinner' }) : null))
     ) : null
   );
 }
