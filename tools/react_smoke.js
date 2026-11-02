@@ -128,6 +128,17 @@ function check(name, condition, detail) {
   check('积分页渲染', String(pointsObj.heading).includes('积分'), 'heading=' + pointsObj.heading);
   check('积分页显示充值档位', pointsObj.packs === 3, 'packs=' + pointsObj.packs);
 
+  // 5. Legacy AI tool page still reachable and error-free under /classic.
+  await cdp(ws, 'Page.navigate', { url: BASE + '/classic/index.html?v=' + Date.now() }, sessionId);
+  await sleep(6000);
+  const legacy = await ev(`(() => ({
+    title: document.title,
+    hasLegacyUi: !!document.querySelector('#drop') || !!document.querySelector('#aiStatus')
+  }))()`);
+  const legacyObj = typeof legacy === 'string' ? JSON.parse(legacy) : legacy;
+  check('旧版工具页在 /classic 可用', String(legacyObj.title).includes('关键词优化') && legacyObj.hasLegacyUi,
+    'title=' + legacyObj.title);
+
   check('全程无未捕获错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   ws.close();
