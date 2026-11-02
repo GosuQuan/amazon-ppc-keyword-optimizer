@@ -393,20 +393,24 @@
     $('load-demo').click();
   }
   const searchInput = $('import-form').elements.search_terms;
-  if (searchInput) {
-    searchInput.addEventListener('change', () => {
-      const target = $('import-file-check');
-      const file = searchInput.files && searchInput.files[0];
+  const bulkInput = $('import-form').elements.bulk;
+  function watchHeader(input, targetId, check, text) {
+    if (!input) return;
+    input.addEventListener('change', () => {
+      const target = $(targetId);
+      const file = input.files && input.files[0];
       if (!file) { target.textContent = ''; return; }
       const reader = new FileReader();
       reader.onload = () => {
         const firstLine = String(reader.result || '').split(/\r?\n/)[0] || '';
-        target.textContent = window.headerCheckText(window.missingSearchColumns(firstLine));
+        target.textContent = text(check(firstLine));
       };
       reader.onerror = () => { target.textContent = '无法读取所选文件，请确认文件可访问。'; };
       reader.readAsText(file.slice(0, 8192));
     });
   }
+  watchHeader(searchInput, 'import-file-check', window.missingSearchColumns, window.headerCheckText);
+  watchHeader(bulkInput, 'bulk-file-check', window.missingBulkColumns, window.bulkCheckText);
   $('import-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget;

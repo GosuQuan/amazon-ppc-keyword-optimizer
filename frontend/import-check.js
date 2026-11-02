@@ -37,6 +37,42 @@ function missingSearchColumns(headerLine) {
   return missing;
 }
 
+const BULK_REQUIRED = {
+  entity: ['entity', '实体'],
+  campaign: ['campaign', 'campaign name', '广告活动', '广告活动名称'],
+  ad_group: ['ad group', 'ad group name', '广告组', '广告组名称'],
+  keyword: ['keyword', 'keyword text', '关键词', 'targeting', '投放词'],
+  match_type: ['match type', '匹配类型', '匹配方式'],
+};
+
+const BULK_ADVISORY = {
+  campaign_id: ['campaign id', '广告活动id'],
+  ad_group_id: ['ad group id', '广告组id'],
+  keyword_id: ['keyword id', '关键词id'],
+  bid: ['bid', 'keyword bid', '出价', '关键词出价'],
+};
+
+function missingBulkColumns(headerLine) {
+  const cells = splitHeaderLine(headerLine);
+  const find = (map) => Object.keys(map).filter((key) => {
+    const aliases = map[key].map(normalizeHeader);
+    return !cells.some((cell) => aliases.includes(cell));
+  });
+  if (!cells.some(Boolean)) return { required: Object.keys(BULK_REQUIRED), advisory: Object.keys(BULK_ADVISORY) };
+  return { required: find(BULK_REQUIRED), advisory: find(BULK_ADVISORY) };
+}
+
+function bulkCheckText(result) {
+  if (!result) return '';
+  if (result.required.length) {
+    return `批量报告预检：缺少必需列（${result.required.join('、')}）。没有 Entity 或名称列时，这份文件不会被采用。最终以服务端校验为准。`;
+  }
+  if (result.advisory.length) {
+    return `批量报告预检：缺少 ${result.advisory.join('、')}。动作仍会生成，但缺少实体 ID 或真实出价时不能导出草稿。最终以服务端校验为准。`;
+  }
+  return '批量报告预检通过：实体、名称、ID 与出价列都已找到。最终仍以服务端校验为准。';
+}
+
 function headerCheckText(missing) {
   if (!Array.isArray(missing)) return '';
   if (!missing.length) return '表头预检通过：必需列都已找到。最终仍以服务端校验为准。';
@@ -45,4 +81,6 @@ function headerCheckText(missing) {
 
 window.missingSearchColumns = missingSearchColumns;
 window.headerCheckText = headerCheckText;
-if (typeof module !== 'undefined') module.exports = { missingSearchColumns, headerCheckText, REQUIRED };
+window.missingBulkColumns = missingBulkColumns;
+window.bulkCheckText = bulkCheckText;
+if (typeof module !== 'undefined') module.exports = { missingSearchColumns, headerCheckText, missingBulkColumns, bulkCheckText, REQUIRED };

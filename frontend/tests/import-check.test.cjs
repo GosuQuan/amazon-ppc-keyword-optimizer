@@ -45,6 +45,35 @@ test('empty header reports everything as missing rather than passing', () => {
   assert.equal(missingSearchColumns(null).length, 9);
 });
 
+test('bulk without entity is rejected outright', () => {
+  const { missingBulkColumns, bulkCheckText } = load();
+  const result = missingBulkColumns('Campaign,Ad Group,Keyword,Match Type,Bid');
+  assert.ok(result.required.includes('entity'));
+  assert.match(bulkCheckText(result), /不会被采用/);
+});
+
+test('bulk missing ids still works but warns about export', () => {
+  const { missingBulkColumns, bulkCheckText } = load();
+  const result = missingBulkColumns('Entity,Campaign,Ad Group,Keyword,Match Type');
+  assert.equal(result.required.length, 0);
+  assert.ok(result.advisory.includes('campaign_id'));
+  assert.match(bulkCheckText(result), /不能导出草稿/);
+});
+
+test('complete bulk header passes with no advisory', () => {
+  const { missingBulkColumns, bulkCheckText } = load();
+  const header = 'Entity,Campaign,Ad Group,Keyword,Match Type,Bid,Campaign ID,Ad Group ID,Keyword ID';
+  const result = missingBulkColumns(header);
+  assert.equal(JSON.stringify(result), JSON.stringify({ required: [], advisory: [] }));
+  assert.match(bulkCheckText(result), /预检通过/);
+});
+
+test('empty bulk header reports everything rather than passing', () => {
+  const { missingBulkColumns } = load();
+  assert.equal(missingBulkColumns('').required.length, 5);
+  assert.equal(missingBulkColumns('').advisory.length, 4);
+});
+
 test('pre-check never presents itself as authoritative', () => {
   const { headerCheckText } = load();
   assert.match(headerCheckText([]), /以服务端校验为准/);
