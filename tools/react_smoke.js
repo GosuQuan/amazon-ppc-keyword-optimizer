@@ -129,7 +129,18 @@ function check(name, condition, detail) {
   check('积分页渲染', String(pointsObj.heading).includes('积分'), 'heading=' + pointsObj.heading);
   check('积分页显示充值档位', pointsObj.packs === 3, 'packs=' + pointsObj.packs);
 
-  // 5. Legacy AI tool page still reachable and error-free under /classic.
+  // 5. Legacy AI tool page (React version) route.
+  await cdp(ws, 'Page.navigate', { url: APP + '#/tool' }, sessionId);
+  await sleep(7000);
+  const tool = await ev(`(() => ({
+    heading: document.querySelector('h1') ? document.querySelector('h1').textContent : '',
+    hasFileInput: !!document.getElementById('tool-files')
+  }))()`);
+  const toolObj = typeof tool === 'string' ? JSON.parse(tool) : tool;
+  check('报表分析页路由', String(toolObj.heading).includes('导入报表并分析') && toolObj.hasFileInput,
+    'heading=' + toolObj.heading);
+
+  // 6. Legacy AI tool page still reachable and error-free under /classic.
   await cdp(ws, 'Page.navigate', { url: BASE + '/classic/index.html?v=' + Date.now() }, sessionId);
   await sleep(6000);
   const legacy = await ev(`(() => ({
