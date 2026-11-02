@@ -287,8 +287,17 @@ function mergeAiJson(j) {
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
-  const heldBack = expansions.filter((item) => item.competitorBrand || item.coveredByGood || item.exists).length;
-  aiStatus(`已合并：扩词 ${expansions.length} 个，其中 ${expansions.length - heldBack} 个进入新词清单，${heldBack} 个因竞品品牌、已包含或已有精准词未进入清单。意图分组 ${intents.length} 组，否定预判 ${negatives.length} 个，洞察 ${j.insights.length} 条。`, 'ok');
+  const heldReasons = { brand: 0, covered: 0, exists: 0 };
+  for (const item of expansions) {
+    if (item.competitorBrand) heldReasons.brand += 1;
+    else if (item.coveredByGood) heldReasons.covered += 1;
+    else if (item.exists) heldReasons.exists += 1;
+  }
+  const heldBack = heldReasons.brand + heldReasons.covered + heldReasons.exists;
+  const heldDetail = heldBack
+    ? `（竞品品牌 ${heldReasons.brand}、已被更长优质词包含 ${heldReasons.covered}、已有精准词 ${heldReasons.exists}；按优先级归类，同一个词可能同时符合多项）`
+    : '';
+  aiStatus(`已合并：扩词 ${expansions.length} 个，其中 ${expansions.length - heldBack} 个进入新词清单；${heldBack} 个未进入${heldDetail}。意图分组 ${intents.length} 组，否定预判 ${negatives.length} 个，洞察 ${j.insights.length} 条。`, 'ok');
   renderAI(); switchTab('pane-ai');
 }
 function importExpertJson(file) {

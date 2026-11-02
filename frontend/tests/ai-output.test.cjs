@@ -186,7 +186,9 @@ test('brand and covered expansions stay out of the new-word list', () => {
   a.mergeAiJson({ expansions: [{ word: 'phone stand for samsung' }, { word: 'cell phone' }, { word: 'desk trip' }], negativeHints: [], intents: [], insights: [] });
   assert.equal(JSON.stringify(a.newWordRows().map((row) => row.word)), '["desk trip"]');
   assert.match(a.node('#aiStatus').textContent, /1 个进入新词清单/);
-  assert.match(a.node('#aiStatus').textContent, /2 个因竞品品牌、已包含或已有精准词未进入清单/);
+  assert.match(a.node('#aiStatus').textContent, /2 个未进入/);
+  assert.match(a.node('#aiStatus').textContent, /竞品品牌 1/);
+  assert.match(a.node('#aiStatus').textContent, /已被更长优质词包含 1/);
   assert.doesNotMatch(a.node('#aiStatus').textContent, /已并入/);
 });
 
