@@ -70,6 +70,38 @@ test('unequal period lengths are called out', () => {
   assert.match(text, /复盘 30 天/);
 });
 
+test('empty plan list points to the next action', () => {
+  const { planListConclusion } = load();
+  assert.match(planListConclusion([]), /还没有方案/);
+  assert.match(planListConclusion([]), /开始新方案/);
+});
+
+test('plan list counts readiness and prioritises pending work', () => {
+  const { planListConclusion } = load();
+  const text = planListConclusion([
+    { id: 'a', export_ready: true },
+    { id: 'b', export_ready: false },
+    { id: 'c', export_ready: false },
+  ]);
+  assert.match(text, /共 3 个方案/);
+  assert.match(text, /可导出 1 个、待审核 2 个/);
+  assert.match(text, /先处理最近的待审核方案/);
+});
+
+test('all exportable plans shift guidance to downloading', () => {
+  const { planListConclusion } = load();
+  const text = planListConclusion([{ id: 'a', export_ready: true }]);
+  assert.match(text, /所有方案都已可导出/);
+  assert.match(text, /核对列名与实体 ID/);
+});
+
+test('plan list never calls historical spend a saving', () => {
+  const { planListConclusion } = load();
+  const text = planListConclusion([{ id: 'a', export_ready: true, claimable_observed_spend: 100 }]);
+  assert.match(text, /不是已节省广告费/);
+  assert.doesNotMatch(text, /已节省 ?[0-9]/);
+});
+
 test('review always carries the non-causal disclaimer', () => {
   const { reviewConclusion } = load();
   const text = reviewConclusion({

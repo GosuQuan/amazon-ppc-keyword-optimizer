@@ -27,6 +27,7 @@
     }));
     const root = document.getElementById('plans');
     root.replaceChildren();
+    document.getElementById('plans-conclusion').textContent = window.planListConclusion(list);
     const continueCard = document.getElementById('continue-card');
     const continueNote = document.getElementById('continue-note');
     const intro = document.createElement('p');

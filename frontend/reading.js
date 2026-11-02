@@ -53,6 +53,23 @@ function reviewConclusion(review) {
   return body + lengthNote + '这是前后两个周期的描述性对比，受季节、流量、归因延迟与周期长度影响，不能证明调整造成了结果，也不构成已节省的广告费。';
 }
 
+/* Describe what the saved plans mean and what to do next. Descriptive only. */
+function planListConclusion(plans) {
+  const list = Array.isArray(plans) ? plans : [];
+  if (!list.length) return '还没有方案。可以从上方「开始新方案」或「载入示例」开始。';
+  let exportable = 0;
+  let pending = 0;
+  list.forEach((plan) => {
+    if (plan && plan.export_ready) exportable += 1;
+    else pending += 1;
+  });
+  const guidance = pending > 0
+    ? `建议先处理最近的待审核方案，逐项批准后再导出`
+    : `所有方案都已可导出，进入工作台下载草稿、核对列名与实体 ID 后再执行`;
+  return `共 ${list.length} 个方案：可导出 ${exportable} 个、待审核 ${pending} 个。${guidance}。列表中的可核对花费是已经发生的搜索词花费，不是已节省广告费。`;
+}
+
 window.metricsReading = metricsReading;
 window.reviewConclusion = reviewConclusion;
-if (typeof module !== 'undefined') module.exports = { metricsReading, reviewConclusion };
+window.planListConclusion = planListConclusion;
+if (typeof module !== 'undefined') module.exports = { metricsReading, reviewConclusion, planListConclusion };
