@@ -411,6 +411,10 @@
   }
   watchHeader(searchInput, 'import-file-check', window.missingSearchColumns, window.headerCheckText);
   watchHeader(bulkInput, 'bulk-file-check', window.missingBulkColumns, window.bulkCheckText);
+  const simpleCheck = (map, label) => (line) => window.optionalReportCheckText(window.missingSimpleColumns(line, map), label);
+  const identity = (value) => value;
+  watchHeader($('import-form').elements.advertised_products, 'products-file-check', simpleCheck(window.PRODUCTS_REQUIRED, '推广商品报告'), identity);
+  watchHeader($('import-form').elements.placements, 'placements-file-check', simpleCheck(window.PLACEMENTS_REQUIRED, '广告位报告'), identity);
   $('import-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget;

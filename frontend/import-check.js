@@ -52,6 +52,32 @@ const BULK_ADVISORY = {
   bid: ['bid', 'keyword bid', '出价', '关键词出价'],
 };
 
+const PRODUCTS_REQUIRED = {
+  asin: ['asin', 'advertised asin', '广告商品asin', '推广的asin', '推广的商品asin'],
+  campaign: ['campaign', 'campaign name', '广告活动', '广告活动名称'],
+  ad_group: ['ad group', 'ad group name', '广告组', '广告组名称'],
+};
+
+const PLACEMENTS_REQUIRED = {
+  placement: ['placement', '广告位', '投放位置'],
+  campaign: ['campaign', 'campaign name', '广告活动', '广告活动名称'],
+};
+
+function missingSimpleColumns(headerLine, map) {
+  const cells = splitHeaderLine(headerLine);
+  if (!cells.some(Boolean)) return Object.keys(map);
+  return Object.keys(map).filter((key) => {
+    const aliases = map[key].map(normalizeHeader);
+    return !cells.some((cell) => aliases.includes(cell));
+  });
+}
+
+function optionalReportCheckText(missing, label) {
+  if (!Array.isArray(missing)) return '';
+  if (!missing.length) return `${label}预检通过：必需列都已找到。最终仍以服务端校验为准。`;
+  return `${label}预检：缺少必需列（${missing.join('、')}）。缺少时这份报告不会被采用；它是可选的，不上传也能生成方案。最终以服务端校验为准。`;
+}
+
 function missingBulkColumns(headerLine) {
   const cells = splitHeaderLine(headerLine);
   const find = (map) => Object.keys(map).filter((key) => {
@@ -83,4 +109,8 @@ window.missingSearchColumns = missingSearchColumns;
 window.headerCheckText = headerCheckText;
 window.missingBulkColumns = missingBulkColumns;
 window.bulkCheckText = bulkCheckText;
-if (typeof module !== 'undefined') module.exports = { missingSearchColumns, headerCheckText, missingBulkColumns, bulkCheckText, REQUIRED };
+window.missingSimpleColumns = missingSimpleColumns;
+window.optionalReportCheckText = optionalReportCheckText;
+window.PRODUCTS_REQUIRED = PRODUCTS_REQUIRED;
+window.PLACEMENTS_REQUIRED = PLACEMENTS_REQUIRED;
+if (typeof module !== 'undefined') module.exports = { missingSearchColumns, headerCheckText, missingBulkColumns, bulkCheckText, missingSimpleColumns, optionalReportCheckText, PRODUCTS_REQUIRED, PLACEMENTS_REQUIRED, REQUIRED };

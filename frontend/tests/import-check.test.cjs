@@ -74,6 +74,29 @@ test('empty bulk header reports everything rather than passing', () => {
   assert.equal(missingBulkColumns('').advisory.length, 4);
 });
 
+test('advertised products report needs asin campaign and ad group', () => {
+  const { missingSimpleColumns, optionalReportCheckText, PRODUCTS_REQUIRED } = load();
+  const header = 'Advertised ASIN,Campaign,Ad Group,Clicks,Spend';
+  assert.equal(JSON.stringify(missingSimpleColumns(header, PRODUCTS_REQUIRED)), '[]');
+  const missing = missingSimpleColumns('Campaign,Ad Group,Spend', PRODUCTS_REQUIRED);
+  assert.deepEqual(JSON.parse(JSON.stringify(missing)), ['asin']);
+  assert.match(optionalReportCheckText(missing, '推广商品报告'), /不会被采用/);
+  assert.match(optionalReportCheckText(missing, '推广商品报告'), /它是可选的/);
+});
+
+test('placements report needs placement and campaign', () => {
+  const { missingSimpleColumns, optionalReportCheckText, PLACEMENTS_REQUIRED } = load();
+  assert.equal(JSON.stringify(missingSimpleColumns('Placement,Campaign,Spend', PLACEMENTS_REQUIRED)), '[]');
+  const missing = missingSimpleColumns('Campaign,Spend', PLACEMENTS_REQUIRED);
+  assert.deepEqual(JSON.parse(JSON.stringify(missing)), ['placement']);
+  assert.match(optionalReportCheckText(missing, '广告位报告'), /不会被采用/);
+});
+
+test('optional report pre-check never claims authority', () => {
+  const { optionalReportCheckText } = load();
+  assert.match(optionalReportCheckText([], '广告位报告'), /以服务端校验为准/);
+});
+
 test('pre-check never presents itself as authoritative', () => {
   const { headerCheckText } = load();
   assert.match(headerCheckText([]), /以服务端校验为准/);
