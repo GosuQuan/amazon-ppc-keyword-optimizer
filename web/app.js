@@ -3,6 +3,30 @@
 const { useState, useEffect, useCallback } = React;
 const h = React.createElement;
 
+/* Error boundary: show render failures on the page instead of a blank screen. */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    if (window.console) console.error('React boundary caught:', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return h('div', { className: 'panel anim-fade-up' },
+        h('h2', null, '页面渲染出错'),
+        h('p', { className: 'error', role: 'alert' },
+          String((this.state.error && this.state.error.message) || this.state.error)),
+        h('p', { className: 'muted' }, '错误已被错误边界捕获，界面没有白屏。请刷新重试；若持续出现，请查看浏览器控制台的完整堆栈。'));
+    }
+    return this.props.children;
+  }
+}
+
 function Spinner() { return h('span', { className: 'spinner', 'aria-hidden': 'true' }); }
 
 function TopBar({ email, plan, points, onLogout }) {
@@ -165,7 +189,7 @@ function App() {
 }
 
 try {
-  ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+  ReactDOM.createRoot(document.getElementById('root')).render(h(ErrorBoundary, null, h(App)));
 } catch (e) {
   const root = document.getElementById('root');
   if (root) root.textContent = 'React 启动失败：' + (e && e.message ? e.message : String(e));
