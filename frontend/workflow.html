@@ -9,6 +9,7 @@
   <script src="/point-cost.js"></script>
   <script src="/conclusion.js"></script>
   <script src="/reading.js"></script>
+  <script src="/import-check.js"></script>
   <script src="/workflow.js" defer></script>
   <script src="/usage.js" defer></script>
   <script src="/cost.js" defer></script>
@@ -42,7 +43,7 @@
           <p><b>后台路径请以你自己账户的 Seller Central 为准</b>：不同站点、语言和改版后菜单位置会变化，我们无法替你确认；导出的 CSV 若缺列，系统会明确列出缺少哪些列。</p>
         </details>
         <p class="callout" id="import-scope">本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）；推广商品报告只用于确认广告组 ASIN，花费不并入搜索词；广告位报告按活动单独展示，不生成调价动作。生成方案消耗积分，导入前会在上方显示当前余额。</p>
-          <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告，示例：亚马逊搜索词报告-示例.csv</small></label>
+          <label class="file-field">搜索词报告 · 必填 CSV<input name="search_terms" type="file" accept=".csv" required><small>已筛选为上方 ASIN 的搜索词报告，示例：亚马逊搜索词报告-示例.csv</small><small id="import-file-check" class="muted"></small></label>
           <label class="file-field">批量广告报告 · 可选 CSV / TSV<input name="bulk" type="file" accept=".csv,.tsv"><small>用于匹配广告实体及可执行动作</small></label>
           <label class="file-field">推广商品报告 · 可选 CSV<input name="advertised_products" type="file" accept=".csv"><small>只用于确认广告组里的 ASIN，花费不并入搜索词</small></label>
           <label class="file-field">广告位报告 · 可选 CSV<input name="placements" type="file" accept=".csv"><small>按活动单独展示，不生成调价动作</small></label>

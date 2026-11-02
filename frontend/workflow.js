@@ -392,6 +392,21 @@
   if (new URLSearchParams(location.search).get('demo') === '1' && sessionStorage.getItem('ppc_token')) {
     $('load-demo').click();
   }
+  const searchInput = $('import-form').elements.search_terms;
+  if (searchInput) {
+    searchInput.addEventListener('change', () => {
+      const target = $('import-file-check');
+      const file = searchInput.files && searchInput.files[0];
+      if (!file) { target.textContent = ''; return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const firstLine = String(reader.result || '').split(/\r?\n/)[0] || '';
+        target.textContent = window.headerCheckText(window.missingSearchColumns(firstLine));
+      };
+      reader.onerror = () => { target.textContent = '无法读取所选文件，请确认文件可访问。'; };
+      reader.readAsText(file.slice(0, 8192));
+    });
+  }
   $('import-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget;
