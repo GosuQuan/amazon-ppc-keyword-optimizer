@@ -37,8 +37,10 @@ function WorkflowView({ token }) {
   const [checks, setChecks] = useState({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [plan, setPlan] = useState(null);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState('');
   const [files, setFiles] = useState({});
+  const [plan, setPlan] = useState(null);
 
   const update = (key) => (event) => setForm((prev) => Object.assign({}, prev, { [key]: event.target.value }));
 
@@ -75,6 +77,72 @@ function WorkflowView({ token }) {
   const onFilePicked = useCallback((name, file) => {
     setFiles((prev) => Object.assign({}, prev, { [name]: file }));
   }, []);
+
+  const reload = useCallback((id) => {
+    return fetch('/api/workflow/plans/' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + token } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('方案重新获取失败'))));
+  }, [token]);
+
+  const setStatus = useCallback(async (actionId, status) => {
+    if (!plan) return;
+    setError('');
+    try {
+      const res = await fetch('/api/workflow/plans/' + encodeURIComponent(plan.id) + '/actions/' + encodeURIComponent(actionId), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({ status }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.detail || '审核失败');
+      setPlan(await reload(plan.id));
+    } catch (e) {
+      setError(e.message || '审核失败');
+    }
+  }, [plan, token, reload]);
+
+  const canExport = useCallback(() => {
+    const readiness = plan && plan.export_readiness;
+    if (readiness) return readiness.ready === true;
+    const approved = (plan && plan.actions || []).filter((a) => a.status === 'approved');
+    return approved.length > 0 && approved.every((a) => a.exportable && !(a.blocking_reasons || []).length);
+  }, [plan]);
+
+  const exportNote = useCallback(() => {
+    const readiness = plan && plan.export_readiness;
+    if (!readiness) return '尚未获取导出资格信息。';
+    if (readiness.ready) return `可导出 ${readiness.approved} 项已批准且通过校验的动作。${readiness.note || ''}`;
+    if (readiness.already_exported) return `已有草稿快照，模板验收状态：${readiness.template_validated ? '已验证' : '未验证'}。${readiness.note || ''}`;
+    if (readiness.blocked && readiness.blocked.length) {
+      return '暂不能导出：' + readiness.blocked.map((item) => `${item.keyword}：${(item.reasons || []).join('、')}`).join('；')
+        + '。整份草稿会被拒绝，不能只导出其中合格的一部分。';
+    }
+    return '暂不能导出：尚无已批准且可执行的动作。请先逐项审核。';
+  }, [plan]);
+
+  const doExport = useCallback(async () => {
+    if (!plan) return;
+    setExportBusy(true); setExportError('');
+    try {
+      const res = await fetch('/api/workflow/plans/' + encodeURIComponent(plan.id) + '/export', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + token },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail || '导出失败');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sp-draft-' + plan.id + '.tsv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setPlan(await reload(plan.id));
+    } catch (e) {
+      setExportError(e.message || '导出失败');
+    } finally { setExportBusy(false); }
+  }, [plan, token, reload]);
 
   return React.createElement(
     'main',
@@ -131,9 +199,30 @@ function WorkflowView({ token }) {
           React.createElement('b', null, action.keyword || '优化动作'),
           React.createElement('small', null, (action.kind || '') + ' · ' + (action.status || '') + (action.exportable ? ' · 可导出' : ' · 不可导出')),
           action.blocking_reasons && action.blocking_reasons.length
-            ? React.createElement('small', null, '阻断：' + action.blocking_reasons.join('、')) : null
+            ? React.createElement('small', null, '阻断：' + action.blocking_reasons.join('、')) : null,
+           React.createElement('div', { className: 'row' },
+             React.createElement('button', {
+               type: 'button', disabled: action.status === 'approved',
+               onClick: () => setStatus(action.id, 'approved'),
+             }, action.status === 'approved' ? '已批准' : '批准'),
+             React.createElement('button', {
+               type: 'button', disabled: action.status === 'rejected',
+               onClick: () => setStatus(action.id, 'rejected'),
+             }, '拒绝'))
         ))
       )
+    ) : null,
+    plan ? React.createElement(
+      'section',
+      { className: 'panel anim-fade-up stagger-3' },
+      React.createElement('p', { className: 'eyebrow' }, '03 / 下载并核对'),
+      React.createElement('h2', null, '导出已批准的可执行草稿'),
+      React.createElement('p', { className: 'callout' }, exportNote()),
+      exportError ? React.createElement('p', { className: 'error', role: 'alert' }, exportError) : null,
+      React.createElement('button', {
+        className: 'primary', type: 'button', disabled: exportBusy || !canExport(), onClick: doExport,
+      }, exportBusy ? '正在生成草稿…' : '下载 TSV 批量草稿',
+        exportBusy ? React.createElement('span', { className: 'spinner' }) : null)
     ) : null
   );
 }
