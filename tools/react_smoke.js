@@ -64,7 +64,8 @@ function check(name, condition, detail) {
       errors.push((ex.exception && ex.exception.description ? ex.exception.description : ex.text || '').slice(0, 200));
     }
     if (data.method === 'Log.entryAdded' && ['error'].includes((data.params.entry || {}).level)) {
-      errors.push(((data.params.entry || {}).text || '').slice(0, 200));
+      const entry = data.params.entry || {};
+      errors.push((entry.text || '').slice(0, 160) + (entry.url ? ' @' + entry.url.split('/').slice(-1)[0] : ''));
     }
   });
   await cdp(ws, 'Log.enable', {}, sessionId).catch(() => {});

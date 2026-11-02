@@ -112,12 +112,9 @@ function ToolView({ token, account }) {
     setAiResult(parsed);
   };
 
-  const brandTokens = () => String(ai.brands || '').toLowerCase().split(/[,，\n]+/)
-    .map((s) => s.trim()).filter(Boolean);
-  const hitsBrand = (word) => {
-    const tokens = String(word || '').toLowerCase().match(/[a-z0-9]+/g) || [];
-    return brandTokens().some((brand) => tokens.includes(brand));
-  };
+  // Reuse the single shared implementation so multi-word brands behave the same
+  // as in the classic tool page.
+  const hitsBrand = (word) => (typeof window.brandHit === 'function' ? window.brandHit(word, ai.brands) : false);
 
   const importExpert = (event) => {
     const file = event.target.files && event.target.files[0];

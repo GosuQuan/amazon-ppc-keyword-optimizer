@@ -253,12 +253,7 @@ function validateAiJson(j) {
   return result;
 }
 function expansionHasCompetitorBrand(word) {
-  const tokens = String(word || '').toLowerCase().match(/[a-z0-9]+/g) || [];
-  const configured = ($('#aiBrands').value || '').toLowerCase().split(/[,，\n]+/);
-  return configured.some((brand) => {
-    const parts = brand.match(/[a-z0-9]+/g) || [];
-    return parts.length > 0 && tokens.some((_, start) => parts.every((part, i) => tokens[start + i] === part));
-  });
+  return window.brandHit(word, ($('#aiBrands').value || ''));
 }
 function expansionCoveredByGood(word, goodTerms) {
   if (word.length < 4) return false;

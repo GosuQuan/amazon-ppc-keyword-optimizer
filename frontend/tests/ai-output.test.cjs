@@ -7,6 +7,8 @@ const vm = require('node:vm');
 
 // Execute the shipped SPA, substituting only browser/transport boundaries.
 const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+// app.js relies on the shared brandHit helper loaded separately in the browser.
+const brandSource = fs.readFileSync(path.join(__dirname, '..', 'brand-check.js'), 'utf8');
 function app() {
   const nodes = new Map();
   const node = id => {
@@ -20,7 +22,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
+  vm.runInContext(brandSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
