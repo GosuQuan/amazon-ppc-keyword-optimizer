@@ -97,6 +97,22 @@ test('optional report pre-check never claims authority', () => {
   assert.match(optionalReportCheckText([], '广告位报告'), /以服务端校验为准/);
 });
 
+test('tab separated bulk headers are recognised', () => {
+  const { missingBulkColumns, missingSearchColumns } = load();
+  const tsv = ['Entity', 'Campaign', 'Ad Group', 'Keyword', 'Match Type', 'Bid', 'Campaign ID', 'Ad Group ID', 'Keyword ID'].join('\t');
+  const result = missingBulkColumns(tsv);
+  assert.equal(JSON.stringify(result), JSON.stringify({ required: [], advisory: [] }), 'TSV bulk was misparsed');
+  const searchTsv = ['Customer Search Term', 'Campaign', 'Clicks', 'Spend', 'Sales', 'Orders', 'Ad Group', 'Keyword', 'Match Type'].join('\t');
+  assert.equal(JSON.stringify(missingSearchColumns(searchTsv)), '[]');
+});
+
+test('comma separated files still win when commas dominate', () => {
+  const { missingBulkColumns } = load();
+  const csv = 'Entity,Campaign,Ad Group,Keyword,Match Type,Bid';
+  const result = missingBulkColumns(csv);
+  assert.equal(result.required.length, 0);
+});
+
 test('pre-check never presents itself as authoritative', () => {
   const { headerCheckText } = load();
   assert.match(headerCheckText([]), /以服务端校验为准/);

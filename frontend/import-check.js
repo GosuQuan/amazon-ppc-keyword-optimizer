@@ -23,7 +23,12 @@ function normalizeHeader(value) {
 }
 
 function splitHeaderLine(line) {
-  return String(line || '').split(',').map((cell) => normalizeHeader(cell.replace(/^"|"$/g, '')));
+  const text = String(line || '');
+  // Amazon bulk downloads are often tab-separated; choose the delimiter that actually appears more.
+  const tabs = (text.match(/\t/g) || []).length;
+  const commas = (text.match(/,/g) || []).length;
+  const delimiter = tabs > commas ? '\t' : ',';
+  return text.split(delimiter).map((cell) => normalizeHeader(cell.replace(/^"|"$/g, '')));
 }
 
 function missingSearchColumns(headerLine) {
