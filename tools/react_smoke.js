@@ -4,6 +4,8 @@
    Exits non-zero on any failed assertion, so it can gate a commit or CI run. */
 const port = process.env.CDP_PORT || '9333';
 const BASE = process.env.SMOKE_BASE || 'http://127.0.0.1:8790';
+// Default: React served under /web (classic default). With PPC_DEFAULT_APP=react use the site root.
+const APP = process.env.SMOKE_APP || (BASE + '/web/index.html');
 const EMAIL = process.env.SMOKE_EMAIL || 'real-run@example.com';
 const PASSWORD = process.env.SMOKE_PASSWORD || 'password1';
 
