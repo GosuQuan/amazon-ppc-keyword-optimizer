@@ -3,11 +3,37 @@
    Uses its own createElement alias (t) so it can load before app.js. */
 const t = React.createElement;
 
-function DataTable({ title, rows, cols, max }) {
+function csvCell(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return /[",\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
+function downloadCsv(filename, cols, rows) {
+  const lines = [cols.map((c) => csvCell(c.label)).join(',')];
+  (rows || []).forEach((r) => {
+    lines.push(cols.map((c) => {
+      const raw = c.get ? c.get(r) : r[c.k];
+      return csvCell(c.fmt ? c.fmt(raw, r) : raw);
+    }).join(','));
+  });
+  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function DataTable({ title, rows, cols, max, file }) {
   const list = (rows || []).slice(0, max || 100);
   if (!list.length) return null;
   return t('section', { className: 'panel anim-fade-up' },
-    t('h3', null, `${title}（${list.length} 条）`),
+    t('div', { className: 'section-head' },
+      t('h3', null, `${title}（${list.length} 条）`),
+      file ? t('button', { type: 'button', onClick: () => downloadCsv(file, cols, list) }, '导出 CSV') : null),
     t('table', null,
       t('thead', null, t('tr', null, cols.map((c) => t('th', { key: c.k }, c.label)))),
       t('tbody', null, list.map((r, index) => t('tr', { key: index },
@@ -84,25 +110,25 @@ function ToolView({ token, account }) {
         t('span', null, label), t('strong', null, value == null ? '—' : String(value))))),
       result.aovAssumed ? t('p', { className: 'callout' }, '报表中没有订单，客单价按缺省值计算 —— 建议填写真实客单价后重新分析。') : null) : null,
     result ? t(DataTable, {
-      title: '调价清单', rows: result.actions, max: 100,
+      title: '调价清单', rows: result.actions, max: 100, file: '亚马逊投流-调价清单.csv',
       cols: [{ k: 'prio', label: '优先级' }, { k: 'cls', label: '级别' }, { k: 'act', label: '建议动作' },
         { k: 'kw', label: '关键词' }, { k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, { k: 'orders', label: '订单' },
         acosCol()],
     }) : null,
     result ? t(DataTable, {
-      title: '搜索词明细', rows: result.st, max: 100,
+      title: '搜索词明细', rows: result.st, max: 100, file: '亚马逊投流-搜索词明细.csv',
       cols: [{ k: 'cls', label: '级别' }, { k: 'st', label: '搜索词' }, { k: 'kw', label: '关键词' },
         { k: 'clk', label: '点击' }, { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' },
         { k: 'orders', label: '订单' }, acosCol()],
     }) : null,
     result ? t(DataTable, {
-      title: '词根挖掘', rows: result.roots, max: 100,
+      title: '词根挖掘', rows: result.roots, max: 100, file: '亚马逊投流-词根挖掘.csv',
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
     }) : null,
     result ? t(DataTable, {
-      title: '互搏检测', rows: result.conflicts, max: 50,
+      title: '互搏检测', rows: result.conflicts, max: 50, file: '亚马逊投流-互搏检测.csv',
       cols: [{ k: 'st', label: '搜索词' }, { k: 'locs', label: '位置数' }, { k: 'totClk', label: '总点击' },
         { k: 'winner', label: '最优位置' }],
     }) : null);
