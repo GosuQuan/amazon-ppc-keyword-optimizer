@@ -264,6 +264,20 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
+test('expansions carry evidence counts from our own report', () => {
+  const a = app();
+  a.state.result.harvest = []; a.state.result.combos = [];
+  a.state.result.st.push(
+    { st: 'desk trip', cls: '优秀', sales: 40, orders: 2 },
+    { st: 'desk trip', cls: '良好', sales: 20, orders: 1 },
+  );
+  a.mergeAiJson({ expansions: [{ word: 'desk trip' }, { word: 'unseen word' }], negativeHints: [], intents: [], insights: [] });
+  assert.equal(a.state.ai.expansions[0].reportRows, 2);
+  assert.equal(a.state.ai.expansions[0].reportOrders, 3);
+  assert.equal(a.state.ai.expansions[1].reportRows, 0);
+  assert.equal(a.state.ai.expansions[1].reportOrders, 0);
+});
+
 test('a good search term that is also a substring stays an independent candidate', () => {
   const a = app();
   a.state.result.harvest = []; a.state.result.combos = [];

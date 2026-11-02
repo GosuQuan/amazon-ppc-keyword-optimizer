@@ -277,7 +277,27 @@ function negativeContainedInGood(word, goodTerms) {
 function mergeAiJson(j) {
   j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
-  const expansions = j.expansions.map(e => { const word = canon(e.word); return { word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '', exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good), competitorBrand: expansionHasCompetitorBrand(e.word) }; });
+  // Evidence from our own report: does this suggested word already appear as a search
+  // term, and did it bring orders? (Never presented as competitor evidence.)
+  const reportIndex = new Map();
+  for (const row of (state.result.st || [])) {
+    const key = canon(row.st);
+    if (!key) continue;
+    const hit = reportIndex.get(key) || { rows: 0, orders: 0 };
+    hit.rows += 1;
+    hit.orders += Number(row.orders) || 0;
+    reportIndex.set(key, hit);
+  }
+  const expansions = j.expansions.map(e => {
+    const word = canon(e.word);
+    const evidence = reportIndex.get(word) || { rows: 0, orders: 0 };
+    return {
+      word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '',
+      exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good),
+      competitorBrand: expansionHasCompetitorBrand(e.word),
+      reportRows: evidence.rows, reportOrders: evidence.orders,
+    };
+  });
   const intents = j.intents;
   const negatives = j.negativeHints.map(e => {
     const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
@@ -353,7 +373,10 @@ function renderAI() {
   if (!state.ai.done) { $('#aiExp').innerHTML = '<p class="hint">三种方式：① <b>专家导入（推荐，无需 Key）</b>——导出优秀关键词发给「亚马逊数据挖掘专家」Agent，把返回 JSON 导入；② 在线代理/直连；③ 关闭仅用规则。</p>'; $('#aiIntent').innerHTML = ''; $('#aiNeg').innerHTML = ''; $('#aiInsight').innerHTML = ''; return; }
   mkTable('aiExp', { name: 'AI扩词', rows: () => state.ai.expansions, max: 200, cols: [
     { k: 'word', label: 'AI 建议关键词' }, { k: 'type', label: '类型', fmt: v => `<span class="badge b-ai">${esc(v)}</span>`, csv: r => r.type },
-    { k: 'exists', label: '查重', get: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词，注意去重' : r.coveredByGood ? '已包含在优质词中' : '新词', csv: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词' : r.coveredByGood ? '已包含在优质词中' : '新词' }, { k: 'reason', label: '理由', fmt: esc }] });
+    { k: 'exists', label: '查重', get: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词，注意去重' : r.coveredByGood ? '已包含在优质词中' : '新词', csv: r => r.competitorBrand ? '含竞品品牌' : r.exists ? '已有精准词' : r.coveredByGood ? '已包含在优质词中' : '新词' },
+    { k: 'reportRows', label: '本报表出现', get: r => (r.reportRows ? `${r.reportRows} 条` : '未出现'), csv: r => String(r.reportRows || 0) },
+    { k: 'reportOrders', label: '其中订单', get: r => (r.reportOrders ? String(r.reportOrders) : '0'), csv: r => String(r.reportOrders || 0) },
+    { k: 'reason', label: '理由', fmt: esc }] });
   $('#aiIntent').innerHTML = state.ai.intents.map((g, i) => `<div class="intent-card"><b>${i + 1}. ${esc(g.intent)}</b><div>${g.keywords.map(k => `<span class="kwchip">${esc(k)}</span>`).join('')}</div></div>`).join('') || '<p class="hint">无意图分组。</p>';
   $('#aiInsight').innerHTML = state.ai.insights.map(x => `<div class="insight-card"><b>${esc(x.title || '洞察')}</b>　${esc(x.detail || '')}</div>`).join('') || '<p class="hint">无洞察。</p>';
   mkTable('aiNeg', { name: 'AI否定预判', rows: () => state.ai.negatives, max: 200, cols: [
