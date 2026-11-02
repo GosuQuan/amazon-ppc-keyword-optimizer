@@ -114,6 +114,18 @@ function check(name, condition, detail) {
   check('工作台文件字段', benchObj.fileInputs >= 2, 'fileInputs=' + benchObj.fileInputs);
   check('五步进度条渲染', benchObj.steps === 5, 'steps=' + benchObj.steps);
 
+  // 4. Points page: balance, packs and ledger.
+  await cdp(ws, 'Page.navigate', { url: BASE + '/web/index.html#/points' }, sessionId);
+  await sleep(8000);
+  const points = await ev(`(() => ({
+    heading: document.querySelector('h1') ? document.querySelector('h1').textContent : '',
+    packs: document.querySelectorAll('.action-card').length,
+    rows: document.querySelectorAll('tbody tr').length
+  }))()`);
+  const pointsObj = typeof points === 'string' ? JSON.parse(points) : points;
+  check('积分页渲染', String(pointsObj.heading).includes('积分'), 'heading=' + pointsObj.heading);
+  check('积分页显示充值档位', pointsObj.packs === 3, 'packs=' + pointsObj.packs);
+
   check('全程无未捕获错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   ws.close();
