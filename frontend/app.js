@@ -277,20 +277,11 @@ function negativeContainedInGood(word, goodTerms) {
 function mergeAiJson(j) {
   j = validateAiJson(j);
   const exact = exactKwSet(), waste = wasteStSet(), good = goodStSet(), loss = lossRootSet();
-  // Evidence from our own report: does this suggested word already appear as a search
-  // term, and did it bring orders? (Never presented as competitor evidence.)
-  const reportIndex = new Map();
-  for (const row of (state.result.st || [])) {
-    const key = canon(row.st);
-    if (!key) continue;
-    const hit = reportIndex.get(key) || { rows: 0, orders: 0 };
-    hit.rows += 1;
-    hit.orders += Number(row.orders) || 0;
-    reportIndex.set(key, hit);
-  }
+  // Evidence from our own report, via the shared helper (never competitor evidence).
+  const reportIndex = window.buildReportEvidence(state.result.st || []);
   const expansions = j.expansions.map(e => {
     const word = canon(e.word);
-    const evidence = reportIndex.get(word) || { rows: 0, orders: 0 };
+    const evidence = window.evidenceFor(reportIndex, e.word);
     return {
       word: e.word.trim(), type: e.type || 'AI', reason: e.reason || '',
       exists: exact.has(word), coveredByGood: expansionCoveredByGood(word, good),
