@@ -112,8 +112,8 @@ function check(name, condition, detail) {
     heading: document.querySelector('h1') ? document.querySelector('h1').textContent : ''
   }))()`);
   const benchObj = typeof bench === 'string' ? JSON.parse(bench) : bench;
-  // 基础两个：搜索词报告与批量报告；复盘报告字段在生成方案后才出现。
-  check('工作台文件字段', benchObj.fileInputs >= 2, 'fileInputs=' + benchObj.fileInputs);
+  // 导入区四份报告：搜索词、批量、推广商品、广告位（复盘报告在生成方案后才出现）。
+  check('工作台四份报告字段', benchObj.fileInputs >= 4, 'fileInputs=' + benchObj.fileInputs);
   check('五步进度条渲染', benchObj.steps === 5, 'steps=' + benchObj.steps);
 
   // 4. Points page: balance, packs and ledger.

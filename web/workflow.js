@@ -210,7 +210,7 @@ function WorkflowView({ token }) {
       React.createElement('p', { className: 'eyebrow' }, '01 / 建立上下文'),
       React.createElement('h1', null, '导入商品广告报告'),
       React.createElement('p', { className: 'callout' },
-        '本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）。生成方案消耗积分。'),
+        '本次会读取：搜索词报告的点击、花费、销售额、订单与匹配类型；批量报告仅用于补齐实体 ID 与真实出价（缺失时动作只可查看、不能导出）；推广商品报告只用于确认广告组 ASIN，花费不并入搜索词；广告位报告按活动单独展示，不生成调价动作。生成方案消耗积分。'),
       React.createElement(
         'form',
         { onSubmit },
@@ -224,7 +224,9 @@ function WorkflowView({ token }) {
           React.createElement(Field, { label: '目标 ACOS（%）', children: React.createElement('input', { type: 'number', value: form.target_acos, onChange: update('target_acos'), required: true }) }),
           React.createElement(Field, { label: '每日预算', children: React.createElement('input', { type: 'number', value: form.daily_budget, onChange: update('daily_budget'), placeholder: '例如：50', required: true }) }),
           React.createElement(FileField, { label: '搜索词报告 · 必填 CSV', name: 'search_terms', accept: '.csv', required: true, onCheck: runCheck, onFile: onFilePicked }),
-          React.createElement(FileField, { label: '批量广告报告 · 可选 CSV / TSV', name: 'bulk', accept: '.csv,.tsv', onCheck: runCheck, onFile: onFilePicked })
+          React.createElement(FileField, { label: '批量广告报告 · 可选 CSV / TSV', name: 'bulk', accept: '.csv,.tsv', onCheck: runCheck, onFile: onFilePicked }),
+          React.createElement(FileField, { label: '推广商品报告 · 可选 CSV', name: 'advertised_products', accept: '.csv', onCheck: runCheck, onFile: onFilePicked }),
+          React.createElement(FileField, { label: '广告位报告 · 可选 CSV', name: 'placements', accept: '.csv', onCheck: runCheck, onFile: onFilePicked })
         ),
         React.createElement('button', { className: 'primary', type: 'submit', disabled: busy },
           busy ? '正在分析报告…' : '生成优化方案 →', busy ? React.createElement('span', { className: 'spinner' }) : null),
