@@ -13,7 +13,7 @@
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.detail || '登录失败');
     sessionStorage.setItem('ppc_token', body.token);
-    location.replace(wantsDemo() ? '/workflow.html?demo=1' : '/dashboard.html');
+    location.replace(wantsDemo() ? 'workflow.html?demo=1' : 'dashboard.html');
   }
   fetch('/api/auth/pricing').then((response) => response.json()).then((data) => {
     const model = data.modelCosts || {};

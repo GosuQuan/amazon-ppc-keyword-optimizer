@@ -1,7 +1,7 @@
 'use strict';
 (() => {
   const token = sessionStorage.getItem('ppc_token');
-  if (!token) location.replace('/login.html');
+  if (!token) location.replace('login.html');
   const headers = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
   document.getElementById('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   const status = document.getElementById('recharge-status');

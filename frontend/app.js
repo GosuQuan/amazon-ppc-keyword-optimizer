@@ -33,7 +33,7 @@ function withAuth(options = {}) {
   if (typeof sessionStorage !== 'undefined') headers.Authorization = 'Bearer ' + (sessionStorage.getItem('ppc_token') || '');
   return { ...options, headers };
 }
-if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('ppc_token') && typeof location !== 'undefined') location.replace('/login.html');
+if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('ppc_token') && typeof location !== 'undefined') location.replace('login.html');
 /* ---------- 数据获取 ---------- */
 async function analyzeWithFiles(files) {
   const fd = new FormData(); const p = readParams();

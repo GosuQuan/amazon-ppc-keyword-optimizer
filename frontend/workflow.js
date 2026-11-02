@@ -65,7 +65,7 @@
     try { details = errorDetails(JSON.parse(text)); } catch { /* 保留服务端纯文本错误。 */ }
     return new Error(`请求失败（HTTP ${response.status}）${details ? '\n' + details : '，服务端未返回具体原因。'}`);
   }
-  if (!sessionStorage.getItem('ppc_token')) location.replace('/login.html');
+  if (!sessionStorage.getItem('ppc_token')) location.replace('login.html');
   function refreshPointPreview() {
     return Promise.all([
       fetch('/api/auth/pricing').then((response) => response.json()),
@@ -103,7 +103,7 @@
       const response = await fetch(url, { ...options, headers, signal: controller.signal });
       if (response.status === 401) {
         sessionStorage.removeItem('ppc_token');
-        location.replace('/login.html');
+        location.replace('login.html');
         throw new Error('请先登录');
       }
       if (!response.ok) throw await responseError(response);

@@ -1,12 +1,12 @@
 'use strict';
 (() => {
   const token = sessionStorage.getItem('ppc_token');
-  if (!token) location.replace('/login.html');
+  if (!token) location.replace('login.html');
   const headers = { Authorization: 'Bearer ' + token };
   document.getElementById('logout').addEventListener('click', () => sessionStorage.removeItem('ppc_token'));
   const text = (id, value) => { document.getElementById(id).textContent = value; };
   Promise.all([
-    fetch('/api/auth/me', { headers }).then((response) => { if (response.status === 401) location.replace('/login.html'); return response.json(); }),
+    fetch('/api/auth/me', { headers }).then((response) => { if (response.status === 401) location.replace('login.html'); return response.json(); }),
     fetch('/api/workflow/plans', { headers }).then((response) => response.json()),
     fetch('/api/billing/packs', { headers }).then((response) => response.json()),
   ]).then(([account, plans, billing]) => {
