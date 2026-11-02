@@ -33,7 +33,8 @@ function TopBar({ email, plan, points, onLogout }) {
   return h('header', { className: 'topbar' },
     h('a', { className: 'brand', href: '/web/index.html' }, 'PPC ', h('span', null, '平台')),
     h('nav', null,
-      h('a', { href: '/web/index.html#/workflow' }, '广告工作台（React）'),
+      h('a', { href: '/web/index.html#/workflow' }, '广告工作台'),
+      h('a', { href: '/web/index.html#/tool' }, '报表分析'),
       h('a', { href: '/web/index.html#/points' }, '积分'),
       email
         ? h('a', { href: '#logout', onClick: (e) => { e.preventDefault(); onLogout(); } },
@@ -185,7 +186,9 @@ function App() {
     h(TopBar, { email: account.email, plan: account.plan, points: account.points, onLogout: logout }),
     hash === '#/workflow' && window.WorkflowView
       ? h(window.WorkflowView, { token })
-      : hash === '#/points' && window.PointsView
+      : hash === '#/tool' && window.ToolView
+        ? h(window.ToolView, { token, account })
+        : hash === '#/points' && window.PointsView
         ? h(window.PointsView, { token, account })
         : h(Dashboard, { token, account }));
 }
