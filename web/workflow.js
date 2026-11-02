@@ -191,6 +191,63 @@ function WorkflowView({ token }) {
     } finally { setExportBusy(false); }
   }, [plan, token, reload]);
 
+  const [usage, setUsage] = useState(null);
+  const [usageBusy, setUsageBusy] = useState(false);
+  const [reviewMinutes, setReviewMinutes] = useState('');
+  const [reviewNote, setReviewNote] = useState('');
+  const [costBusy, setCostBusy] = useState(false);
+  const [costStatus, setCostStatus] = useState('');
+
+  const loadUsage = useCallback(() => {
+    setUsageBusy(true);
+    return fetch('/api/ai/usage', { headers: { Authorization: 'Bearer ' + token } })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('读取调用记录失败'))))
+      .then(setUsage)
+      .catch(() => setUsage(null))
+      .finally(() => setUsageBusy(false));
+  }, [token]);
+
+  useEffect(() => { loadUsage(); }, [loadUsage]);
+
+  const submitReviewTime = useCallback((event) => {
+    event.preventDefault();
+    const minutes = Number(reviewMinutes);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+      setCostStatus('请填写 1 到 1440 的整数分钟。');
+      return null;
+    }
+    setCostBusy(true);
+    return fetch('/api/cost/review', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ minutes, note: reviewNote }),
+    })
+      .then((r) => r.json().then((body) => ({ ok: r.ok, body })))
+      .then((result) => {
+        if (!result.ok) throw new Error(result.body.detail || '记录失败');
+        setCostStatus(`已记录审核 ${result.body.review_minutes} 分钟，共 ${result.body.review_count} 次。模型费用未知；广告花费变化未计为节省。`);
+        setReviewMinutes('');
+        setReviewNote('');
+      })
+      .catch((e) => setCostStatus('记录失败：' + (e.message || '')))
+      .finally(() => setCostBusy(false));
+  }, [token, reviewMinutes, reviewNote]);
+
+  const usageCards = (() => {
+    if (!usage || !usage.summary) return [];
+    const s = usage.summary;
+    const v = (n) => (typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('zh-CN') : '未知');
+    return [
+      ['已记录调用', v(s.calls)],
+      ['接口成功 / 失败', `${v(s.successes)} / ${v(s.failures)}`],
+      ['已知输入 token', `${v(s.prompt_tokens)}（覆盖 ${v(s.prompt_known_calls)} 次）`],
+      ['已知输出 token', `${v(s.completion_tokens)}（覆盖 ${v(s.completion_known_calls)} 次）`],
+      ['其中推理 token', `${v(s.reasoning_tokens)}（不是建议正文，也不等于已节省费用）`],
+      ['已知总 token', `${v(s.total_tokens)}（覆盖 ${v(s.usage_known_calls)} 次）`],
+      ['本次启动后的重复命中', v(s.cache_hits)],
+      ['模型费用', '未知（待核实费率及账单）']
+    ];
+  })();
+
   const stage = !plan ? 0 : plan.review ? 4 : plan.execution ? 3 : (plan.exports && plan.exports.length) ? 2 : 1;
   const stepLabels = ['01 导入报告', '02 分析与审核', '03 导出草稿', '04 记录执行', '05 周期复盘'];
 
@@ -283,6 +340,33 @@ function WorkflowView({ token }) {
       }, exportBusy ? '正在生成草稿…' : '下载 TSV 批量草稿',
         exportBusy ? React.createElement('span', { className: 'spinner' }) : null)
     ) : null,
+    React.createElement(
+      'section',
+      { className: 'panel anim-fade-up stagger-4' },
+      React.createElement('p', { className: 'eyebrow' }, '模型调用与成本'),
+      React.createElement('h2', null, '本机代理的调用记录'),
+      React.createElement('p', { className: 'muted' }, '只统计启用账本后、本机代理发起的调用。刷新不会消耗模型额度；接口成功不代表建议有效。未核实费率，费用显示未知。'),
+      React.createElement('button', {
+        type: 'button', disabled: usageBusy, onClick: loadUsage,
+      }, usageBusy ? '正在刷新…' : '刷新用量', usageBusy ? React.createElement('span', { className: 'spinner' }) : null),
+      usageCards.length
+        ? React.createElement('div', { className: 'metrics' }, usageCards.map(([label, detail]) => React.createElement(
+            'div', { className: 'metric', key: label },
+            React.createElement('span', null, label),
+            React.createElement('strong', null, detail))))
+        : React.createElement('p', { className: 'muted' }, usage ? '尚无调用记录。' : '正在读取调用记录…'),
+      React.createElement('form', { onSubmit: submitReviewTime },
+        React.createElement('div', { className: 'form-grid' },
+          Field({ label: '本次审核分钟', children: React.createElement('input', {
+            type: 'number', min: 1, max: 1440, value: reviewMinutes, onChange: (e) => setReviewMinutes(e.target.value), required: true,
+          }) }),
+          Field({ label: '备注', children: React.createElement('input', {
+            value: reviewNote, onChange: (e) => setReviewNote(e.target.value), placeholder: '例如：核对了 12 个阻断项',
+          }) })),
+        React.createElement('button', { type: 'submit', disabled: costBusy },
+          costBusy ? '正在记录…' : '记录审核耗时', costBusy ? React.createElement('span', { className: 'spinner' }) : null)),
+      costStatus ? React.createElement('p', { className: 'callout', role: 'status' }, costStatus) : null
+    ),
     plan ? React.createElement(
       'section',
       { className: 'panel anim-fade-up stagger-4' },
