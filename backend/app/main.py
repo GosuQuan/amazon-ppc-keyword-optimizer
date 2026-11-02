@@ -37,9 +37,21 @@ app.include_router(workflow_router)
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _WEB = os.path.join(_ROOT, "web")
+_FRONTEND = os.path.join(_ROOT, "frontend")
+
+# Shared plain-JS business helpers (pre-check, conclusions, point text) live once in frontend/
+# and are exposed to the React app through /shared so the rules never fork.
+if os.path.isdir(_FRONTEND):
+    app.mount("/shared", StaticFiles(directory=_FRONTEND), name="shared")
+
+# Default entry app: "classic" (plain HTML/JS) or "react" (web/). Switch with PPC_DEFAULT_APP.
+_DEFAULT_APP = (os.environ.get("PPC_DEFAULT_APP") or "classic").strip().lower()
 if os.path.isdir(_WEB):
     app.mount("/web", StaticFiles(directory=_WEB, html=True), name="web")
 
-_FRONTEND = os.path.join(_ROOT, "frontend")
-if os.path.isdir(_FRONTEND):
+if _DEFAULT_APP == "react" and os.path.isdir(_WEB):
+    if os.path.isdir(_FRONTEND):
+        app.mount("/classic", StaticFiles(directory=_FRONTEND, html=True), name="classic")
+    app.mount("/", StaticFiles(directory=_WEB, html=True), name="react-root")
+elif os.path.isdir(_FRONTEND):
     app.mount("/", StaticFiles(directory=_FRONTEND, html=True), name="frontend")
