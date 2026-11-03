@@ -23,7 +23,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp, mtSplitRows };', context);
+  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp, mtSplitRows, kwSplitByCamp };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -297,6 +297,23 @@ test('checkSharedDeps passes when every rule helper is present', () => {
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '["charIssues"]');
   a.context.window.charIssues = () => [];
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]');
+});
+
+test('kw split shows how many campaigns each bid keyword runs in', () => {
+  const a = app();
+  const rows = a.kwSplitByCamp([
+    { st: 'x', kw: 'red shoe', camp: 'A', adg: 'G1', clk: 5, spend: 10, sales: 30, orders: 1 },
+    { st: 'y', kw: 'red shoe', camp: 'B', adg: 'G2', clk: 3, spend: 8, sales: 0, orders: 0 },
+    { st: 'z', kw: 'blue mat', camp: 'A', adg: 'G9', clk: 2, spend: 4, sales: 20, orders: 1 },
+  ]);
+  assert.equal(rows.length, 2);
+  const red = rows.find((r) => r.kw === 'red shoe');
+  assert.equal(red.campCount, 2, 'runs in two campaigns');
+  assert.equal(red.adgCount, 2);
+  assert.equal(red.spend, 18);
+  assert.equal(red.acos, 0.6);
+  const blue = rows.find((r) => r.kw === 'blue mat');
+  assert.equal(blue.campCount, 1);
 });
 
 test('mt split aggregates spend by match type ordered by spend', () => {

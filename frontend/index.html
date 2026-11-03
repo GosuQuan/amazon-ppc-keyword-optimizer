@@ -95,7 +95,7 @@
   <div id="pane-roots" class="pane"><div class="card"><div id="tblRoots"></div></div></div>
   <div id="pane-new" class="pane"><div class="card"><div id="tblNew"></div></div></div>
   <div id="pane-conflict" class="pane"><div class="card"><div id="tblConflict"></div><p class="hint">同一搜索词出现在多个广告组 → 保留最优位置，其余精准否定。<br>匹配口径（对齐 Amazon 规则）：精准=完全相同（含 close variants 单复数/拼写变体）；词组=待投放包含已投放且顺序一致；广泛=包含已投放全部词且顺序无关，另有语义扩展——实际内耗范围比字符串判断更大，否定前请人工确认。</p></div></div>
-  <div id="pane-budget" class="pane"><div class="card"><h2>钱投给哪种匹配方式？（对标广告地图）</h2><div id="tblMt"></div><p class="hint">按搜索词报表的匹配类型聚合花费与订单——对应「花费主要花在哪里」的下钻口径。</p><h2>预算参考（事实数据，非建议）</h2><div id="tblBudget"></div><p class="hint">按上传报表的日期范围聚合各活动/组的实际花费与订单；覆盖天数取自报表日期列，报表无日期列时无法计算日均。是否调整预算由你决定；本表不输出建议预算。</p></div></div>
+  <div id="pane-budget" class="pane"><div class="card"><h2>钱投给哪种匹配方式？（对标广告地图）</h2><div id="tblMt"></div><p class="hint">按搜索词报表的匹配类型聚合花费与订单——对应「花费主要花在哪里」的下钻口径。</p><h2>投放关键词按活动拆分</h2><div id="tblKwSplit"></div><p class="hint">每个投放关键词出现在几个活动/组、合计表现——出现活动数 ≥2 的词是潜在内耗点（与互搏检测互补：那张表只列冲突，这张给全景）。</p><h2>预算参考（事实数据，非建议）</h2><div id="tblBudget"></div><p class="hint">按上传报表的日期范围聚合各活动/组的实际花费与订单；覆盖天数取自报表日期列，报表无日期列时无法计算日均。是否调整预算由你决定；本表不输出建议预算。</p></div></div>
   <div id="pane-dedup" class="pane"><div class="card">
     <h2>投放前去重（本地规则，数据不出本机）</h2>
     <p class="hint">已投放 = 现在正在跑的关键词；待投放 = 准备新开的关键词。冲突口径：精准（完全相同）&gt; 词组（包含且顺序一致）&gt; 广泛（包含全部词、顺序无关）。不做词形还原（lamp/lamps 算不同词），广泛匹配的语义扩展无法本地检测——结果需人工复核。</p>

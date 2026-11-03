@@ -187,6 +187,15 @@ function renderAll() {
     { k: 'clk', label: '点击', num: true, fmt: fmtN }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
+  mkTable('tblKwSplit', { name: '亚马逊投流-投放关键词按活动拆分', rows: () => kwSplitByCamp(R.st), max: 100, cols: [
+    { k: 'kw', label: '投放关键词' },
+    { k: 'campCount', label: '出现活动数', num: true, fmt: fmtN },
+    { k: 'adgCount', label: '出现广告组数', num: true, fmt: fmtN },
+    { k: 'clk', label: '点击', num: true, fmt: fmtN },
+    { k: 'spend', label: '花费', num: true, fmt: fmtMoney },
+    { k: 'orders', label: '订单', num: true, fmt: fmtN },
+    { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
+    { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
   mkTable('tblMt', { name: '亚马逊投流-按匹配方式聚合', rows: () => mtSplitRows(R.st), max: 10, cols: [
     { k: 'mt', label: '匹配类型', get: r => MT_LABEL[r.mt] || r.mt, csv: r => MT_LABEL[r.mt] || r.mt },
     { k: 'termCount', label: '搜索词数', num: true, fmt: fmtN },
@@ -282,6 +291,32 @@ function stSplitByCamp(stRows) {
 }
 /* Per-match-type aggregation (mirrors YICOPY's ad-map layer 2): where does the
    money go by Exact/Phrase/Broad/Auto. Sorted by spend. */
+/* Per-keyword split (mirrors YICOPY's 投放关键词按广告活动拆分): one row per
+   bid keyword showing how many campaigns/ad-groups it appears in, plus totals.
+   Complements the conflict table (which only lists overlaps). */
+function kwSplitByCamp(stRows) {
+  const groups = new Map();
+  for (const s of (stRows || [])) {
+    const kw = s.kw && s.kw.trim() !== '—' && s.kw.trim() !== '-' ? s.kw : null;
+    if (!kw) continue;
+    const key = canon(kw);
+    const g = groups.get(key) || { kw, campCount: new Set(), adgCount: new Set(), clk: 0, spend: 0, sales: 0, orders: 0 };
+    if (s.camp) g.campCount.add(canon(s.camp));
+    if (s.adg) g.adgCount.add(canon(s.adg));
+    g.clk += Number(s.clk) || 0;
+    g.spend += Number(s.spend) || 0;
+    g.sales += Number(s.sales) || 0;
+    g.orders += Number(s.orders) || 0;
+    groups.set(key, g);
+  }
+  const rows = [...groups.values()].map((g) => ({
+    kw: g.kw, campCount: g.campCount.size, adgCount: g.adgCount.size,
+    clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders,
+    acos: g.sales > 0 ? g.spend / g.sales : null,
+  }));
+  rows.sort((a, b) => b.spend - a.spend);
+  return rows;
+}
 function mtSplitRows(stRows) {
   const groups = new Map();
   for (const s of (stRows || [])) {
@@ -585,7 +620,9 @@ $$('[data-exp]').forEach(b => b.onclick = () => {
 });
 loadSettings();
 if (typeof window.checkSharedDeps === 'function') window.checkSharedDeps('pane-overview');
-document.getElementById('btnDedup').addEventListener('click', () => {
+if (typeof document.getElementById === 'function') {
+  const dedupBtn = document.getElementById('btnDedup');
+  if (dedupBtn) dedupBtn.addEventListener('click', () => {
   const out = document.getElementById('dedupOut');
   const existing = document.getElementById('dedupExisting').value.split(/[\n,，;；]/).map(s => s.trim()).filter(Boolean);
   const planned = document.getElementById('dedupPlanned').value.split(/[\n,，;；]/).map(s => s.trim()).filter(Boolean);
@@ -601,5 +638,6 @@ document.getElementById('btnDedup').addEventListener('click', () => {
   }
   if (result.clean.length) html += `<p class="hint">干净待投放词：${esc(result.clean.join('、'))}</p>`;
   out.innerHTML = html;
-});
+  });
+}
 window.__app = { state, switchTab };

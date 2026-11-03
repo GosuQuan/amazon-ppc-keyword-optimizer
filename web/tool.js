@@ -284,6 +284,26 @@ function ToolView({ token, account }) {
       .sort((a, b) => b.spend - a.spend);
   })();
 
+  const kwRows = (() => {
+    const groups = new Map();
+    for (const s of (result && result.st) || []) {
+      const kw = s.kw && s.kw.trim() !== '—' && s.kw.trim() !== '-' ? s.kw : null;
+      if (!kw) continue;
+      const key = canonOf(kw);
+      const g = groups.get(key) || { kw, campCount: new Set(), adgCount: new Set(), clk: 0, spend: 0, sales: 0, orders: 0 };
+      if (s.camp) g.campCount.add(canonOf(s.camp));
+      if (s.adg) g.adgCount.add(canonOf(s.adg));
+      g.clk += Number(s.clk) || 0;
+      g.spend += Number(s.spend) || 0;
+      g.sales += Number(s.sales) || 0;
+      g.orders += Number(s.orders) || 0;
+      groups.set(key, g);
+    }
+    return [...groups.values()]
+      .map((g) => ({ kw: g.kw, campCount: g.campCount.size, adgCount: g.adgCount.size, clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders, acos: g.sales > 0 ? g.spend / g.sales : null }))
+      .sort((a, b) => b.spend - a.spend);
+  })();
+
   const mtRows = (() => {
     const groups = new Map();
     for (const s of (result && result.st) || []) {
@@ -427,6 +447,14 @@ function ToolView({ token, account }) {
       title: '词根挖掘', rows: result.roots, max: 100, file: '亚马逊投流-词根挖掘.csv',
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
+    }) : null,
+    result ? t(DataTable, {
+      title: '投放关键词按活动拆分', rows: kwRows, max: 50, file: '亚马逊投流-投放关键词按活动拆分.csv',
+      cols: [{ k: 'kw', label: '投放关键词' }, { k: 'campCount', label: '出现活动数' },
+        { k: 'adgCount', label: '出现广告组数' }, { k: 'clk', label: '点击' },
+        { k: 'spend', label: '花费' }, { k: 'orders', label: '订单' },
+        { k: 'sales', label: '销售额' }, acosCol()],
+      note: '出现活动数 ≥2 的词是潜在内耗点（与互搏检测互补：那张表只列冲突，这张给全景）。',
     }) : null,
     result ? t(DataTable, {
       title: '按匹配方式聚合（钱投给哪种？）', rows: mtRows, max: 10, file: '亚马逊投流-按匹配方式聚合.csv',
