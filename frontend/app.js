@@ -216,10 +216,15 @@ function newWordRows() {
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
     const issues = window.charIssues ? window.charIssues(e.word) : [];
+    let charNote = '';
+    if (issues.length) {
+      const cleaned = window.cleanWord ? window.cleanWord(e.word) : '';
+      charNote = '⚠字符: ' + issues.join('、') + (cleaned ? '，清洗建议「' + cleaned + '」' : '，清洗后为空需人工改写') + '　';
+    }
     const place = window.suggestPlacement ? window.suggestPlacement(e.word, stAll) : { camp: '', adg: '', via: '' };
     add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: place.camp, adg: place.adg, sales: null, orders: null, acos: null,
       advice: window.adviceFor ? window.adviceFor(e.reportRows, e.reportOrders) : (e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证')),
-      note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (place.via ? place.via + '　' : '') + (e.reason || '') });
+      note: charNote + (place.via ? place.via + '　' : '') + (e.reason || '') });
   }
   return rows;
 }

@@ -273,15 +273,20 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
-test('charIssues flags non-ascii, dangerous punctuation and stray spaces only', () => {
+test('charIssues follows the official letters-numbers-spaces whitelist', () => {
   const a = app();
   const check = a.context.window.charIssues;
+  const clean = a.context.window.cleanWord;
   assert.equal(JSON.stringify(check('cell phone stand')), '[]');
-  assert.equal(JSON.stringify(check('wireless charger 中文')), '["含非英文字符"]');
-  assert.equal(JSON.stringify(check('phone "stand"')), '["含特殊标点"]');
+  assert.equal(JSON.stringify(check('wireless charger 中文')), '["含非英文字符","含官方外字符"]');
+  assert.equal(JSON.stringify(check('phone "stand"')), '["含官方外字符"]');
   assert.equal(JSON.stringify(check('  pad  ')), '["含多余空格"]');
-  assert.equal(JSON.stringify(check("men's shirt")), '[]', 'in-word apostrophe is legal');
-  assert.equal(JSON.stringify(check('t-shirt for kids')), '[]', 'hyphen is legal');
+  assert.equal(JSON.stringify(check("men's shirt")), '["含官方外字符"]', 'apostrophe is outside the official whitelist');
+  assert.equal(JSON.stringify(check('t-shirt for kids')), '["含官方外字符"]', 'hyphen is outside the official whitelist');
+  assert.equal(JSON.stringify(check('nike® shoes')), '["含非英文字符","含官方外字符"]');
+  assert.equal(clean("men's t-shirt, 100%"), 'men s t shirt 100');
+  assert.equal(clean('   AT&T   router '), 'AT T router');
+  assert.equal(clean('中文'), '', 'empty result signals a manual rewrite');
 });
 
 test('checkSharedDeps passes when every rule helper is present', () => {

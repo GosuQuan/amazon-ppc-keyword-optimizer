@@ -217,10 +217,15 @@ function ToolView({ token, account }) {
       if (e.competitorBrand || e.coveredByGood || e.exists) continue;
       const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, e.word) : { rows: 0, orders: 0 };
       const issues = window.charIssues ? window.charIssues(e.word) : [];
+      let charNote = '';
+      if (issues.length) {
+        const cleaned = window.cleanWord ? window.cleanWord(e.word) : '';
+        charNote = '⚠字符: ' + issues.join('、') + (cleaned ? '，清洗建议「' + cleaned + '」' : '，清洗后为空需人工改写') + '　';
+      }
       const place = window.suggestPlacement ? window.suggestPlacement(e.word, (result && result.st) || []) : { camp: '', adg: '', via: '' };
       push({ word: e.word, src: 'AI扩词', type: e.type || 'AI', camp: place.camp, adg: place.adg,
         advice: window.adviceFor ? window.adviceFor(ev.rows, ev.orders) : '待验证',
-        orders: ev.orders || '', note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (place.via ? place.via + '　' : '') + (e.reason || '') });
+        orders: ev.orders || '', note: charNote + (place.via ? place.via + '　' : '') + (e.reason || '') });
     }
     const rank = { '优先新增': 0, '先观察': 1, '待验证': 2 };
     return list.slice().sort((a, b) => (rank[a.advice] ?? 3) - (rank[b.advice] ?? 3));

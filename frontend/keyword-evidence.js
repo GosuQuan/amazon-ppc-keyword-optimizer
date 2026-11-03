@@ -87,14 +87,25 @@ function negativeCross(word, options) {
 }
 
 /* Character-level pre-check before a term goes anywhere near an Amazon Ads upload.
-   Advisory only: returns a short list of human-readable issues, never blocks. */
+   Amazon Ads official rule for SP manual keywords: letters, numbers, or spaces only
+   (? / " & \ are the documented examples of disallowed characters). Anything else is
+   flagged. Advisory only: returns human-readable issues, never blocks. */
 function charIssues(word) {
   const value = String(word == null ? '' : word);
   const issues = [];
   if (/[^\x00-\x7F]/.test(value)) issues.push('含非英文字符');
-  if (/[";|\\<>“”‘’「」『』]/.test(value)) issues.push('含特殊标点');
+  if (/[^A-Za-z0-9 ]/.test(value)) issues.push('含官方外字符');
   if (value !== value.trim() || /\s{2,}/.test(value)) issues.push('含多余空格');
   return issues;
+}
+
+/* Cleaning suggestion: drop every character outside letters/digits/spaces, then
+   collapse whitespace. An empty result means the term needs a manual rewrite. */
+function cleanWord(word) {
+  return String(word == null ? '' : word)
+    .replace(/[^A-Za-z0-9 ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /* Suggest a target campaign/ad group for a suggested keyword, using our own report:
@@ -147,6 +158,7 @@ window.sortByEvidence = sortByEvidence;
 window.adviceFor = adviceFor;
 window.negativeCross = negativeCross;
 window.charIssues = charIssues;
+window.cleanWord = cleanWord;
 window.suggestPlacement = suggestPlacement;
 window.checkSharedDeps = checkSharedDeps;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, suggestPlacement, checkSharedDeps, canonWord };
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, cleanWord, suggestPlacement, checkSharedDeps, canonWord };
