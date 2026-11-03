@@ -285,6 +285,12 @@ function ToolView({ token, account }) {
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
     }) : null,
+    result ? t(DataTable, {
+      title: '互搏检测', rows: result.conflicts, max: 50, file: '亚马逊投流-互搏检测.csv',
+      cols: [{ k: 'st', label: '搜索词' }, { k: 'locs', label: '位置数' },
+        { k: 'totClk', label: '总点击' }, { k: 'winner', label: '最优位置' },
+        { k: 'losers', label: '其余位置与建议', get: (r) => (r.losers || []).map((l) => `${l.camp} / ${l.adg}：${l.sug}`).join('；') }],
+    }) : null,
     aiResult ? t('section', { className: 'panel anim-fade-up stagger-3' },
       t('h3', null, 'AI 结果（仅供参考，需人工复核）'),
       aiExpansions.length ? t(DataTable, {
