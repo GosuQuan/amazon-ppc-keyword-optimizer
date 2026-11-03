@@ -17,6 +17,14 @@ dist/
 *.local
 ai_proxy.log
 
+# 运行时探针产物与登录态数据（真实经营相关，仅本地）
+docs/runs/real-*
+docs/runs/登录态快照/
+docs/runs/probe_*.js
+docs/runs/call_*.py
+docs/runs/*-report.csv
+docs/runs/*.xlsx
+
 # 系统与编辑器
 .DS_Store
 Thumbs.db
