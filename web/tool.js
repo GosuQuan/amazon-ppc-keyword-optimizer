@@ -243,6 +243,24 @@ function ToolView({ token, account }) {
     });
   })();
 
+  const splitRows = (() => {
+    const groups = new Map();
+    for (const s of (result && result.st) || []) {
+      if (!s.camp && !s.adg) continue;
+      const key = canonOf(s.camp) + '||' + canonOf(s.adg);
+      const g = groups.get(key) || { camp: s.camp, adg: s.adg, terms: new Set(), clk: 0, spend: 0, sales: 0, orders: 0 };
+      if (s.st && s.st.trim() !== '—' && s.st.trim() !== '-') g.terms.add(canonOf(s.st));
+      g.clk += Number(s.clk) || 0;
+      g.spend += Number(s.spend) || 0;
+      g.sales += Number(s.sales) || 0;
+      g.orders += Number(s.orders) || 0;
+      groups.set(key, g);
+    }
+    return [...groups.values()]
+      .map((g) => ({ camp: g.camp, adg: g.adg, termCount: g.terms.size, clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders, acos: g.sales > 0 ? g.spend / g.sales : null }))
+      .sort((a, b) => b.spend - a.spend);
+  })();
+
   const budgetRows = (() => {
     const groups = new Map();
     const keyOf = (camp, adg) => canonOf(camp) + '||' + canonOf(adg);
@@ -338,6 +356,13 @@ function ToolView({ token, account }) {
         { k: 'days', label: '覆盖天数', get: (r) => (r.days == null ? '未知' : r.days + ' 天') },
         { k: 'spend', label: '期间花费' }, { k: 'daily', label: '日均花费', get: (r) => (r.daily == null ? '—' : String(Math.round(r.daily * 100) / 100)) },
         { k: 'clk', label: '点击' }, { k: 'orders', label: '订单' },
+        { k: 'sales', label: '销售额' }, acosCol()],
+    }) : null,
+    result ? t(DataTable, {
+      title: '搜索词按活动拆分', rows: splitRows, max: 50, file: '亚马逊投流-搜索词按活动拆分.csv',
+      cols: [{ k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
+        { k: 'termCount', label: '搜索词数' }, { k: 'clk', label: '点击' },
+        { k: 'spend', label: '花费' }, { k: 'orders', label: '订单' },
         { k: 'sales', label: '销售额' }, acosCol()],
     }) : null,
     result ? t(DataTable, {

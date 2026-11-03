@@ -23,7 +23,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows };', context);
+  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -284,6 +284,21 @@ test('checkSharedDeps passes when every rule helper is present', () => {
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '["charIssues"]');
   a.context.window.charIssues = () => [];
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]');
+});
+
+test('st split aggregates terms per campaign group ordered by spend', () => {
+  const a = app();
+  const split = a.stSplitByCamp([
+    { st: 'red shoe', camp: 'B', adg: 'G2', clk: 5, spend: 40, sales: 0, orders: 0 },
+    { st: 'blue shoe', camp: 'A', adg: 'G1', clk: 8, spend: 20, sales: 60, orders: 2 },
+    { st: 'red sandal', camp: 'B', adg: 'G2', clk: 3, spend: 10, sales: 30, orders: 1 },
+  ]);
+  assert.equal(split.length, 2);
+  assert.equal(split[0].camp, 'B', 'higher spend first');
+  assert.equal(split[0].termCount, 2);
+  assert.equal(split[0].spend, 50);
+  assert.equal(split[1].termCount, 1);
+  assert.equal(split[1].orders, 2);
 });
 
 test('budget reference derives coverage days from the report dates', () => {

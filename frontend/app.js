@@ -187,6 +187,14 @@ function renderAll() {
     { k: 'clk', label: '点击', num: true, fmt: fmtN }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
+  mkTable('tblSplit', { name: '亚马逊投流-搜索词按活动拆分', rows: () => stSplitByCamp(R.st), max: 100, cols: [
+    { k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
+    { k: 'termCount', label: '搜索词数', num: true, fmt: fmtN },
+    { k: 'clk', label: '点击', num: true, fmt: fmtN },
+    { k: 'spend', label: '花费', num: true, fmt: fmtMoney },
+    { k: 'orders', label: '订单', num: true, fmt: fmtN },
+    { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
+    { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
   renderAI();
 }
 function newWordRows() {
@@ -235,6 +243,29 @@ function reportCoverageDays(stRows) {
   }
   if (min === null || max === null) return null;
   return Math.max(1, Math.round((max - min) / 86400000) + 1);
+}
+/* Per-campaign split of search terms (mirrors YICOPY's 拆分表): one row per
+   campaign/ad-group with its own terms aggregated. Sorted by spend. */
+function stSplitByCamp(stRows) {
+  const groups = new Map();
+  for (const s of (stRows || [])) {
+    if (!s.camp && !s.adg) continue;
+    const key = canon(s.camp) + '||' + canon(s.adg);
+    const g = groups.get(key) || { camp: s.camp, adg: s.adg, terms: new Set(), clk: 0, spend: 0, sales: 0, orders: 0 };
+    if (s.st && s.st.trim() !== '—' && s.st.trim() !== '-') g.terms.add(canon(s.st));
+    g.clk += Number(s.clk) || 0;
+    g.spend += Number(s.spend) || 0;
+    g.sales += Number(s.sales) || 0;
+    g.orders += Number(s.orders) || 0;
+    groups.set(key, g);
+  }
+  const rows = [...groups.values()].map((g) => ({
+    camp: g.camp, adg: g.adg, termCount: g.terms.size,
+    clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders,
+    acos: g.sales > 0 ? g.spend / g.sales : null,
+  }));
+  rows.sort((a, b) => b.spend - a.spend);
+  return rows;
 }
 function budgetReferenceRows(actions, stRows) {
   const groups = new Map();
