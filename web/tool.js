@@ -185,6 +185,39 @@ function ToolView({ token, account }) {
   const aiNegatives = (aiResult && aiResult.negativeHints) || [];
   const aiInsights = (aiResult && aiResult.insights) || [];
 
+  // Build the new-word candidate list from our own analysis plus any AI expansions.
+  const newWordRows = (() => {
+    const list = [];
+    const seen = new Set();
+    const canonOf = (v) => String(v == null ? '' : v).toLowerCase().replace(/\s+/g, '');
+    const push = (row) => {
+      const key = canonOf(row.word);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      list.push(row);
+    };
+    for (const h of (result && result.harvest) || []) {
+      if (h.exists) continue;
+      push({ word: h.st, src: '搜索词收割', type: h.sug || '新增精准词',
+        advice: window.adviceFor ? window.adviceFor(h.orders ? 1 : 0, h.orders) : '先观察',
+        orders: h.orders == null ? '' : h.orders, note: '来自' + (h.srcMt || '') + ' 匹配' });
+    }
+    for (const c of (result && result.combos) || []) {
+      push({ word: c.pair, src: '组合挖掘', type: '组合新词',
+        advice: window.adviceFor ? window.adviceFor(c.orders ? 1 : 0, c.orders) : '先观察',
+        orders: c.orders == null ? '' : c.orders, note: c.evidence || '' });
+    }
+    for (const e of aiExpansions) {
+      if (e.competitorBrand || e.coveredByGood || e.exists) continue;
+      const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, e.word) : { rows: 0, orders: 0 };
+      push({ word: e.word, src: 'AI扩词', type: e.type || 'AI',
+        advice: window.adviceFor ? window.adviceFor(ev.rows, ev.orders) : '待验证',
+        orders: ev.orders || '', note: e.reason || '' });
+    }
+    const rank = { '优先新增': 0, '先观察': 1, '待验证': 2 };
+    return list.slice().sort((a, b) => (rank[a.advice] ?? 3) - (rank[b.advice] ?? 3));
+  })();
+
   return t('main', null,
     t('section', { className: 'panel anim-fade-up' },
       t('p', { className: 'eyebrow' }, '旧工具页 · 报表分析'),
@@ -255,6 +288,16 @@ function ToolView({ token, account }) {
       aiInsights.length ? t('div', { className: 'panel' },
         t('h3', null, '专家洞察'),
         aiInsights.map((item, index) => t('p', { key: index }, `${item.title || '洞察'}：${item.detail || ''}`))) : null) : null,
+    aiResult ? t('section', { className: 'panel anim-fade-up stagger-3' },
+      t('h3', null, '新词候选（合并收割、组合与 AI 扩词，已去重）'),
+      newWordRows.length
+        ? t(DataTable, {
+            title: '新词候选', rows: newWordRows, max: 100, file: '亚马逊投流-新词候选.csv',
+            cols: [{ k: 'word', label: '建议关键词' }, { k: 'advice', label: '建议' },
+              { k: 'src', label: '来源' }, { k: 'type', label: '类型' },
+              { k: 'orders', label: '订单' }, { k: 'note', label: '说明' }],
+          })
+        : t('p', { className: 'muted' }, '没有可新增的候选（都已被过滤或去重）。')) : null,
     result ? t('section', { className: 'panel anim-fade-up stagger-4' },
       t('p', { className: 'eyebrow' }, 'AI 挖掘'),
       t('h2', null, '在线挖掘或导入专家结果'),
