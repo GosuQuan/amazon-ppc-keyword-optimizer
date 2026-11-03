@@ -218,6 +218,23 @@ function ToolView({ token, account }) {
     return list.slice().sort((a, b) => (rank[a.advice] ?? 3) - (rank[b.advice] ?? 3));
   })();
 
+  const distRows = (() => {
+    const dist = (result && result.dist) || {};
+    const order = ['优秀', '良好', '偏高', '亏损', '无效', '潜力', '观察'];
+    return order.filter((cls) => dist[cls]).map((cls) => {
+      const d = dist[cls];
+      return {
+        cls,
+        n: d.n,
+        clk: d.clk,
+        spend: d.spend,
+        sales: d.sales,
+        orders: d.orders,
+        acos: d.sales > 0 ? d.spend / d.sales : null,
+      };
+    });
+  })();
+
   return t('main', null,
     t('section', { className: 'panel anim-fade-up' },
       t('p', { className: 'eyebrow' }, '旧工具页 · 报表分析'),
@@ -244,6 +261,12 @@ function ToolView({ token, account }) {
       t('div', { className: 'metrics' }, kpiCards.map(([label, value]) => t('div', { className: 'metric', key: label },
         t('span', null, label), t('strong', null, value == null ? '—' : String(value))))),
       result.aovAssumed ? t('p', { className: 'callout' }, '报表中没有订单，客单价按缺省值计算 —— 建议填写真实客单价后重新分析。') : null) : null,
+    result ? t(DataTable, {
+      title: '搜索词分级分布', rows: distRows, max: 10, file: '亚马逊投流-分级分布.csv',
+      cols: [{ k: 'cls', label: '级别' }, { k: 'n', label: '搜索词数' }, { k: 'clk', label: '点击' },
+        { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, { k: 'orders', label: '订单' },
+        acosCol()],
+    }) : null,
     result ? t(DataTable, {
       title: '调价清单', rows: result.actions, max: 100, file: '亚马逊投流-调价清单.csv',
       cols: [{ k: 'prio', label: '优先级' }, { k: 'cls', label: '级别' }, { k: 'act', label: '建议动作' },
