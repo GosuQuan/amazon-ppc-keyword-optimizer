@@ -86,10 +86,22 @@ function negativeCross(word, options) {
   return '仅 AI 建议，需人工复核';
 }
 
+/* Character-level pre-check before a term goes anywhere near an Amazon Ads upload.
+   Advisory only: returns a short list of human-readable issues, never blocks. */
+function charIssues(word) {
+  const value = String(word == null ? '' : word);
+  const issues = [];
+  if (/[^\x00-\x7F]/.test(value)) issues.push('含非英文字符');
+  if (/[";|\\<>“”‘’「」『』]/.test(value)) issues.push('含特殊标点');
+  if (value !== value.trim() || /\s{2,}/.test(value)) issues.push('含多余空格');
+  return issues;
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
 window.sortByEvidence = sortByEvidence;
 window.adviceFor = adviceFor;
 window.negativeCross = negativeCross;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, canonWord };
+window.charIssues = charIssues;
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, canonWord };

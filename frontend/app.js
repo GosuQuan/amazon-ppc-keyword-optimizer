@@ -195,9 +195,10 @@ function newWordRows() {
     note: c.evidence });
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
+    const issues = window.charIssues ? window.charIssues(e.word) : [];
     add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null,
       advice: window.adviceFor ? window.adviceFor(e.reportRows, e.reportOrders) : (e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证')),
-      note: e.reason });
+      note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (e.reason || '') });
   }
   return rows;
 }

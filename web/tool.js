@@ -215,9 +215,10 @@ function ToolView({ token, account }) {
     for (const e of aiExpansions) {
       if (e.competitorBrand || e.coveredByGood || e.exists) continue;
       const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, e.word) : { rows: 0, orders: 0 };
+      const issues = window.charIssues ? window.charIssues(e.word) : [];
       push({ word: e.word, src: 'AI扩词', type: e.type || 'AI',
         advice: window.adviceFor ? window.adviceFor(ev.rows, ev.orders) : '待验证',
-        orders: ev.orders || '', note: e.reason || '' });
+        orders: ev.orders || '', note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (e.reason || '') });
     }
     const rank = { '优先新增': 0, '先观察': 1, '待验证': 2 };
     return list.slice().sort((a, b) => (rank[a.advice] ?? 3) - (rank[b.advice] ?? 3));

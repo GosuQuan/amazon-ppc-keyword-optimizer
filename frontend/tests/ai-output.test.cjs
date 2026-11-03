@@ -265,6 +265,17 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
+test('charIssues flags non-ascii, dangerous punctuation and stray spaces only', () => {
+  const a = app();
+  const check = a.context.window.charIssues;
+  assert.equal(JSON.stringify(check('cell phone stand')), '[]');
+  assert.equal(JSON.stringify(check('wireless charger 中文')), '["含非英文字符"]');
+  assert.equal(JSON.stringify(check('phone "stand"')), '["含特殊标点"]');
+  assert.equal(JSON.stringify(check('  pad  ')), '["含多余空格"]');
+  assert.equal(JSON.stringify(check("men's shirt")), '[]', 'in-word apostrophe is legal');
+  assert.equal(JSON.stringify(check('t-shirt for kids')), '[]', 'hyphen is legal');
+});
+
 test('advice label maps evidence to an actionable suggestion', () => {
   const a = app();
   const advice = a.context.window.adviceFor;
