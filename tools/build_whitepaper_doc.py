@@ -7,7 +7,7 @@ from docx.oxml.ns import qn
 root = Path(__file__).resolve().parents[1]
 md_path = root / 'docs' / '产品白皮书.md'
 shots = root / 'docs' / '对标快照'
-out = root / 'docs' / '产品白皮书-2026-11-03.docx'
+out = root / 'docs' / '产品白皮书-2026-11-03b.docx'
 
 document = Document()
 style = document.styles['Normal']
