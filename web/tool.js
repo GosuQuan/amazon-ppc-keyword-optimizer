@@ -331,6 +331,16 @@ function ToolView({ token, account }) {
       t('div', { className: 'metrics' }, kpiCards.map(([label, value]) => t('div', { className: 'metric', key: label },
         t('span', null, label), t('strong', null, value == null ? '—' : String(value))))),
       result.aovAssumed ? t('p', { className: 'callout' }, '报表中没有订单，客单价按缺省值计算 —— 建议填写真实客单价后重新分析。') : null) : null,
+    result ? t('section', { className: 'panel anim-fade-up stagger-2' },
+      t('h2', null, '相关性四档（广告表现口径）'),
+      t('div', { className: 'metrics' },
+        [
+          ['强认可（优秀+良好）', distRows.filter((d) => d.cls === '优秀' || d.cls === '良好').reduce((s, d) => s + d.n, 0), '更容易获得曝光与订单'],
+          ['需优化（偏高）', distRows.filter((d) => d.cls === '偏高').reduce((s, d) => s + d.n, 0), '有转化但成本偏高'],
+          ['高风险（亏损+无效）', distRows.filter((d) => d.cls === '亏损' || d.cls === '无效').reduce((s, d) => s + d.n, 0), '转化差或无转化，优先处理'],
+          ['观察（潜力+观察）', distRows.filter((d) => d.cls === '潜力' || d.cls === '观察').reduce((s, d) => s + d.n, 0), '数据不足，继续积累'],
+        ].map(([label, n, hint]) => t('div', { className: 'metric', key: label },
+          t('span', null, label), t('strong', null, String(n)), t('small', null, hint))))) : null,
     result ? t(DataTable, {
       title: '搜索词分级分布', rows: distRows, max: 10, file: '亚马逊投流-分级分布.csv',
       cols: [{ k: 'cls', label: '级别' }, { k: 'n', label: '搜索词数' }, { k: 'clk', label: '点击' },
