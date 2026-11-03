@@ -163,9 +163,15 @@ function renderAll() {
     { k: 'clk', label: '点击', num: true, fmt: fmtN }, { k: 'spend', label: '花费', num: true, fmt: fmtMoney },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }, { k: 'sug', label: '建议', fmt: esc }] });
-  mkTable('tblNew', { name: '亚马逊投流-新词候选', rows: () => newWordRows(), max: 200, cols: [
+  mkTable('tblNew', { name: '亚马逊投流-新词候选',
+    rows: () => {
+      const order = { '优先新增': 0, '先观察': 1, '待验证': 2 };
+      return newWordRows().slice().sort((a, b) => (order[a.advice] ?? 3) - (order[b.advice] ?? 3));
+    }, max: 200, cols: [
     { k: 'src', label: '来源', fmt: v => v === 'AI扩词' ? '<span class="badge b-ai">AI扩词</span>' : esc(v), csv: r => r.src },
-    { k: 'word', label: '建议关键词' }, { k: 'type', label: '类型/支持' },
+    { k: 'word', label: '建议关键词' },
+    { k: 'advice', label: '建议', fmt: v => `<span class="badge">${esc(v || '待验证')}</span>`, csv: r => r.advice || '待验证' },
+    { k: 'type', label: '类型/支持' },
     { k: 'camp', label: '建议放入广告活动' }, { k: 'adg', label: '建议放入广告组' },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }, { k: 'note', label: '说明', fmt: esc }] });
@@ -180,12 +186,16 @@ function newWordRows() {
   const add = (row) => { const key = canon(row.word); if (!key || seen.has(key)) return; seen.add(key); rows.push(row); };
   for (const h of R.harvest) {
     if (h.exists) continue;
-    add({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos, note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
+    add({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos,
+      advice: h.orders > 0 ? '优先新增' : '先观察',
+      note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   }
-  for (const c of R.combos) add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null, note: c.evidence });
+  for (const c of R.combos) add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null,
+    advice: c.orders > 0 ? '优先新增' : '先观察', note: c.evidence });
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
-    add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null, note: e.reason });
+    add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null,
+      advice: e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证'), note: e.reason });
   }
   return rows;
 }
@@ -445,7 +455,7 @@ $$('[data-exp]').forEach(b => b.onclick = () => {
   const map = {
     actions: () => csvString(['优先级','级别','建议动作','广告活动','广告组','关键词','匹配类型','当前出价(估算)','建议出价(估算)','调整幅度%','点击','花费','销售额','订单','ACOS','理由'], R.actions.map(a => [a.prio,a.cls,a.act,a.camp,a.adg,a.kw,MT_LABEL[a.mt]||a.mtRaw,fmtMoney(a.curBid),a.newBid!=null?fmtMoney(a.newBid):'',fmtDelta(a.delta),a.clk,a.spend,a.sales,a.orders,fmtPct(a.acos),a.reason])),
     negatives: () => csvString(['否定方式','否定词','广告活动','广告组','来源','点击','花费','理由'], R.negatives.map(n=>[n.type,n.word,n.camp,n.adg,n.source,n.clk,n.spend,n.reason]).concat(aiNegativeExportRows(R.negatives, state.ai.negatives))),
-    newwords: () => csvString(['建议关键词','建议匹配类型','建议放入广告活动','建议放入广告组','来源','类型','说明'], newWordRows().map(r=>[r.word,'精准',r.camp,r.adg,r.src,r.type,r.note])),
+    newwords: () => csvString(['建议关键词','建议匹配类型','建议','建议放入广告活动','建议放入广告组','来源','类型','说明'], newWordRows().map(r=>[r.word,'精准',r.advice||'待验证',r.camp,r.adg,r.src,r.type,r.note])),
     roots: () => csvString(['词根','类型','出现词数','点击','花费','销售额','订单','ACOS','建议'], R.roots.map(r=>[r.tok,r.type,r.terms,r.clk,r.spend,r.sales,r.orders,fmtPct(r.acos),r.sug])),
     stdetail: () => { const v = R.st.filter(s=>s.st&&s.st.trim()!=='—'&&s.st.trim()!=='-'); return csvString(['级别','搜索词','广告活动','广告组','关键词','匹配类型','展示','点击','CTR','花费','销售额','订单','ACOS','允许预算'], v.map(s=>[s.cls,s.st,s.camp,s.adg,s.kw,MT_LABEL[s.mt]||s.mtRaw,s.imp,s.clk,fmtPct(s.ctr,2),s.spend,s.sales,s.orders,fmtPct(s.acos),fmtMoney(s.allowed)])); },
   };

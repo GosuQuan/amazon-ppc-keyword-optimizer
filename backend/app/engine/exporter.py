@@ -50,10 +50,13 @@ def new_word_rows(harvest: List[Dict[str, Any]], combos: List[Dict[str, Any]]) -
             continue
         add({"src": "搜索词收割", "word": h["st"], "type": h["sug"], "camp": h["camp"],
              "adg": h["adg"], "sales": h["sales"], "orders": h["orders"], "acos": h["acos"],
+             "advice": "优先新增" if (h.get("orders") or 0) > 0 else "先观察",
              "note": f"来自{MT_LABEL[h['srcMt']]}匹配，ACOS {_p(h['acos'])}"})
     for c in combos:
         add({"src": "组合挖掘", "word": c["pair"], "type": "组合新词", "camp": "", "adg": "",
-             "sales": c["sales"], "orders": c["orders"], "acos": None, "note": c["evidence"]})
+             "sales": c["sales"], "orders": c["orders"], "acos": None,
+             "advice": "优先新增" if (c.get("orders") or 0) > 0 else "先观察",
+             "note": c["evidence"]})
     return rows
 
 
@@ -90,7 +93,8 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
 
 
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:
-    rows = [[r["word"], "精准", r["camp"], r["adg"], r["src"], r["type"], r["note"]] for r in new_rows]
+    rows = [[r["word"], "精准", r.get("advice") or "待验证", r["camp"], r["adg"], r["src"], r["type"], r["note"]]
+            for r in new_rows]
     seen = {canon(r["word"]) for r in new_rows}
     for e in (ai_expansions or []):
         if e.get("competitorBrand") or e.get("coveredByGood") or e.get("exists"):
@@ -99,8 +103,11 @@ def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str
         if not key or key in seen:
             continue
         seen.add(key)
-        rows.append([e["word"], "精准", "", "", "AI扩词", e.get("type", "AI"), e.get("reason", "")])
-    return csv_string(["建议关键词", "建议匹配类型", "建议放入广告活动", "建议放入广告组", "来源", "类型", "说明"], rows)
+        orders = e.get("reportOrders") or 0
+        appearances = e.get("reportRows") or 0
+        advice = "优先新增" if orders > 0 else ("先观察" if appearances > 0 else "待验证")
+        rows.append([e["word"], "精准", advice, "", "", "AI扩词", e.get("type", "AI"), e.get("reason", "")])
+    return csv_string(["建议关键词", "建议匹配类型", "建议", "建议放入广告活动", "建议放入广告组", "来源", "类型", "说明"], rows)
 
 
 def export_roots(roots: List[Dict[str, Any]]) -> str:

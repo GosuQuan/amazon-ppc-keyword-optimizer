@@ -25,6 +25,21 @@ def test_same_new_keyword_is_exported_once():
     assert text.lower().count('fresh term') == 1
 
 
+def test_export_advice_follows_report_evidence():
+    text = export_newwords(
+        [{'word': 'harvested', 'src': '搜索词收割', 'type': '新增精准词', 'camp': 'c', 'adg': 'g',
+          'advice': '优先新增', 'note': 'x'}],
+        [{'word': 'ordered term', 'reason': 'r', 'reportOrders': 2, 'reportRows': 3},
+         {'word': 'seen term', 'reason': 'r', 'reportRows': 1},
+         {'word': 'cold term', 'reason': 'r'}],
+    )
+    lines = {line.split(',')[0]: line for line in text.split('\r\n')}
+    assert '优先新增' in lines['harvested']
+    assert '优先新增' in lines['ordered term']
+    assert '先观察' in lines['seen term']
+    assert '待验证' in lines['cold term']
+
+
 def test_existing_harvest_is_not_exported_as_a_new_keyword():
     text = export_newwords(new_word_rows([
         {'st': 'already', 'sug': '已有精准词：核对出价与预算', 'camp': 'c', 'adg': 'g', 'srcMt': 'broad',
