@@ -69,7 +69,30 @@ def export_actions(actions: List[Dict[str, Any]]) -> str:
           _m(a["sales"]), _n(a["orders"]), _p(a["acos"]), a["reason"]] for a in actions])
 
 
-def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[str, Any]] | None = None) -> str:
+def _suggest_placement(word: str, st_rows: List[Dict[str, Any]]) -> tuple:
+    """Root-match a suggested term to the most-ordered report row (advisory)."""
+    key = canon(word)
+    if not key or len(key) < 4 or not st_rows:
+        return ("", "", "")
+    best = None
+    for s in st_rows:
+        term = canon(s.get("st"))
+        if not term or len(term) < 4:
+            continue
+        if term not in key and key not in term:
+            continue
+        orders = s.get("orders") or 0
+        if orders <= 0:
+            continue
+        if best is None or orders > best[0]:
+            best = (orders, s.get("camp") or "", s.get("adg") or "")
+    if not best:
+        return ("", "", "")
+    return (best[1], best[2], f"按词根匹配 {best[1]} / {best[2]}，需人工确认")
+
+
+def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[str, Any]] | None = None,
+                     st_rows: List[Dict[str, Any]] | None = None) -> str:
     rows = [[n["type"], n["word"], n["camp"], n["adg"], n["source"], _n(n["clk"]), _m(n["spend"]),
              n.get("review", "规则命中"), n["reason"]]
             for n in negatives]
@@ -89,8 +112,10 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
         elif "竞品品牌" in cross:
             source += "（竞品品牌候选）"
             match = "待复核勿上传"
-        rows.append([match, e["word"], "", "", source, "", "", cross or "仅 AI 建议，需人工复核", e.get("reason", "")])
-    return csv_string(["否定方式", "否定词", "广告活动", "广告组", "来源", "点击", "花费", "复核提示", "理由"], rows)
+        camp, adg, via = _suggest_placement(e.get("word"), st_rows or [])
+        rows.append([match, e["word"], camp, adg, source, "", "", cross or "仅 AI 建议，需人工复核",
+                     (via + "　" if via else "") + e.get("reason", "")])
+    return csv_string(["否定方式", "否定词", "建议活动", "建议组", "来源", "点击", "花费", "复核提示", "理由"], rows)
 
 
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:
@@ -132,7 +157,7 @@ def export_st_detail(st_rows: List[Dict[str, Any]]) -> str:
 
 EXPORTERS = {
     "actions": lambda r: export_actions(r["actions"]),
-    "negatives": lambda r: export_negatives(r["negatives"], r.get("aiNegatives")),
+    "negatives": lambda r: export_negatives(r["negatives"], r.get("aiNegatives"), r.get("st")),
     "newwords": lambda r: export_newwords(new_word_rows(r["harvest"], r["combos"]), r.get("aiExpansions")),
     "roots": lambda r: export_roots(r["roots"]),
     "stdetail": lambda r: export_st_detail(r["st"]),

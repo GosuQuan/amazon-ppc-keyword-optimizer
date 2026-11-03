@@ -469,7 +469,7 @@ function renderAI() {
   mkTable('aiNeg', { name: 'AI否定预判', rows: () => state.ai.negatives, max: 200, cols: [
     { k: 'word', label: 'AI 否定候选（需复核）' }, { k: 'cross', label: '与规则交叉验证' }, { k: 'reason', label: '理由', fmt: esc }] });
 }
-function aiNegativeExportRows(ruleNegatives, aiNegatives) {
+function aiNegativeExportRows(ruleNegatives, aiNegatives, stRows) {
   const seen = new Set((ruleNegatives || []).map((row) => canon(row.word)));
   const rows = [];
   for (const item of aiNegatives || []) {
@@ -482,7 +482,8 @@ function aiNegativeExportRows(ruleNegatives, aiNegatives) {
     let match = '待复核勿上传';
     if (cross.indexOf('一致') >= 0) source += '（与规则一致）';
     else if (cross.indexOf('竞品品牌') >= 0) { source += '（竞品品牌候选）'; match = '待复核勿上传'; }
-    rows.push([match, item.word, '', '', source, '', '', cross || '仅 AI 建议，需人工复核', item.reason || '']);
+    const place = (window.suggestPlacement && stRows) ? window.suggestPlacement(item.word, stRows) : { camp: '', adg: '', via: '' };
+    rows.push([match, item.word, place.camp, place.adg, source, '', '', cross || '仅 AI 建议，需人工复核', (place.via ? place.via + '　' : '') + (item.reason || '')]);
   }
   return rows;
 }
@@ -540,7 +541,7 @@ $$('[data-exp]').forEach(b => b.onclick = () => {
   const names = { actions: '调价清单', negatives: '否定词清单', newwords: '新增关键词清单', roots: '词根挖掘表', stdetail: '搜索词明细' };
   const map = {
     actions: () => csvString(['优先级','级别','建议动作','广告活动','广告组','关键词','匹配类型','当前出价(估算)','建议出价(估算)','调整幅度%','点击','花费','销售额','订单','ACOS','理由'], R.actions.map(a => [a.prio,a.cls,a.act,a.camp,a.adg,a.kw,MT_LABEL[a.mt]||a.mtRaw,fmtMoney(a.curBid),a.newBid!=null?fmtMoney(a.newBid):'',fmtDelta(a.delta),a.clk,a.spend,a.sales,a.orders,fmtPct(a.acos),a.reason])),
-    negatives: () => csvString(['否定方式','否定词','广告活动','广告组','来源','点击','花费','复核提示','理由'], R.negatives.map(n=>[n.type,n.word,n.camp,n.adg,n.source,n.clk,n.spend,'规则命中',n.reason]).concat(aiNegativeExportRows(R.negatives, state.ai.negatives))),
+    negatives: () => csvString(['否定方式','否定词','建议活动','建议组','来源','点击','花费','复核提示','理由'], R.negatives.map(n=>[n.type,n.word,n.camp,n.adg,n.source,n.clk,n.spend,'规则命中',n.reason]).concat(aiNegativeExportRows(R.negatives, state.ai.negatives, R.st))),
     newwords: () => csvString(['建议关键词','建议匹配类型','建议','建议放入广告活动','建议放入广告组','来源','类型','说明'], newWordRows().map(r=>[r.word,'精准',r.advice||'待验证',r.camp,r.adg,r.src,r.type,r.note])),
     roots: () => csvString(['词根','类型','出现词数','点击','花费','销售额','订单','ACOS','建议'], R.roots.map(r=>[r.tok,r.type,r.terms,r.clk,r.spend,r.sales,r.orders,fmtPct(r.acos),r.sug])),
     stdetail: () => { const v = R.st.filter(s=>s.st&&s.st.trim()!=='—'&&s.st.trim()!=='-'); return csvString(['级别','搜索词','广告活动','广告组','关键词','匹配类型','展示','点击','CTR','花费','销售额','订单','ACOS','允许预算'], v.map(s=>[s.cls,s.st,s.camp,s.adg,s.kw,MT_LABEL[s.mt]||s.mtRaw,s.imp,s.clk,fmtPct(s.ctr,2),s.spend,s.sales,s.orders,fmtPct(s.acos),fmtMoney(s.allowed)])); },

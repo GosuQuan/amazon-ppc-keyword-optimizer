@@ -195,16 +195,24 @@ test('brand and covered expansions stay out of the new-word list', () => {
 
 test('browser negative export follows the same rule and brand guards', () => {
   const a = app();
+  const st = [
+    { st: 'google nexus case', camp: 'CampN', adg: 'GN', orders: 2 },
+    { st: 'desk lamp led', camp: 'CampD', adg: 'GD', orders: 4 },
+  ];
   const rows = a.aiNegativeExportRows(
     [{ word: 'samsung galaxy' }],
     [{ word: 'Samsung   Galaxy', cross: '竞品品牌，可作为否定候选', reason: 'brand' },
      { word: 'cell phone', cross: '不建议否定', reason: 'bad' },
      { word: 'google nexus', cross: '竞品品牌，可作为否定候选', reason: 'brand' },
      { word: 'desk lamp', cross: '仅 AI 建议，需人工复核', reason: 'maybe' }],
+    st,
   );
   assert.equal(JSON.stringify(rows.map((row) => row[1])), '["google nexus","desk lamp"]');
   assert.equal(rows[0][0], '待复核勿上传');
   assert.equal(rows[1][0], '待复核勿上传');
+  assert.equal(rows[0][2], 'CampN', 'root-matched campaign suggestion');
+  assert.equal(rows[1][2], 'CampD');
+  assert.match(rows[1][8], /按词根匹配/);
 });
 
 test('the same new keyword from harvest combo and AI is listed once', () => {
