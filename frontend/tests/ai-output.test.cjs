@@ -286,6 +286,27 @@ test('checkSharedDeps passes when every rule helper is present', () => {
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]');
 });
 
+test('budget reference derives coverage days from the report dates', () => {
+  const a = app();
+  const rows = a.budgetReferenceRows([], [
+    { st: 'a', camp: 'C1', adg: 'G1', spend: 90, sales: 120, orders: 5, clk: 25, date: '2026-01-01' },
+    { st: 'b', camp: 'C1', adg: 'G1', spend: 30, sales: 60, orders: 1, clk: 10, date: '2026-01-08' },
+    { st: 'c', camp: 'C2', adg: 'G9', spend: 10, sales: 0, orders: 0, clk: 5, date: '2026-01-01' },
+  ]);
+  assert.equal(rows[0].days, 8);
+  assert.equal(rows[0].daily, 15);
+  assert.equal(rows[1].days, 8);
+});
+
+test('budget reference shows unknown days when the report has no dates', () => {
+  const a = app();
+  const rows = a.budgetReferenceRows([], [
+    { st: 'a', camp: 'C1', adg: 'G1', spend: 90, sales: 120, orders: 5, clk: 25 },
+  ]);
+  assert.equal(rows[0].days, null);
+  assert.equal(rows[0].daily, null);
+});
+
 test('budget reference aggregates spend per campaign group without advice', () => {
   const a = app();
   const rows = a.budgetReferenceRows([], [
@@ -296,7 +317,7 @@ test('budget reference aggregates spend per campaign group without advice', () =
   assert.equal(rows.length, 2);
   assert.equal(JSON.stringify(rows[0].camp), '"C1"');
   assert.equal(rows[0].spend, 90);
-  assert.equal(rows[0].daily, 3);
+  assert.equal(rows[0].daily, null, 'no dates in fixture -> unknown pace');
   assert.equal(rows[0].orders, 5);
   assert.equal(rows[1].spend, 10);
 });

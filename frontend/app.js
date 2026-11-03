@@ -181,8 +181,9 @@ function renderAll() {
     { k: 'losers', label: '其余位置与建议', get: r => r.losers.map(l => esc(l.camp + ' / ' + l.adg + '：' + l.sug)).join('<br>'), csv: r => r.losers.map(l => l.camp + ' / ' + l.adg + '：' + l.sug).join('；') }] });
   mkTable('tblBudget', { name: '亚马逊投流-预算参考（事实数据，非建议）', rows: () => budgetReferenceRows(R.actions, R.st), max: 20, cols: [
     { k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
+    { k: 'days', label: '覆盖天数', get: r => r.days == null ? '未知' : r.days + ' 天', csv: r => r.days == null ? '' : r.days },
     { k: 'spend', label: '期间花费', num: true, fmt: fmtMoney },
-    { k: 'daily', label: '日均花费', num: true, fmt: fmtMoney },
+    { k: 'daily', label: '日均花费', get: r => r.daily == null ? '—' : fmtMoney(r.daily), csv: r => r.daily == null ? '' : String(Math.round(r.daily * 100) / 100) },
     { k: 'clk', label: '点击', num: true, fmt: fmtN }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
@@ -221,7 +222,20 @@ function wasteStSet() { return new Set(state.result.st.filter(s => s.cls === '�
 function goodStSet() { return new Set(state.result.st.filter(s => (s.cls === '优秀' || s.cls === '良好' || Number(s.orders) > 0) && s.st && s.st.trim() !== '—' && s.st.trim() !== '-').map(s => canon(s.st))); }
 function lossRootSet() { return new Set((state.result.roots || []).filter(r => r.type === '亏损').map(r => canon(r.tok))); }
 function aiStatus(msg, cls) { const el = $('#aiStatus'); el.className = 'status ' + (cls || ''); el.textContent = msg; }
-/* Facts only: per campaign/ad-group spend pace for the uploaded period. No advice. */
+/* Facts only: per campaign/ad-group spend pace for the uploaded period. No advice.
+   Coverage days come from the report's own date column; ÷30 was a wrong hardcode. */
+function reportCoverageDays(stRows) {
+  let min = null, max = null;
+  for (const s of (stRows || [])) {
+    const m = String(s && s.date || '').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) continue;
+    const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    if (min === null || t < min) min = t;
+    if (max === null || t > max) max = t;
+  }
+  if (min === null || max === null) return null;
+  return Math.max(1, Math.round((max - min) / 86400000) + 1);
+}
 function budgetReferenceRows(actions, stRows) {
   const groups = new Map();
   const keyOf = (camp, adg) => canon(camp) + '||' + canon(adg);
@@ -235,9 +249,10 @@ function budgetReferenceRows(actions, stRows) {
     g.clk += Number(s.clk) || 0;
     groups.set(key, g);
   }
+  const days = reportCoverageDays(stRows);
   const rows = [...groups.values()].map((g) => ({
     camp: g.camp, adg: g.adg, spend: g.spend, sales: g.sales, orders: g.orders,
-    daily: g.spend / 30, acos: g.sales > 0 ? g.spend / g.sales : null,
+    days: days || null, daily: days ? g.spend / days : null, acos: g.sales > 0 ? g.spend / g.sales : null,
   }));
   rows.sort((a, b) => b.spend - a.spend);
   return rows.slice(0, 20);

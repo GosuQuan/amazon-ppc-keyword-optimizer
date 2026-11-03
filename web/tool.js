@@ -256,8 +256,18 @@ function ToolView({ token, account }) {
       g.clk += Number(s.clk) || 0;
       groups.set(key, g);
     }
+    let min = null, max = null;
+    for (const s of (result && result.st) || []) {
+      const m = String((s && s.date) || '').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (!m) continue;
+      const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+      if (min === null || t < min) min = t;
+      if (max === null || t > max) max = t;
+    }
+    const days = (min === null || max === null) ? null : Math.max(1, Math.round((max - min) / 86400000) + 1);
     return [...groups.values()]
-      .map((g) => ({ camp: g.camp, adg: g.adg, spend: g.spend, sales: g.sales, orders: g.orders, daily: g.spend / 30, acos: g.sales > 0 ? g.spend / g.sales : null }))
+      .map((g) => ({ camp: g.camp, adg: g.adg, spend: g.spend, sales: g.sales, orders: g.orders,
+        days: days || null, daily: days ? g.spend / days : null, acos: g.sales > 0 ? g.spend / g.sales : null }))
       .sort((a, b) => b.spend - a.spend)
       .slice(0, 20);
   })();
@@ -325,7 +335,8 @@ function ToolView({ token, account }) {
     result ? t(DataTable, {
       title: '预算参考（事实数据，非建议）', rows: budgetRows, max: 20, file: '亚马逊投流-预算参考.csv',
       cols: [{ k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
-        { k: 'spend', label: '期间花费' }, { k: 'daily', label: '日均花费' },
+        { k: 'days', label: '覆盖天数', get: (r) => (r.days == null ? '未知' : r.days + ' 天') },
+        { k: 'spend', label: '期间花费' }, { k: 'daily', label: '日均花费', get: (r) => (r.daily == null ? '—' : String(Math.round(r.daily * 100) / 100)) },
         { k: 'clk', label: '点击' }, { k: 'orders', label: '订单' },
         { k: 'sales', label: '销售额' }, acosCol()],
     }) : null,
