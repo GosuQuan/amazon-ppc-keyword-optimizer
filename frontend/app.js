@@ -187,15 +187,17 @@ function newWordRows() {
   for (const h of R.harvest) {
     if (h.exists) continue;
     add({ src: '搜索词收割', word: h.st, type: h.sug, camp: h.camp, adg: h.adg, sales: h.sales, orders: h.orders, acos: h.acos,
-      advice: h.orders > 0 ? '优先新增' : '先观察',
+      advice: window.adviceFor ? window.adviceFor(h.orders ? 1 : 0, h.orders) : (h.orders > 0 ? '优先新增' : '先观察'),
       note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   }
   for (const c of R.combos) add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null,
-    advice: c.orders > 0 ? '优先新增' : '先观察', note: c.evidence });
+    advice: window.adviceFor ? window.adviceFor(c.orders ? 1 : 0, c.orders) : (c.orders > 0 ? '优先新增' : '先观察'),
+    note: c.evidence });
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
     add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null,
-      advice: e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证'), note: e.reason });
+      advice: window.adviceFor ? window.adviceFor(e.reportRows, e.reportOrders) : (e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证')),
+      note: e.reason });
   }
   return rows;
 }

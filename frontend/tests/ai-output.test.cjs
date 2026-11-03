@@ -265,6 +265,15 @@ test('brand detection does not treat an embedded letter sequence as a brand', ()
   assert.equal(a.state.ai.expansions[1].competitorBrand, true);
 });
 
+test('advice label maps evidence to an actionable suggestion', () => {
+  const a = app();
+  const advice = a.context.window.adviceFor;
+  assert.equal(advice(2, 3), '优先新增');
+  assert.equal(advice(1, 0), '先观察');
+  assert.equal(advice(0, 0), '待验证');
+  assert.equal(advice(null, null), '待验证');
+});
+
 test('evidence sorting puts the best supported suggestions first and stays stable', () => {
   const a = app();
   const sort = a.context.window.sortByEvidence;

@@ -52,8 +52,19 @@ function sortByEvidence(items) {
     .map((entry) => entry.item);
 }
 
+/* One rule for the actionable advice label, shared by both front ends:
+   orders > 0 → 优先新增；仅在报表出现 → 先观察；没有任何报表证据 → 待验证。 */
+function adviceFor(rows, orders) {
+  const o = Number(orders) || 0;
+  const r = Number(rows) || 0;
+  if (o > 0) return '优先新增';
+  if (r > 0) return '先观察';
+  return '待验证';
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
 window.sortByEvidence = sortByEvidence;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, canonWord };
+window.adviceFor = adviceFor;
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, canonWord };

@@ -238,6 +238,10 @@ function ToolView({ token, account }) {
             const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, r.word) : { rows: 0, orders: 0 };
             return window.evidenceLabel ? window.evidenceLabel(ev.rows, ev.orders) : '未出现';
           } },
+          { k: 'word', label: '建议', get: (r) => {
+            const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, r.word) : { rows: 0, orders: 0 };
+            return window.adviceFor ? window.adviceFor(ev.rows, ev.orders) : '待验证';
+          } },
           { k: 'reason', label: '理由' },
           { k: 'word', label: '命中复核品牌', get: (r) => (hitsBrand(r.word) ? '是' : '') }],
       }) : null,
