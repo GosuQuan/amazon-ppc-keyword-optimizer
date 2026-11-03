@@ -249,6 +249,15 @@ function ToolView({ token, account }) {
     });
   })();
 
+  const [focusGrade, setFocusGrade] = (typeof React.useState === 'function')
+    ? React.useState(null)
+    : [null, () => {}];
+  const focusQuestions = [
+    ['钱主要花在哪一档？', ['偏高', '亏损']],
+    ['哪一档最亏（有花费没订单）？', ['亏损', '无效']],
+    ['哪一档该优先保住？', ['优秀', '良好']],
+  ];
+
   const splitRows = (() => {
     const groups = new Map();
     for (const s of (result && result.st) || []) {
@@ -334,6 +343,12 @@ function ToolView({ token, account }) {
       result.aovAssumed ? t('p', { className: 'callout' }, '报表中没有订单，客单价按缺省值计算 —— 建议填写真实客单价后重新分析。') : null) : null,
     result ? t('section', { className: 'panel anim-fade-up stagger-2' },
       t('h2', null, '相关性四档（广告表现口径）'),
+      t('div', { className: 'row' },
+        focusQuestions.map(([q, grades]) => t('button', {
+          type: 'button', key: q, className: focusGrade && grades.includes(focusGrade) ? 'primary' : '',
+          onClick: () => setFocusGrade(focusGrade && grades.includes(focusGrade) ? null : grades[0]),
+        }, q))),
+      focusGrade ? t('p', { className: 'hint' }, '已聚焦「' + focusGrade + '」档，下表对应行加粗显示。') : null,
       t('div', { className: 'metrics' },
         [
           ['强认可（优秀+良好）', distRows.filter((d) => d.cls === '优秀' || d.cls === '良好').reduce((s, d) => s + d.n, 0), '更容易获得曝光与订单'],
@@ -343,7 +358,9 @@ function ToolView({ token, account }) {
         ].map(([label, n, hint]) => t('div', { className: 'metric', key: label },
           t('span', null, label), t('strong', null, String(n)), t('small', null, hint))))) : null,
     result ? t(DataTable, {
-      title: '搜索词分级分布', rows: distRows, max: 10, file: '亚马逊投流-分级分布.csv',
+      title: '搜索词分级分布' + (focusGrade ? '（聚焦：' + focusGrade + '）' : ''), rows: distRows.map((d) => ({
+        ...d, cls: focusGrade === d.cls ? '★ ' + d.cls : d.cls,
+      })), max: 10, file: '亚马逊投流-分级分布.csv',
       cols: [{ k: 'cls', label: '级别' }, { k: 'n', label: '搜索词数' }, { k: 'clk', label: '点击' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, { k: 'orders', label: '订单' },
         acosCol()],
