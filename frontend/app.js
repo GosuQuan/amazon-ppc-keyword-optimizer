@@ -187,6 +187,14 @@ function renderAll() {
     { k: 'clk', label: '点击', num: true, fmt: fmtN }, { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
+  mkTable('tblMt', { name: '亚马逊投流-按匹配方式聚合', rows: () => mtSplitRows(R.st), max: 10, cols: [
+    { k: 'mt', label: '匹配类型', get: r => MT_LABEL[r.mt] || r.mt, csv: r => MT_LABEL[r.mt] || r.mt },
+    { k: 'termCount', label: '搜索词数', num: true, fmt: fmtN },
+    { k: 'clk', label: '点击', num: true, fmt: fmtN },
+    { k: 'spend', label: '花费', num: true, fmt: fmtMoney },
+    { k: 'orders', label: '订单', num: true, fmt: fmtN },
+    { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
+    { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
   mkTable('tblSplit', { name: '亚马逊投流-搜索词按活动拆分', rows: () => stSplitByCamp(R.st), max: 100, cols: [
     { k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
     { k: 'termCount', label: '搜索词数', num: true, fmt: fmtN },
@@ -267,6 +275,28 @@ function stSplitByCamp(stRows) {
   const rows = [...groups.values()].map((g) => ({
     camp: g.camp, adg: g.adg, termCount: g.terms.size,
     clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders,
+    acos: g.sales > 0 ? g.spend / g.sales : null,
+  }));
+  rows.sort((a, b) => b.spend - a.spend);
+  return rows;
+}
+/* Per-match-type aggregation (mirrors YICOPY's ad-map layer 2): where does the
+   money go by Exact/Phrase/Broad/Auto. Sorted by spend. */
+function mtSplitRows(stRows) {
+  const groups = new Map();
+  for (const s of (stRows || [])) {
+    if (!s.mt) continue;
+    const key = String(s.mt);
+    const g = groups.get(key) || { mt: key, clk: 0, spend: 0, sales: 0, orders: 0, terms: new Set() };
+    g.clk += Number(s.clk) || 0;
+    g.spend += Number(s.spend) || 0;
+    g.sales += Number(s.sales) || 0;
+    g.orders += Number(s.orders) || 0;
+    if (s.st && s.st.trim() !== '—' && s.st.trim() !== '-') g.terms.add(canon(s.st));
+    groups.set(key, g);
+  }
+  const rows = [...groups.values()].map((g) => ({
+    mt: g.mt, termCount: g.terms.size, clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders,
     acos: g.sales > 0 ? g.spend / g.sales : null,
   }));
   rows.sort((a, b) => b.spend - a.spend);

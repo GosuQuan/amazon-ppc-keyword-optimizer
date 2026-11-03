@@ -23,7 +23,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp };', context);
+  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp, mtSplitRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -297,6 +297,22 @@ test('checkSharedDeps passes when every rule helper is present', () => {
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '["charIssues"]');
   a.context.window.charIssues = () => [];
   assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]');
+});
+
+test('mt split aggregates spend by match type ordered by spend', () => {
+  const a = app();
+  const rows = a.mtSplitRows([
+    { st: 'b1', mt: 'broad', clk: 10, spend: 50, sales: 40, orders: 1 },
+    { st: 'e1', mt: 'exact', clk: 20, spend: 80, sales: 200, orders: 8 },
+    { st: 'e2', mt: 'exact', clk: 5, spend: 20, sales: 100, orders: 4 },
+  ]);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].mt, 'exact', 'higher spend first');
+  assert.equal(rows[0].spend, 100);
+  assert.equal(rows[0].orders, 12);
+  assert.equal(rows[0].acos, 1 / 3);
+  assert.equal(rows[1].mt, 'broad');
+  assert.equal(rows[1].acos, 1.25);
 });
 
 test('st split aggregates terms per campaign group ordered by spend', () => {

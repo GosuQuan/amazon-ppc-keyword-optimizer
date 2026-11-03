@@ -276,6 +276,24 @@ function ToolView({ token, account }) {
       .sort((a, b) => b.spend - a.spend);
   })();
 
+  const mtRows = (() => {
+    const groups = new Map();
+    for (const s of (result && result.st) || []) {
+      if (!s.mt) continue;
+      const key = String(s.mt);
+      const g = groups.get(key) || { mt: key, clk: 0, spend: 0, sales: 0, orders: 0, terms: new Set() };
+      g.clk += Number(s.clk) || 0;
+      g.spend += Number(s.spend) || 0;
+      g.sales += Number(s.sales) || 0;
+      g.orders += Number(s.orders) || 0;
+      if (s.st && s.st.trim() !== '—' && s.st.trim() !== '-') g.terms.add(canonOf(s.st));
+      groups.set(key, g);
+    }
+    return [...groups.values()]
+      .map((g) => ({ mt: g.mt, termCount: g.terms.size, clk: g.clk, spend: g.spend, sales: g.sales, orders: g.orders, acos: g.sales > 0 ? g.spend / g.sales : null }))
+      .sort((a, b) => b.spend - a.spend);
+  })();
+
   const budgetRows = (() => {
     const groups = new Map();
     const keyOf = (camp, adg) => canonOf(camp) + '||' + canonOf(adg);
@@ -382,6 +400,13 @@ function ToolView({ token, account }) {
       title: '词根挖掘', rows: result.roots, max: 100, file: '亚马逊投流-词根挖掘.csv',
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
+    }) : null,
+    result ? t(DataTable, {
+      title: '钱投给哪种匹配方式？', rows: mtRows, max: 10, file: '亚马逊投流-按匹配方式聚合.csv',
+      cols: [{ k: 'mt', label: '匹配类型' }, { k: 'termCount', label: '搜索词数' },
+        { k: 'clk', label: '点击' }, { k: 'spend', label: '花费' }, { k: 'orders', label: '订单' },
+        { k: 'sales', label: '销售额' }, acosCol()],
+      note: '按搜索词报表的匹配类型聚合——对应「花费主要花在哪里」的下钻口径。',
     }) : null,
     result ? t(DataTable, {
       title: '预算参考（事实数据，非建议）', rows: budgetRows, max: 20, file: '亚马逊投流-预算参考.csv',
