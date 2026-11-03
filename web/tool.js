@@ -27,13 +27,14 @@ function downloadCsv(filename, cols, rows) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function DataTable({ title, rows, cols, max, file }) {
+function DataTable({ title, rows, cols, max, file, note }) {
   const list = (rows || []).slice(0, max || 100);
   if (!list.length) return null;
   return t('section', { className: 'panel anim-fade-up' },
     t('div', { className: 'section-head' },
       t('h3', null, `${title}（${list.length} 条）`),
       file ? t('button', { type: 'button', onClick: () => downloadCsv(file, cols, list) }, '导出 CSV') : null),
+    note ? t('p', { className: 'hint' }, note) : null,
     t('table', null,
       t('thead', null, t('tr', null, cols.map((c) => t('th', { key: c.k }, c.label)))),
       t('tbody', null, list.map((r, index) => t('tr', { key: index },
@@ -385,6 +386,7 @@ function ToolView({ token, account }) {
       cols: [{ k: 'st', label: '搜索词' }, { k: 'locs', label: '位置数' },
         { k: 'totClk', label: '总点击' }, { k: 'winner', label: '最优位置' },
         { k: 'losers', label: '其余位置与建议', get: (r) => (r.losers || []).map((l) => `${l.camp} / ${l.adg}：${l.sug}`).join('；') }],
+      note: '匹配口径（对齐 Amazon 规则）：精准=完全相同（含 close variants）；词组=包含且顺序一致；广泛=包含全部词且顺序无关，另有语义扩展——实际内耗范围比字符串判断更大，否定前请人工确认。',
     }) : null,
     aiResult ? t('section', { className: 'panel anim-fade-up stagger-3' },
       t('h3', null, 'AI 结果（仅供参考，需人工复核）'),
