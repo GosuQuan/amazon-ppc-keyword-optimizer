@@ -243,6 +243,25 @@ function ToolView({ token, account }) {
     });
   })();
 
+  const budgetRows = (() => {
+    const groups = new Map();
+    const keyOf = (camp, adg) => canonOf(camp) + '||' + canonOf(adg);
+    for (const s of (result && result.st) || []) {
+      if (!s.camp && !s.adg) continue;
+      const key = keyOf(s.camp, s.adg);
+      const g = groups.get(key) || { camp: s.camp, adg: s.adg, spend: 0, sales: 0, orders: 0, clk: 0 };
+      g.spend += Number(s.spend) || 0;
+      g.sales += Number(s.sales) || 0;
+      g.orders += Number(s.orders) || 0;
+      g.clk += Number(s.clk) || 0;
+      groups.set(key, g);
+    }
+    return [...groups.values()]
+      .map((g) => ({ camp: g.camp, adg: g.adg, spend: g.spend, sales: g.sales, orders: g.orders, daily: g.spend / 30, acos: g.sales > 0 ? g.spend / g.sales : null }))
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 20);
+  })();
+
   return t('main', null,
     t('section', { className: 'panel anim-fade-up' },
       t('p', { className: 'eyebrow' }, '旧工具页 · 报表分析'),
@@ -292,6 +311,13 @@ function ToolView({ token, account }) {
       title: '词根挖掘', rows: result.roots, max: 100, file: '亚马逊投流-词根挖掘.csv',
       cols: [{ k: 'type', label: '类型' }, { k: 'tok', label: '词根' }, { k: 'terms', label: '出现词数' },
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
+    }) : null,
+    result ? t(DataTable, {
+      title: '预算参考（事实数据，非建议）', rows: budgetRows, max: 20, file: '亚马逊投流-预算参考.csv',
+      cols: [{ k: 'camp', label: '广告活动' }, { k: 'adg', label: '广告组' },
+        { k: 'spend', label: '期间花费' }, { k: 'daily', label: '日均花费' },
+        { k: 'clk', label: '点击' }, { k: 'orders', label: '订单' },
+        { k: 'sales', label: '销售额' }, acosCol()],
     }) : null,
     result ? t(DataTable, {
       title: '互搏检测', rows: result.conflicts, max: 50, file: '亚马逊投流-互搏检测.csv',

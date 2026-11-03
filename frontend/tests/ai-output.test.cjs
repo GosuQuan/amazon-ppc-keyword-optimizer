@@ -23,7 +23,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows };', context);
+  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -274,6 +274,21 @@ test('charIssues flags non-ascii, dangerous punctuation and stray spaces only', 
   assert.equal(JSON.stringify(check('  pad  ')), '["含多余空格"]');
   assert.equal(JSON.stringify(check("men's shirt")), '[]', 'in-word apostrophe is legal');
   assert.equal(JSON.stringify(check('t-shirt for kids')), '[]', 'hyphen is legal');
+});
+
+test('budget reference aggregates spend per campaign group without advice', () => {
+  const a = app();
+  const rows = a.budgetReferenceRows([], [
+    { st: 'a', camp: 'C1', adg: 'G1', spend: 30, sales: 90, orders: 3, clk: 10 },
+    { st: 'b', camp: 'C1', adg: 'G1', spend: 60, sales: 120, orders: 2, clk: 15 },
+    { st: 'c', camp: 'C2', adg: 'G9', spend: 10, sales: 0, orders: 0, clk: 5 },
+  ]);
+  assert.equal(rows.length, 2);
+  assert.equal(JSON.stringify(rows[0].camp), '"C1"');
+  assert.equal(rows[0].spend, 90);
+  assert.equal(rows[0].daily, 3);
+  assert.equal(rows[0].orders, 5);
+  assert.equal(rows[1].spend, 10);
 });
 
 test('suggestPlacement matches the ordered report row sharing a word root', () => {
