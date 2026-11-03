@@ -6,6 +6,41 @@ function Field({ label, children, hint }) {
   return React.createElement('label', null, label, children, hint ? React.createElement('small', { className: 'muted' }, hint) : null);
 }
 
+/* Placement drill-down (mirrors YICOPY ad-map layer 3): where clicks and money land
+   by placement. Facts only — the placement report is companion data, excluded from
+   plan metrics, so these rows are shown as-is and never summed into the plan. */
+function PlacementDrill({ plan }) {
+  const rows = plan && plan.reports && plan.reports.placements && plan.reports.placements.rows
+    ? plan.reports.placements.rows : null;
+  if (!rows || !rows.length) return null;
+  const agg = new Map();
+  for (const r of rows) {
+    const g = agg.get(r.placement) || { placement: r.placement, clicks: 0, spend: 0, sales: 0, orders: 0 };
+    g.clicks += Number(r.clicks) || 0;
+    g.spend += Number(r.spend) || 0;
+    g.sales += Number(r.sales) || 0;
+    g.orders += Number(r.orders) || 0;
+    agg.set(r.placement, g);
+  }
+  const list = [...agg.values()]
+    .map((g) => ({ ...g, acos: g.sales > 0 ? g.spend / g.sales : null }))
+    .sort((a, b) => b.spend - a.spend);
+  const pct = (v) => (v == null ? '—' : (Math.round(v * 1000) / 10) + '%');
+  return React.createElement('div', null,
+    React.createElement('h3', null, '广告位下钻（花费降序）'),
+    React.createElement('table', null,
+      React.createElement('thead', null, React.createElement('tr', null,
+        ['广告位', '点击', '花费', '订单', '销售额', 'ACOS'].map((h) => React.createElement('th', { key: h }, h)))),
+      React.createElement('tbody', null, list.map((r) => React.createElement('tr', { key: r.placement },
+        React.createElement('td', null, r.placement),
+        React.createElement('td', null, r.clicks),
+        React.createElement('td', null, r.spend),
+        React.createElement('td', null, r.orders),
+        React.createElement('td', null, r.sales),
+        React.createElement('td', null, pct(r.acos)))))),
+    React.createElement('p', { className: 'hint' }, '广告位报表为伴随数据（companion），不并入方案指标；此处仅按位展示，某广告位 ACOS 偏高是否调价由你人工判断。'));
+}
+
 function FileField({ label, name, accept, required, onCheck, onFile }) {
   const [text, setText] = useState('');
   const onChange = (event) => {
@@ -307,6 +342,7 @@ function WorkflowView({ token }) {
       ),
       React.createElement('p', { className: 'callout' }, window.metricsReading(metrics, plan.target_acos, plan.context && plan.context.currency)),
       React.createElement('p', { className: 'callout' }, window.conclusionText(conclusion)),
+      React.createElement(PlacementDrill, { plan }),
       React.createElement(
         'div',
         { className: 'action-cards' },
