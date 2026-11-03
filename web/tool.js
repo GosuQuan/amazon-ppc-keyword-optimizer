@@ -429,7 +429,7 @@ function ToolView({ token, account }) {
         { k: 'spend', label: '花费' }, { k: 'sales', label: '销售额' }, acosCol(), { k: 'sug', label: '建议' }],
     }) : null,
     result ? t(DataTable, {
-      title: '钱投给哪种匹配方式？', rows: mtRows, max: 10, file: '亚马逊投流-按匹配方式聚合.csv',
+      title: '按匹配方式聚合（钱投给哪种？）', rows: mtRows, max: 10, file: '亚马逊投流-按匹配方式聚合.csv',
       cols: [{ k: 'mt', label: '匹配类型' }, { k: 'termCount', label: '搜索词数' },
         { k: 'clk', label: '点击' }, { k: 'spend', label: '花费' }, { k: 'orders', label: '订单' },
         { k: 'sales', label: '销售额' }, acosCol()],

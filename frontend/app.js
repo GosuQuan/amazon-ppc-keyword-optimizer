@@ -585,4 +585,21 @@ $$('[data-exp]').forEach(b => b.onclick = () => {
 });
 loadSettings();
 if (typeof window.checkSharedDeps === 'function') window.checkSharedDeps('pane-overview');
+document.getElementById('btnDedup').addEventListener('click', () => {
+  const out = document.getElementById('dedupOut');
+  const existing = document.getElementById('dedupExisting').value.split(/[\n,，;；]/).map(s => s.trim()).filter(Boolean);
+  const planned = document.getElementById('dedupPlanned').value.split(/[\n,，;；]/).map(s => s.trim()).filter(Boolean);
+  const result = window.dedupKeywords ? window.dedupKeywords(existing, planned) : { conflicts: [], clean: [] };
+  const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let html = `<h3>冲突 ${result.conflicts.length} 组 / 干净 ${result.clean.length} 个</h3>`;
+  if (result.conflicts.length) {
+    html += '<table><thead><tr><th>待投放词</th><th>冲突级别</th><th>与已投放冲突</th></tr></thead><tbody>'
+      + result.conflicts.map(c => `<tr><td>${esc(c.planned)}</td><td>${esc(c.level)}</td><td>${esc(c.existing)}</td></tr>`).join('')
+      + '</tbody></table><p class="hint">建议：精准/词组冲突的待投放词不要重复创建；广泛冲突说明两词覆盖同一批搜索，二选一即可。</p>';
+  } else {
+    html += '<p class="hint">没有冲突，全部待投放词都干净。</p>';
+  }
+  if (result.clean.length) html += `<p class="hint">干净待投放词：${esc(result.clean.join('、'))}</p>`;
+  out.innerHTML = html;
+});
 window.__app = { state, switchTab };
