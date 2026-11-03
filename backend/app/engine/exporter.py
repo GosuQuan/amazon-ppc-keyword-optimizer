@@ -70,7 +70,8 @@ def export_actions(actions: List[Dict[str, Any]]) -> str:
 
 
 def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[str, Any]] | None = None) -> str:
-    rows = [[n["type"], n["word"], n["camp"], n["adg"], n["source"], _n(n["clk"]), _m(n["spend"]), n["reason"]]
+    rows = [[n["type"], n["word"], n["camp"], n["adg"], n["source"], _n(n["clk"]), _m(n["spend"]),
+             n.get("review", "规则命中"), n["reason"]]
             for n in negatives]
     seen = {canon(n["word"]) for n in negatives}
     for e in (ai_negatives or []):
@@ -88,8 +89,8 @@ def export_negatives(negatives: List[Dict[str, Any]], ai_negatives: List[Dict[st
         elif "竞品品牌" in cross:
             source += "（竞品品牌候选）"
             match = "待复核勿上传"
-        rows.append([match, e["word"], "", "", source, "", "", e.get("reason", "")])
-    return csv_string(["否定方式", "否定词", "广告活动", "广告组", "来源", "点击", "花费", "理由"], rows)
+        rows.append([match, e["word"], "", "", source, "", "", cross or "仅 AI 建议，需人工复核", e.get("reason", "")])
+    return csv_string(["否定方式", "否定词", "广告活动", "广告组", "来源", "点击", "花费", "复核提示", "理由"], rows)
 
 
 def export_newwords(new_rows: List[Dict[str, Any]], ai_expansions: List[Dict[str, Any]] | None = None) -> str:

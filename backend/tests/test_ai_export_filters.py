@@ -25,6 +25,19 @@ def test_same_new_keyword_is_exported_once():
     assert text.lower().count('fresh term') == 1
 
 
+def test_negative_export_shows_the_cross_check_in_its_own_column():
+    text = export_negatives(
+        [{'type': '精准否定', 'word': 'waste term', 'camp': 'c', 'adg': 'g', 'source': '规则',
+          'clk': 2, 'spend': 1, 'reason': 'no orders'}],
+        [{'word': 'maybe term', 'cross': '仅 AI 建议，需人工复核', 'reason': 'r'}],
+    )
+    header = text.split('\r\n')[0]
+    assert '复核提示' in header
+    lines = {line.split(',')[1]: line for line in text.split('\r\n')[1:] if ',' in line}
+    assert '规则命中' in lines['waste term']
+    assert '仅 AI 建议' in lines['maybe term']
+
+
 def test_export_advice_follows_report_evidence():
     text = export_newwords(
         [{'word': 'harvested', 'src': '搜索词收割', 'type': '新增精准词', 'camp': 'c', 'adg': 'g',
