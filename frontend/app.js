@@ -502,4 +502,5 @@ $$('[data-exp]').forEach(b => b.onclick = () => {
   downloadCSV('亚马逊投流-' + names[b.dataset.exp] + '.csv', map[b.dataset.exp]());
 });
 loadSettings();
+if (typeof window.checkSharedDeps === 'function') window.checkSharedDeps('pane-overview');
 window.__app = { state, switchTab };

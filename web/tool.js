@@ -262,7 +262,17 @@ function ToolView({ token, account }) {
       .slice(0, 20);
   })();
 
+  const missingDeps = (typeof window.checkSharedDeps === 'function')
+    ? window.checkSharedDeps(null)
+    : ['checkSharedDeps'];
+
+  const depWarning = missingDeps.length
+    ? t('p', { className: 'status err', role: 'alert' },
+        '⚠ 共享规则脚本缺失：' + missingDeps.join('、') + '。业务规则已退回本地旧逻辑，请刷新页面或检查部署。')
+    : null;
+
   return t('main', null,
+    depWarning,
     t('section', { className: 'panel anim-fade-up' },
       t('p', { className: 'eyebrow' }, '旧工具页 · 报表分析'),
       t('h1', null, '导入报表并分析'),

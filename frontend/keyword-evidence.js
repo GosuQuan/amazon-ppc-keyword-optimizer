@@ -119,6 +119,27 @@ function suggestPlacement(word, stRows) {
   return { camp: best.camp, adg: best.adg, via: '按词根匹配 ' + best.camp + ' / ' + best.adg + '，需人工确认' };
 }
 
+/* Fail-visibly check: verify every shared rule function this page relies on exists.
+   Missing ones mean an old/partial deploy — degrade loudly instead of silently. */
+function checkSharedDeps(hostId) {
+  try {
+    const required = ['brandHit', 'buildReportEvidence', 'evidenceFor', 'evidenceLabel', 'adviceFor', 'sortByEvidence', 'charIssues', 'negativeCross', 'suggestPlacement'];
+    const missing = required.filter((name) => typeof window[name] !== 'function');
+    if (!missing.length) return [];
+    const host = hostId ? document.getElementById(hostId) : document.body;
+    if (host) {
+      const bar = document.createElement('div');
+      bar.className = 'status err';
+      bar.setAttribute('role', 'alert');
+      bar.textContent = '⚠ 共享规则脚本缺失：' + missing.join('、') + '。业务规则已退回本地旧逻辑，请刷新页面或检查部署。';
+      host.insertBefore(bar, host.firstChild);
+    }
+    return missing;
+  } catch (error) {
+    return ['check-failed'];
+  }
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
@@ -127,4 +148,5 @@ window.adviceFor = adviceFor;
 window.negativeCross = negativeCross;
 window.charIssues = charIssues;
 window.suggestPlacement = suggestPlacement;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, suggestPlacement, canonWord };
+window.checkSharedDeps = checkSharedDeps;
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, suggestPlacement, checkSharedDeps, canonWord };

@@ -276,6 +276,16 @@ test('charIssues flags non-ascii, dangerous punctuation and stray spaces only', 
   assert.equal(JSON.stringify(check('t-shirt for kids')), '[]', 'hyphen is legal');
 });
 
+test('checkSharedDeps passes when every rule helper is present', () => {
+  const a = app();
+  const required = ['brandHit', 'buildReportEvidence', 'evidenceFor', 'evidenceLabel', 'adviceFor', 'sortByEvidence', 'charIssues', 'negativeCross', 'suggestPlacement'];
+  assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]', 'all helpers loaded together should pass');
+  delete a.context.window.charIssues;
+  assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '["charIssues"]');
+  a.context.window.charIssues = () => [];
+  assert.equal(JSON.stringify(a.context.window.checkSharedDeps(null)), '[]');
+});
+
 test('budget reference aggregates spend per campaign group without advice', () => {
   const a = app();
   const rows = a.budgetReferenceRows([], [
