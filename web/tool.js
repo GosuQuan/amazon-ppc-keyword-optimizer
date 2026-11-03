@@ -175,6 +175,12 @@ function ToolView({ token, account }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  // Same normalisation the shared evidence/negative helpers use (strip spaces AND punctuation),
+  // otherwise a term like "cell phone" would not match "cell phone stand".
+  const canonOf = (v) => String(v == null ? '' : v)
+    .toLowerCase()
+    .replace(/[\s\u3000]+/g, '')
+    .replace(/[()（）#％%：:，,。·'"“”\-—–_/\\]/g, '');
   const evidenceMap = (typeof React.useMemo === 'function')
     ? React.useMemo(() => (window.buildReportEvidence ? window.buildReportEvidence((result && result.st) || []) : null), [result])
     : null;
@@ -189,7 +195,6 @@ function ToolView({ token, account }) {
   const newWordRows = (() => {
     const list = [];
     const seen = new Set();
-    const canonOf = (v) => String(v == null ? '' : v).toLowerCase().replace(/\s+/g, '');
     const push = (row) => {
       const key = canonOf(row.word);
       if (!key || seen.has(key)) return;
@@ -311,9 +316,22 @@ function ToolView({ token, account }) {
         t('h3', null, '意图分组'),
         aiIntents.map((group, index) => t('p', { key: index },
           `${index + 1}. ${group.intent}：${(group.keywords || []).join('、')}`))) : null,
-      aiNegatives.length ? t('div', { className: 'panel' },
-        t('h3', null, '否定预判（需确认不会误伤自有词）'),
-        aiNegatives.map((item, index) => t('p', { key: index }, `${item.word} —— ${item.reason || ''}`))) : null,
+      aiNegatives.length ? t(DataTable, {
+        title: 'AI 否定预判', rows: aiNegatives, max: 100,
+        cols: [{ k: 'word', label: '否定候选' },
+          { k: 'word', label: '与规则交叉验证', get: (r) => {
+            // Protect any search term that actually produced orders, not only those the
+            // rule engine happened to grade 优秀/良好 — matching the backend's protection.
+            const protect = (s) => s.cls === '优秀' || s.cls === '良好' || Number(s.orders) > 0;
+            const goodSet = new Set((result.st || []).filter(protect).map((s) => canonOf(s.st)));
+            const wasteSet = new Set((result.st || []).filter((s) => s.cls === '无效').map((s) => canonOf(s.st)));
+            const lossSet = new Set((result.roots || []).filter((x) => x.type === '亏损').map((x) => canonOf(x.tok)));
+            return window.negativeCross
+              ? window.negativeCross(r.word, { good: goodSet, waste: wasteSet, loss: lossSet, brandHit: hitsBrand(r.word) })
+              : '仅 AI 建议，需人工复核';
+          } },
+          { k: 'reason', label: '理由' }],
+      }) : null,
       aiInsights.length ? t('div', { className: 'panel' },
         t('h3', null, '专家洞察'),
         aiInsights.map((item, index) => t('p', { key: index }, `${item.title || '洞察'}：${item.detail || ''}`))) : null) : null,

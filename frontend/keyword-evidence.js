@@ -62,9 +62,34 @@ function adviceFor(rows, orders) {
   return '待验证';
 }
 
+/* Cross-check a model-suggested negative against our own rule data.
+   Order matters: a term that overlaps a good search term must be flagged as a
+   conflict even if it also looks wasteful, because deleting it could cut real traffic. */
+function negativeCross(word, options) {
+  const opts = options || {};
+  const canonOf = typeof canonWord === 'function' ? canonWord : (v) => String(v || '').toLowerCase();
+  const key = canonOf(word);
+  const good = opts.good || new Set();
+  const waste = opts.waste || new Set();
+  const loss = opts.loss || new Set();
+  const containedInGood = (() => {
+    if (key.length < 4) return false;
+    for (const term of good) {
+      if (term.length < 4 || term === key) continue;
+      if (term.includes(key) || key.includes(term)) return true;
+    }
+    return false;
+  })();
+  if (good.has(key) || containedInGood) return '⚠ 与优质数据冲突，不建议否定';
+  if (waste.has(key) || loss.has(key)) return '与规则一致（高置信）';
+  if (opts.brandHit) return '竞品品牌，可作为否定候选，仍需确认不会误伤自有词';
+  return '仅 AI 建议，需人工复核';
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
 window.sortByEvidence = sortByEvidence;
 window.adviceFor = adviceFor;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, canonWord };
+window.negativeCross = negativeCross;
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, canonWord };

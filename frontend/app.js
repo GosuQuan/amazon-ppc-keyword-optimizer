@@ -205,7 +205,7 @@ function newWordRows() {
 /* ---------- AI：专家导入 / 在线 ---------- */
 function exactKwSet() { return new Set((state.result.actions || []).filter(a => a.mt === 'exact').map(a => canon(a.kw))); }
 function wasteStSet() { return new Set(state.result.st.filter(s => s.cls === '无效' && s.st && s.st.trim() !== '—' && s.st.trim() !== '-').map(s => canon(s.st))); }
-function goodStSet() { return new Set(state.result.st.filter(s => (s.cls === '优秀' || s.cls === '良好') && s.st && s.st.trim() !== '—' && s.st.trim() !== '-').map(s => canon(s.st))); }
+function goodStSet() { return new Set(state.result.st.filter(s => (s.cls === '优秀' || s.cls === '良好' || Number(s.orders) > 0) && s.st && s.st.trim() !== '—' && s.st.trim() !== '-').map(s => canon(s.st))); }
 function lossRootSet() { return new Set((state.result.roots || []).filter(r => r.type === '亏损').map(r => canon(r.tok))); }
 function aiStatus(msg, cls) { const el = $('#aiStatus'); el.className = 'status ' + (cls || ''); el.textContent = msg; }
 function parseAiText(text) {
@@ -303,10 +303,14 @@ function mergeAiJson(j) {
   });
   const intents = j.intents;
   const negatives = j.negativeHints.map(e => {
-    const w = canon(e.word); let cross = '仅 AI 建议，需人工复核';
-    if (good.has(w) || negativeContainedInGood(w, good)) cross = '⚠ 与优质数据冲突，不建议否定';
-    else if (waste.has(w) || loss.has(w)) cross = '与规则一致（高置信）';
-    else if (expansionHasCompetitorBrand(e.word)) cross = '竞品品牌，可作为否定候选，仍需确认不会误伤自有词';
+    const w = canon(e.word);
+    const cross = (typeof window.negativeCross === 'function')
+      ? window.negativeCross(e.word, { good, waste, loss, brandHit: expansionHasCompetitorBrand(e.word) })
+      : (good.has(w) || negativeContainedInGood(w, good)
+        ? '⚠ 与优质数据冲突，不建议否定'
+        : (waste.has(w) || loss.has(w)
+          ? '与规则一致（高置信）'
+          : (expansionHasCompetitorBrand(e.word) ? '竞品品牌，可作为否定候选，仍需确认不会误伤自有词' : '仅 AI 建议，需人工复核')));
     return { word: e.word.trim(), reason: e.reason || '', cross };
   });
   state.ai = { expansions, intents, negatives, insights: j.insights, done: true };
