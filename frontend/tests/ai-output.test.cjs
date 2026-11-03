@@ -276,6 +276,20 @@ test('charIssues flags non-ascii, dangerous punctuation and stray spaces only', 
   assert.equal(JSON.stringify(check('t-shirt for kids')), '[]', 'hyphen is legal');
 });
 
+test('suggestPlacement matches the ordered report row sharing a word root', () => {
+  const a = app();
+  const suggest = a.context.window.suggestPlacement;
+  const st = [
+    { st: 'desk trip organizer', camp: 'CampB', adg: 'G2', orders: 5 },
+    { st: 'desk trip mat', camp: 'CampA', adg: 'G1', orders: 2 },
+    { st: 'desk trip pad', camp: 'CampC', adg: 'G3', orders: 0 },
+  ];
+  assert.equal(JSON.stringify(suggest('desk trip', st)), JSON.stringify({ camp: 'CampB', adg: 'G2', via: '按词根匹配 CampB / G2，需人工确认' }));
+  assert.equal(suggest('unrelated term', st).camp, '');
+  assert.equal(suggest('desk', []).camp, '');
+  assert.equal(suggest('ab', st).camp, '', 'too-short words never match');
+});
+
 test('advice label maps evidence to an actionable suggestion', () => {
   const a = app();
   const advice = a.context.window.adviceFor;

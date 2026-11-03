@@ -97,6 +97,28 @@ function charIssues(word) {
   return issues;
 }
 
+/* Suggest a target campaign/ad group for a suggested keyword, using our own report:
+   among report rows that share a word-root with the keyword (either is a substring of
+   the other), pick the one with the most orders. Returns '' when nothing qualifies. */
+function suggestPlacement(word, stRows) {
+  const canonOf = typeof canonWord === 'function' ? canonWord : (v) => String(v || '').toLowerCase();
+  const key = canonOf(word);
+  if (!key || key.length < 4 || !Array.isArray(stRows)) return { camp: '', adg: '', via: '' };
+  let best = null;
+  for (const row of stRows) {
+    const term = canonOf(row && row.st);
+    if (!term || term.length < 4) continue;
+    if (!term.includes(key) && !key.includes(term)) continue;
+    const orders = Number(row.orders) || 0;
+    if (orders <= 0) continue;
+    if (!best || orders > best.orders) {
+      best = { camp: String(row.camp || ''), adg: String(row.adg || ''), orders };
+    }
+  }
+  if (!best) return { camp: '', adg: '', via: '' };
+  return { camp: best.camp, adg: best.adg, via: '按词根匹配 ' + best.camp + ' / ' + best.adg + '，需人工确认' };
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
@@ -104,4 +126,5 @@ window.sortByEvidence = sortByEvidence;
 window.adviceFor = adviceFor;
 window.negativeCross = negativeCross;
 window.charIssues = charIssues;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, canonWord };
+window.suggestPlacement = suggestPlacement;
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, suggestPlacement, canonWord };

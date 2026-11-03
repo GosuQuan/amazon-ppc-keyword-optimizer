@@ -208,17 +208,19 @@ function ToolView({ token, account }) {
         orders: h.orders == null ? '' : h.orders, note: '来自' + (h.srcMt || '') + ' 匹配' });
     }
     for (const c of (result && result.combos) || []) {
-      push({ word: c.pair, src: '组合挖掘', type: '组合新词',
+      const place = window.suggestPlacement ? window.suggestPlacement(c.pair, (result && result.st) || []) : { camp: '', adg: '', via: '' };
+      push({ word: c.pair, src: '组合挖掘', type: '组合新词', camp: place.camp, adg: place.adg,
         advice: window.adviceFor ? window.adviceFor(c.orders ? 1 : 0, c.orders) : '先观察',
-        orders: c.orders == null ? '' : c.orders, note: c.evidence || '' });
+        orders: c.orders == null ? '' : c.orders, note: (place.via ? place.via + '　' : '') + (c.evidence || '') });
     }
     for (const e of aiExpansions) {
       if (e.competitorBrand || e.coveredByGood || e.exists) continue;
       const ev = (window.evidenceFor && evidenceMap) ? window.evidenceFor(evidenceMap, e.word) : { rows: 0, orders: 0 };
       const issues = window.charIssues ? window.charIssues(e.word) : [];
-      push({ word: e.word, src: 'AI扩词', type: e.type || 'AI',
+      const place = window.suggestPlacement ? window.suggestPlacement(e.word, (result && result.st) || []) : { camp: '', adg: '', via: '' };
+      push({ word: e.word, src: 'AI扩词', type: e.type || 'AI', camp: place.camp, adg: place.adg,
         advice: window.adviceFor ? window.adviceFor(ev.rows, ev.orders) : '待验证',
-        orders: ev.orders || '', note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (e.reason || '') });
+        orders: ev.orders || '', note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (place.via ? place.via + '　' : '') + (e.reason || '') });
     }
     const rank = { '优先新增': 0, '先观察': 1, '待验证': 2 };
     return list.slice().sort((a, b) => (rank[a.advice] ?? 3) - (rank[b.advice] ?? 3));
@@ -342,6 +344,7 @@ function ToolView({ token, account }) {
         ? t(DataTable, {
             title: '新词候选', rows: newWordRows, max: 100, file: '亚马逊投流-新词候选.csv',
             cols: [{ k: 'word', label: '建议关键词' }, { k: 'advice', label: '建议' },
+              { k: 'camp', label: '建议活动' }, { k: 'adg', label: '建议组' },
               { k: 'src', label: '来源' }, { k: 'type', label: '类型' },
               { k: 'orders', label: '订单' }, { k: 'note', label: '说明' }],
           })

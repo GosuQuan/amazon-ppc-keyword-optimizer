@@ -190,15 +190,20 @@ function newWordRows() {
       advice: window.adviceFor ? window.adviceFor(h.orders ? 1 : 0, h.orders) : (h.orders > 0 ? '优先新增' : '先观察'),
       note: '来自' + MT_LABEL[h.srcMt] + '匹配，ACOS ' + fmtPct(h.acos) });
   }
-  for (const c of R.combos) add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: '', adg: '', sales: c.sales, orders: c.orders, acos: null,
-    advice: window.adviceFor ? window.adviceFor(c.orders ? 1 : 0, c.orders) : (c.orders > 0 ? '优先新增' : '先观察'),
-    note: c.evidence });
+  const stAll = state.result.st || [];
+  for (const c of R.combos) {
+    const place = window.suggestPlacement ? window.suggestPlacement(c.pair, stAll) : { camp: '', adg: '', via: '' };
+    add({ src: '组合挖掘', word: c.pair, type: '组合新词', camp: place.camp, adg: place.adg, sales: c.sales, orders: c.orders, acos: null,
+      advice: window.adviceFor ? window.adviceFor(c.orders ? 1 : 0, c.orders) : (c.orders > 0 ? '优先新增' : '先观察'),
+      note: (place.via ? place.via + '　' : '') + c.evidence });
+  }
   for (const e of state.ai.expansions) {
     if (e.competitorBrand || e.coveredByGood || e.exists) continue;
     const issues = window.charIssues ? window.charIssues(e.word) : [];
-    add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: '', adg: '', sales: null, orders: null, acos: null,
+    const place = window.suggestPlacement ? window.suggestPlacement(e.word, stAll) : { camp: '', adg: '', via: '' };
+    add({ src: 'AI扩词', word: e.word, type: e.type || 'AI', camp: place.camp, adg: place.adg, sales: null, orders: null, acos: null,
       advice: window.adviceFor ? window.adviceFor(e.reportRows, e.reportOrders) : (e.reportOrders > 0 ? '优先新增' : (e.reportRows > 0 ? '先观察' : '待验证')),
-      note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (e.reason || '') });
+      note: (issues.length ? '⚠字符: ' + issues.join('、') + '　' : '') + (place.via ? place.via + '　' : '') + (e.reason || '') });
   }
   return rows;
 }
