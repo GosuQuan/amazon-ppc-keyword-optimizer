@@ -84,6 +84,14 @@ function ToolView({ token, account }) {
     ['销售额', kpi.sales], ['订单', kpi.orders], ['整体 ACOS', pct(kpi.acos)], ['搜索词数', kpi.stCount],
   ] : [];
 
+  const [dedupState, setDedupState] = useState({ existing: '', planned: '', result: null });
+  const runDedup = () => {
+    const existing = dedupState.existing.split(/[\n,，;；]/).map((s) => s.trim()).filter(Boolean);
+    const planned = dedupState.planned.split(/[\n,，;；]/).map((s) => s.trim()).filter(Boolean);
+    const result = window.dedupKeywords ? window.dedupKeywords(existing, planned) : { conflicts: [], clean: [] };
+    setDedupState((s) => ({ ...s, result }));
+  };
+
   const [ai, setAi] = useState({
     mode: 'expert', baseUrl: '', model: '', apiKey: '', desc: '', brands: '',
   });
@@ -354,6 +362,25 @@ function ToolView({ token, account }) {
         t('button', { className: 'primary', type: 'submit', disabled: busy },
           busy ? '正在分析…' : '开始分析', busy ? t('span', { className: 'spinner' }) : null)),
       error ? t('p', { className: 'error', role: 'alert' }, error) : null),
+    t('section', { className: 'panel anim-fade-up stagger-1' },
+      t('h2', null, '投放前去重（本地规则，数据不出本机）'),
+      t('p', { className: 'hint' }, '已投放 = 现在正在跑的关键词；待投放 = 准备新开的关键词。冲突口径：精准（完全相同）> 词组（包含且顺序一致）> 广泛（包含全部词、顺序无关）。不做词形还原（lamp/lamps 算不同词），广泛匹配的语义扩展无法本地检测——结果需人工复核。'),
+      t('div', { className: 'form-grid' },
+        t('label', null, '已投放关键词（逗号/换行分隔）',
+          t('textarea', { value: dedupState.existing, onChange: (e) => setDedupState((s) => ({ ...s, existing: e.target.value })), rows: 4, placeholder: '例如：\ncell phone stand\nphone holder' })),
+        t('label', null, '待投放关键词（逗号/换行分隔）',
+          t('textarea', { value: dedupState.planned, onChange: (e) => setDedupState((s) => ({ ...s, planned: e.target.value })), rows: 4, placeholder: '例如：\ncell phone\nlaptop stand' }))),
+      t('div', { className: 'row' },
+        t('button', { type: 'button', className: 'primary', onClick: runDedup }, '开始去重')),
+      dedupState.result ? t('div', null,
+        t('h3', null, `冲突 ${dedupState.result.conflicts.length} 组 / 干净 ${dedupState.result.clean.length} 个`),
+        dedupState.result.conflicts.length ? t(DataTable, {
+          title: '冲突明细', rows: dedupState.result.conflicts, max: 100,
+          cols: [{ k: 'planned', label: '待投放词' }, { k: 'level', label: '冲突级别' },
+            { k: 'existing', label: '与已投放冲突' }],
+          note: '建议：精准/词组冲突的待投放词不要重复创建；广泛冲突说明两词覆盖同一批搜索，二选一即可。',
+        }) : t('p', { className: 'muted' }, '没有冲突，全部待投放词都干净。'),
+        dedupState.result.clean.length ? t('p', { className: 'muted' }, '干净待投放词：' + dedupState.result.clean.join('、')) : null) : null),
     kpi ? t('section', { className: 'panel anim-fade-up stagger-2' },
       t('h2', null, '概览'),
       t('div', { className: 'metrics' }, kpiCards.map(([label, value]) => t('div', { className: 'metric', key: label },
