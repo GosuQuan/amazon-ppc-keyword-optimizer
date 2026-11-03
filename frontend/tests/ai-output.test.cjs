@@ -330,6 +330,27 @@ test('st split aggregates terms per campaign group ordered by spend', () => {
   assert.equal(split[1].orders, 2);
 });
 
+test('dedupKeywords flags exact/phrase/broad conflicts and returns the clean set', () => {
+  const a = app();
+  const dedup = a.context.window.dedupKeywords;
+  const r = dedup(
+    ['cell phone stand', 'phone holder', 'desk mount'],
+    ['cell phone stand', 'stand for cell phone', 'cell phone', 'laptop stand'],
+  );
+  const byPlanned = Object.fromEntries(r.conflicts.map((c) => [c.planned, c]));
+  assert.equal(byPlanned['cell phone stand'].level, 'exact');
+  assert.equal(byPlanned['stand for cell phone'].level, 'broad', 'bag-of-words, order irrelevant');
+  assert.equal(byPlanned['cell phone'].level, 'phrase', 'contained term is a phrase conflict');
+  assert.equal(JSON.stringify(r.clean), '["laptop stand"]');
+  // Priority: a planned term equal to an existing one reports exact even if phrase also fits.
+  const r2 = dedup(['girl bag'], ['girl bag']);
+  assert.equal(r2.conflicts[0].level, 'exact');
+  // Empty and duplicate inputs are normalised.
+  const r3 = dedup([], ['', 'laptop stand', 'laptop stand']);
+  assert.equal(JSON.stringify(r3.conflicts), '[]');
+  assert.equal(JSON.stringify(r3.clean), '["laptop stand"]');
+});
+
 test('budget reference derives coverage days from the report dates', () => {
   const a = app();
   const rows = a.budgetReferenceRows([], [

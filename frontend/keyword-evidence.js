@@ -151,6 +151,52 @@ function checkSharedDeps(hostId) {
   }
 }
 
+/* Manual dedup (mirrors YICOPY's 自竞争检索): given already-running keywords and
+   planned ones, flag conflicts by Amazon match-type semantics and return the clean set.
+   Priority: exact > phrase > broad. Local string rules only — no lemmatization. */
+function dedupKeywords(existing, planned) {
+  const canonOf = typeof canonWord === 'function' ? canonWord : (v) => String(v || '').toLowerCase();
+  const wordsOf = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  const uniq = (list) => {
+    const seen = new Set();
+    return (list || []).map((w) => String(w == null ? '' : w).trim()).filter((w) => {
+      const key = canonOf(w);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  const ex = uniq(existing);
+  const pl = uniq(planned);
+  const conflicts = [];
+  const clean = [];
+  for (const p of pl) {
+    const pk = canonOf(p);
+    const pb = wordsOf(p);
+    let worst = null;
+    for (const e of ex) {
+      const ek = canonOf(e);
+      if (!ek) continue;
+      let level = null;
+      if (pk === ek) level = 'exact';
+      else if (pk.includes(ek) || ek.includes(pk)) level = 'phrase';
+      else {
+        const eb = wordsOf(e);
+        if (eb.length && eb.every((w) => pb.includes(w))) level = 'broad';
+      }
+      if (level && (!worst || rank(level) < rank(worst.level))) {
+        worst = { planned: p, existing: e, level };
+      }
+      if (worst && worst.level === 'exact') break;
+    }
+    if (worst) conflicts.push(worst);
+    else clean.push(p);
+  }
+  function rank(level) { return level === 'exact' ? 0 : level === 'phrase' ? 1 : 2; }
+  conflicts.sort((a, b) => rank(a.level) - rank(b.level) || a.planned.localeCompare(b.planned));
+  return { conflicts, clean };
+}
+
 window.buildReportEvidence = buildReportEvidence;
 window.evidenceFor = evidenceFor;
 window.evidenceLabel = evidenceLabel;
@@ -159,6 +205,7 @@ window.adviceFor = adviceFor;
 window.negativeCross = negativeCross;
 window.charIssues = charIssues;
 window.cleanWord = cleanWord;
+window.dedupKeywords = dedupKeywords;
 window.suggestPlacement = suggestPlacement;
 window.checkSharedDeps = checkSharedDeps;
-if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, cleanWord, suggestPlacement, checkSharedDeps, canonWord };
+if (typeof module !== 'undefined') module.exports = { buildReportEvidence, evidenceFor, evidenceLabel, sortByEvidence, adviceFor, negativeCross, charIssues, cleanWord, dedupKeywords, suggestPlacement, checkSharedDeps, canonWord };
