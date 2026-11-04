@@ -461,7 +461,9 @@ function ToolView({ token, account }) {
       cols: [{ k: 'mt', label: '匹配类型' }, { k: 'termCount', label: '搜索词数' },
         { k: 'clk', label: '点击' }, { k: 'spend', label: '花费' }, { k: 'orders', label: '订单' },
         { k: 'sales', label: '销售额' }, acosCol()],
-      note: '按搜索词报表的匹配类型聚合——对应「花费主要花在哪里」的下钻口径。',
+      note: window.mtReading
+        ? (window.mtReading(mtRows) || '按搜索词报表的匹配类型聚合——对应「花费主要花在哪里」的下钻口径。')
+        : '按搜索词报表的匹配类型聚合——对应「花费主要花在哪里」的下钻口径。',
     }) : null,
     result ? t(DataTable, {
       title: '预算参考（事实数据，非建议）', rows: budgetRows, max: 20, file: '亚马逊投流-预算参考.csv',

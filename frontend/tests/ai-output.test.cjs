@@ -369,6 +369,22 @@ test('dedupKeywords flags exact/phrase/broad conflicts and returns the clean set
   assert.equal(JSON.stringify(r3.clean), '["laptop stand"]');
 });
 
+test('mtReading reports spend share and above-average ACOS drift', () => {
+  const a = app();
+  const read = a.context.window.mtReading;
+  const rows = [
+    { mt: 'exact', spend: 100, sales: 300, orders: 10 },
+    { mt: 'broad', spend: 50, sales: 40, orders: 1 },
+  ];
+  const text = read(rows);
+  assert.match(text, /精准匹配占花费 66\.7%/);
+  assert.match(text, /广泛匹配占花费 33\.3%.*高于整体均值/);
+  assert.match(text, /整体 ACOS 44\.1%/);
+  assert.match(text, /不构成调整承诺/);
+  assert.equal(read([]), null);
+  assert.equal(read([{ mt: 'exact', spend: 0 }]), null, 'zero spend cannot be read');
+});
+
 test('placementReading describes each band without causal claims', () => {
   const a = app();
   const read = a.context.window.placementReading;

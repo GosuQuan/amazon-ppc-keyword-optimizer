@@ -42,6 +42,36 @@ function placementReading(rows) {
   if (!parts.length) return null;
   return parts.join('；') + '。以上是对已发生数据的分层描述，不构成因果判断或节省承诺。';
 }
+/* Match-type reading (mirrors YICOPY's ad-map layer 2): which match type eats the
+   budget and whether its ACOS drifts above the account average. Descriptive only. */
+function mtReading(rows) {
+  const agg = new Map();
+  let totalSpend = 0, totalSales = 0;
+  for (const r of (rows || [])) {
+    const key = String(r && r.mt || '').trim();
+    if (!key) continue;
+    const g = agg.get(key) || { spend: 0, sales: 0, orders: 0 };
+    g.spend += Number(r.spend) || 0;
+    g.sales += Number(r.sales) || 0;
+    g.orders += Number(r.orders) || 0;
+    agg.set(key, g);
+    totalSpend += Number(r.spend) || 0;
+    totalSales += Number(r.sales) || 0;
+  }
+  if (!agg.size || totalSpend <= 0) return null;
+  const accountAcos = totalSales > 0 ? totalSpend / totalSales : null;
+  const parts = [];
+  const label = (key) => ({ exact: '精准', phrase: '词组', broad: '广泛', auto: '自动' }[key.toLowerCase()] || key);
+  const sorted = [...agg.entries()].sort((a, b) => b[1].spend - a[1].spend);
+  for (const [key, g] of sorted) {
+    const share = (g.spend / totalSpend * 100).toFixed(1);
+    const acos = g.sales > 0 ? (g.spend / g.sales * 100).toFixed(1) + '%' : '无销售';
+    const drift = accountAcos && g.sales > 0 && (g.spend / g.sales) > accountAcos * 1.1 ? '，ACOS 高于整体均值' : '';
+    parts.push(`${label(key)}匹配占花费 ${share}%（ACOS ${acos}${drift}）`);
+  }
+  if (accountAcos) parts.push(`整体 ACOS ${(accountAcos * 100).toFixed(1)}%`);
+  return parts.join('；') + '。以上为花费结构描述，不构成调整承诺；广泛匹配还有语义扩展，实际触发面更大。';
+}
 function metricsReading(metrics, targetAcos, currency) {
   const m = metrics || {};
   const num = (value, digits) => (typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : null);
@@ -113,6 +143,7 @@ function planListConclusion(plans) {
 
 window.metricsReading = metricsReading;
 window.placementReading = placementReading;
+window.mtReading = mtReading;
 window.reviewConclusion = reviewConclusion;
 window.planListConclusion = planListConclusion;
 if (typeof module !== 'undefined') module.exports = { metricsReading, reviewConclusion, planListConclusion };
