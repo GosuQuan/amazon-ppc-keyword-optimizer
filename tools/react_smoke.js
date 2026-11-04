@@ -151,6 +151,20 @@ function check(name, condition, detail) {
   check('旧版工具页在 /classic 可用', String(legacyObj.title).includes('关键词优化') && legacyObj.hasLegacyUi,
     'title=' + legacyObj.title);
 
+  // 6b. Shared reading source must actually render on the classic page:
+  //     load the demo data and assert the match-type reading line is non-empty.
+  await ev(`(() => { const b = document.getElementById('btnDemo'); if (b) b.click(); return 'ok'; })()`);
+  await sleep(8000);
+  const reading = await ev(`(() => {
+    const b = [...document.querySelectorAll('.tabbtn')].find(x => x.dataset.tab === 'pane-budget');
+    if (b) b.click();
+    const el = document.getElementById('mtReadingOut');
+    return { present: !!el, text: el ? el.textContent : '' };
+  })()`);
+  const readingObj = typeof reading === 'string' ? JSON.parse(reading) : reading;
+  check('原生版匹配解读句渲染（共享源生效）', readingObj.present && readingObj.text.includes('ACOS'),
+    'text=' + String(readingObj.text).slice(0, 60));
+
   check('全程无未捕获错误', errors.length === 0, errors.slice(0, 2).join(' | '));
 
   ws.close();
