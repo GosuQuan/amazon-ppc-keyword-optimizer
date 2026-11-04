@@ -24,6 +24,17 @@ docs/runs/probe_*.js
 docs/runs/call_*.py
 docs/runs/*-report.csv
 docs/runs/*.xlsx
+docs/runs/yicopy_login_*.js
+docs/runs/yicopy_relogin_*.js
+docs/runs/yicopy_query_submit.js
+docs/runs/yicopy_explore_more.js
+docs/runs/yicopy_retry.js
+docs/runs/dump_real_words.py
+docs/runs/build_prototype_record.py
+docs/runs/make_review_sample.js
+docs/runs/probe_thinking.py
+docs/runs/verify_demo_flow.js
+docs/runs/scnet-*.txt
 
 # 系统与编辑器
 .DS_Store
