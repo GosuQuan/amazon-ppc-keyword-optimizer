@@ -196,7 +196,7 @@ function renderAll() {
     { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
-  const mtReadingEl = document.getElementById('mtReading');
+  const mtReadingEl = document.getElementById('mtReadingOut');
   if (mtReadingEl) {
     mtReadingEl.textContent = (window.mtReading && window.mtReading(mtSplitRows(R.st)))
       || '按搜索词报表的匹配类型聚合花费与订单——对应「花费主要花在哪里」的下钻口径。';
