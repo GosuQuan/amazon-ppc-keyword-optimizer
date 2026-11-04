@@ -196,6 +196,11 @@ function renderAll() {
     { k: 'orders', label: '订单', num: true, fmt: fmtN },
     { k: 'sales', label: '销售额', num: true, fmt: fmtMoney },
     { k: 'acos', label: 'ACOS', num: true, fmt: v => fmtPct(v) }] });
+  const mtReadingEl = document.getElementById('mtReading');
+  if (mtReadingEl) {
+    mtReadingEl.textContent = (window.mtReading && window.mtReading(mtSplitRows(R.st)))
+      || '按搜索词报表的匹配类型聚合花费与订单——对应「花费主要花在哪里」的下钻口径。';
+  }
   mkTable('tblMt', { name: '亚马逊投流-按匹配方式聚合', rows: () => mtSplitRows(R.st), max: 10, cols: [
     { k: 'mt', label: '匹配类型', get: r => MT_LABEL[r.mt] || r.mt, csv: r => MT_LABEL[r.mt] || r.mt },
     { k: 'termCount', label: '搜索词数', num: true, fmt: fmtN },
