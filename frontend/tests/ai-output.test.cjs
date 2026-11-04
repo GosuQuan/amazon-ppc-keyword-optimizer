@@ -10,6 +10,7 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
 // app.js relies on the shared brandHit helper loaded separately in the browser.
 const brandSource = fs.readFileSync(path.join(__dirname, '..', 'brand-check.js'), 'utf8');
 const evidenceSource = fs.readFileSync(path.join(__dirname, '..', 'keyword-evidence.js'), 'utf8');
+const readingSource = fs.readFileSync(path.join(__dirname, '..', 'reading.js'), 'utf8');
 function app() {
   const nodes = new Map();
   const node = id => {
@@ -23,7 +24,7 @@ function app() {
     FileReader: class { readAsText(file) { this.result = file.text; this.onload(); } },
     fetch: async () => { throw new Error('Unexpected network access'); },
   });
-  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp, mtSplitRows, kwSplitByCamp };', context);
+  vm.runInContext(brandSource + '\n' + evidenceSource + '\n' + readingSource + '\n' + source + '\nrenderAI = () => {}; renderAll = () => {}; switchTab = () => {}; window.testApi = { mergeAiJson, runAiOnline, importExpertJson, newWordRows, aiNegativeExportRows, budgetReferenceRows, stSplitByCamp, mtSplitRows, kwSplitByCamp };', context);
   const state = context.window.__app.state;
   state.result = { actions: [{ mt: 'exact', kw: 'existing' }], roots: [{ type: '亏损', tok: 'loss' }], st: [
     { st: 'good', cls: '优秀', sales: 10 }, { st: 'waste', cls: '无效' },
@@ -366,6 +367,22 @@ test('dedupKeywords flags exact/phrase/broad conflicts and returns the clean set
   const r3 = dedup([], ['', 'laptop stand', 'laptop stand']);
   assert.equal(JSON.stringify(r3.conflicts), '[]');
   assert.equal(JSON.stringify(r3.clean), '["laptop stand"]');
+});
+
+test('placementReading describes each band without causal claims', () => {
+  const a = app();
+  const read = a.context.window.placementReading;
+  const rows = [
+    { placement: 'Top of Search', clicks: 10, spend: 20, sales: 40, orders: 2 },
+    { placement: 'Rest of Search', clicks: 20, spend: 40, sales: 0, orders: 0 },
+    { placement: 'Product Pages', clicks: 5, spend: 5, sales: 10, orders: 1 },
+  ];
+  const text = read(rows);
+  assert.match(text, /搜索顶部.*2 单/);
+  assert.match(text, /其余搜索位置.*止损优先核查区/);
+  assert.match(text, /商品页面.*单独评估/);
+  assert.match(text, /不构成因果判断/);
+  assert.equal(read([]), null);
 });
 
 test('budget reference derives coverage days from the report dates', () => {

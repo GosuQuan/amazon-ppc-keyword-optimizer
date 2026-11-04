@@ -1,5 +1,47 @@
 'use strict';
 /* Describe what the observed metrics mean. Descriptive only: no causal or savings claims. */
+/* Placement-level reading (mirrors YICOPY's per-position semantics guide).
+   Descriptive only: Top of Search carries the strongest intent, Rest of Search is
+   the volume band, Product Pages convert differently. Never causal, never savings. */
+function placementReading(rows) {
+  const agg = new Map();
+  for (const r of (rows || [])) {
+    const key = String(r && r.placement || '').trim();
+    if (!key) continue;
+    const g = agg.get(key) || { clicks: 0, spend: 0, sales: 0, orders: 0 };
+    g.clicks += Number(r.clicks) || 0;
+    g.spend += Number(r.spend) || 0;
+    g.sales += Number(r.sales) || 0;
+    g.orders += Number(r.orders) || 0;
+    agg.set(key, g);
+  }
+  if (!agg.size) return null;
+  const get = (needle) => [...agg.keys()].find((k) => k.toLowerCase().includes(needle));
+  const parts = [];
+  const pick = (needle) => {
+    const key = get(needle);
+    return key ? { name: key, ...agg.get(key) } : null;
+  };
+  const top = pick('top of search');
+  if (top) {
+    parts.push(top.orders > 0
+      ? `搜索顶部（${top.name}）有 ${top.orders} 单、花费 ${Number(top.spend).toFixed(2)}——流量与意图最高的位置，值得保持出价竞争力`
+      : `搜索顶部（${top.name}）有 ${Number(top.spend).toFixed(2)} 花费但 0 订单——该位置意图高却未转化，需人工核对 listing 与价格竞争力`);
+  }
+  const rest = pick('rest of search');
+  if (rest && rest.spend > 0) {
+    parts.push(rest.orders > 0
+      ? `其余搜索位置（${rest.name}）花费 ${Number(rest.spend).toFixed(2)}、${rest.orders} 单`
+      : `其余搜索位置（${rest.name}）花费 ${Number(rest.spend).toFixed(2)} 但 0 订单，是止损优先核查区`);
+  }
+  const product = pick('product');
+  if (product && product.spend > 0) {
+    const acos = product.sales > 0 ? (product.spend / product.sales * 100).toFixed(1) + '%' : '无销售';
+    parts.push(`商品页面（${product.name}）花费 ${Number(product.spend).toFixed(2)}、ACOS ${acos}——该位置流量大但转化口径不同，高 ACOS 未必等于无效，建议单独评估`);
+  }
+  if (!parts.length) return null;
+  return parts.join('；') + '。以上是对已发生数据的分层描述，不构成因果判断或节省承诺。';
+}
 function metricsReading(metrics, targetAcos, currency) {
   const m = metrics || {};
   const num = (value, digits) => (typeof value === 'number' && Number.isFinite(value) ? value.toFixed(digits) : null);
@@ -70,6 +112,7 @@ function planListConclusion(plans) {
 }
 
 window.metricsReading = metricsReading;
+window.placementReading = placementReading;
 window.reviewConclusion = reviewConclusion;
 window.planListConclusion = planListConclusion;
 if (typeof module !== 'undefined') module.exports = { metricsReading, reviewConclusion, planListConclusion };

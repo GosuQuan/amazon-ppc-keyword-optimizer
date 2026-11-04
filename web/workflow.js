@@ -38,7 +38,10 @@ function PlacementDrill({ plan }) {
         React.createElement('td', null, r.orders),
         React.createElement('td', null, r.sales),
         React.createElement('td', null, pct(r.acos)))))),
-    React.createElement('p', { className: 'hint' }, '广告位报表为伴随数据（companion），不并入方案指标；此处仅按位展示，某广告位 ACOS 偏高是否调价由你人工判断。'));
+    React.createElement('p', { className: 'hint' },
+      window.placementReading
+        ? (window.placementReading(rows) || '广告位报表为伴随数据（companion），不并入方案指标；此处仅按位展示，某广告位 ACOS 偏高是否调价由你人工判断。')
+        : '广告位报表为伴随数据（companion），不并入方案指标；此处仅按位展示，某广告位 ACOS 偏高是否调价由你人工判断。'));
 }
 
 function FileField({ label, name, accept, required, onCheck, onFile }) {
