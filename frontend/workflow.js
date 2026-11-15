@@ -206,6 +206,34 @@
       box.append(list);
     }
     root.append(box);
+    renderPlacementDrill(reports.placements);
+  }
+  /* Ad-map layer 4 (mirrors YICOPY): placement drill-down, aggregated by the shared
+     reading.js rule. Companion data — shown as-is, never summed into plan metrics,
+     never turned into bid suggestions. */
+  function renderPlacementDrill(placements) {
+    const root = $('placement-drill');
+    if (!root) return;
+    root.replaceChildren();
+    const rows = placements && Array.isArray(placements.rows) ? placements.rows : null;
+    if (!rows || !rows.length || !window.placementDrillRows) return;
+    const list = window.placementDrillRows(rows);
+    if (!list.length) return;
+    root.append(node('h3', '广告位下钻（花费降序）'));
+    const table = node('table');
+    const head = node('tr');
+    ['广告位', '点击', '花费', '订单', '销售额', 'ACOS'].forEach((h) => head.append(node('th', h)));
+    table.append(head);
+    const pct = (v) => (v == null ? '—' : (Math.round(v * 1000) / 10) + '%');
+    list.forEach((r) => {
+      const tr = node('tr');
+      tr.append(node('td', r.placement), node('td', number(r.clicks)), node('td', money(r.spend)),
+        node('td', number(r.orders)), node('td', money(r.sales)), node('td', pct(r.acos)));
+      table.append(tr);
+    });
+    root.append(table);
+    const reading = window.placementReading ? window.placementReading(rows) : null;
+    root.append(node('p', reading || '广告位报表为伴随数据（companion），不并入方案指标；此处仅按位展示，某广告位 ACOS 偏高是否调价由你人工判断。', 'muted'));
   }
   function renderActions() {
     const root = $('actions');

@@ -119,3 +119,37 @@ test('reading never claims savings or causality', () => {
   assert.match(text, /不代表已节省广告费/);
   assert.doesNotMatch(text, /已节省 \d|节省 \d|预计|预测/);
 });
+
+test('placementDrillRows aggregates by placement and sorts by spend', () => {
+  const { placementDrillRows } = load();
+  const rows = [
+    { placement: 'Rest of Search', clicks: '10', spend: '40', sales: '100', orders: '1' },
+    { placement: 'Top of Search', clicks: '5', spend: '50', sales: '300', orders: '3' },
+    { placement: 'Top of Search', clicks: '3', spend: '10', sales: '0', orders: '0' },
+    { placement: 'Product Pages', clicks: '2', spend: '10', sales: '50', orders: '1' },
+  ];
+  const out = placementDrillRows(rows);
+  assert.equal(out.length, 3);
+  // vm realm arrays differ in prototype; re-collect into test-realm before deep compare.
+  assert.deepEqual(Array.from(out, (r) => r.placement), ['Top of Search', 'Rest of Search', 'Product Pages']);
+  assert.equal(out[0].clicks, 8);
+  assert.equal(out[0].spend, 60);
+  assert.equal(out[0].sales, 300);
+  assert.equal(out[0].orders, 3);
+  assert.equal(out[0].acos, 0.2);
+  assert.equal(out[1].acos, 0.4);
+  assert.equal(out[2].acos, 0.2);
+});
+
+test('placementDrillRows handles missing report and dirty numbers', () => {
+  const { placementDrillRows } = load();
+  assert.deepEqual(Array.from(placementDrillRows(null)), []);
+  assert.deepEqual(Array.from(placementDrillRows([])), []);
+  const out = placementDrillRows([{ placement: 'Top of Search', clicks: 'x', spend: '', sales: 'abc', orders: null }]);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].clicks, 0);
+  assert.equal(out[0].spend, 0);
+  assert.equal(out[0].sales, 0);
+  assert.equal(out[0].orders, 0);
+  assert.equal(out[0].acos, null);
+});

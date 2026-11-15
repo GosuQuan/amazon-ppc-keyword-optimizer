@@ -6,25 +6,16 @@ function Field({ label, children, hint }) {
   return React.createElement('label', null, label, children, hint ? React.createElement('small', { className: 'muted' }, hint) : null);
 }
 
-/* Placement drill-down (mirrors YICOPY ad-map layer 3): where clicks and money land
-   by placement. Facts only — the placement report is companion data, excluded from
-   plan metrics, so these rows are shown as-is and never summed into the plan. */
+/* Placement drill-down (mirrors YICOPY ad-map layer 4): where clicks and money land
+   by placement. Aggregation lives in the shared reading.js rule (placementDrillRows);
+   this component only renders. Facts only — the placement report is companion data,
+   excluded from plan metrics, so these rows are shown as-is and never summed into the plan. */
 function PlacementDrill({ plan }) {
   const rows = plan && plan.reports && plan.reports.placements && plan.reports.placements.rows
     ? plan.reports.placements.rows : null;
-  if (!rows || !rows.length) return null;
-  const agg = new Map();
-  for (const r of rows) {
-    const g = agg.get(r.placement) || { placement: r.placement, clicks: 0, spend: 0, sales: 0, orders: 0 };
-    g.clicks += Number(r.clicks) || 0;
-    g.spend += Number(r.spend) || 0;
-    g.sales += Number(r.sales) || 0;
-    g.orders += Number(r.orders) || 0;
-    agg.set(r.placement, g);
-  }
-  const list = [...agg.values()]
-    .map((g) => ({ ...g, acos: g.sales > 0 ? g.spend / g.sales : null }))
-    .sort((a, b) => b.spend - a.spend);
+  if (!rows || !rows.length || !window.placementDrillRows) return null;
+  const list = window.placementDrillRows(rows);
+  if (!list.length) return null;
   const pct = (v) => (v == null ? '—' : (Math.round(v * 1000) / 10) + '%');
   return React.createElement('div', null,
     React.createElement('h3', null, '广告位下钻（花费降序）'),

@@ -42,6 +42,27 @@ function placementReading(rows) {
   if (!parts.length) return null;
   return parts.join('；') + '。以上是对已发生数据的分层描述，不构成因果判断或节省承诺。';
 }
+/* Shared placement drill-down aggregation (ad-map layer 4): one row per placement,
+   numbers coerced defensively, sorted by spend desc, ACOS as a ratio or null.
+   Facts only — the placement report is companion data and is never summed into
+   plan metrics; both front-ends render this list from this single source. */
+function placementDrillRows(rows) {
+  const agg = new Map();
+  for (const r of (rows || [])) {
+    const key = String(r && r.placement || '').trim();
+    if (!key) continue;
+    const g = agg.get(key) || { placement: key, clicks: 0, spend: 0, sales: 0, orders: 0 };
+    g.clicks += Number(r.clicks) || 0;
+    g.spend += Number(r.spend) || 0;
+    g.sales += Number(r.sales) || 0;
+    g.orders += Number(r.orders) || 0;
+    agg.set(key, g);
+  }
+  return [...agg.values()]
+    .map((g) => ({ ...g, acos: g.sales > 0 ? g.spend / g.sales : null }))
+    .sort((a, b) => b.spend - a.spend);
+}
+
 /* Match-type reading (mirrors YICOPY's ad-map layer 2): which match type eats the
    budget and whether its ACOS drifts above the account average. Descriptive only. */
 function mtReading(rows) {
@@ -143,6 +164,7 @@ function planListConclusion(plans) {
 
 window.metricsReading = metricsReading;
 window.placementReading = placementReading;
+window.placementDrillRows = placementDrillRows;
 window.mtReading = mtReading;
 window.reviewConclusion = reviewConclusion;
 window.planListConclusion = planListConclusion;
