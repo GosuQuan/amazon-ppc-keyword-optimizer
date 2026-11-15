@@ -60,20 +60,28 @@ ALIASES = {
     'asin': ['asin', 'advertised asin', '广告商品asin', '推广的asin', '推广的商品asin'],
     'date': ['date', '日期'],
     'start': ['start date', '开始日期'], 'end': ['end date', '结束日期'],
-    'campaign': ['campaign', 'campaign name', '广告活动', '广告活动名称'],
-    'ad_group': ['ad group', 'ad group name', '广告组', '广告组名称'],
+    'campaign': ['campaign', 'campaign name', 'campaign id (informational only)', '广告活动', '广告活动名称'],
+    'ad_group': ['ad group', 'ad group name', 'ad group id (informational only)', '广告组', '广告组名称'],
     'keyword': ['keyword', 'keyword text', '关键词', 'targeting', '投放词'],
     'match_type': ['match type', '匹配类型', '匹配方式'],
     'search_term': ['customer search term', 'search term', '搜索词', '客户搜索词'],
     'campaign_id': ['campaign id', '广告活动id'], 'ad_group_id': ['ad group id', '广告组id'],
     'keyword_id': ['keyword id', '关键词id'], 'bid': ['bid', 'keyword bid', '出价', '关键词出价'],
-    'entity': ['entity', '实体'],
+    'entity': ['entity', '实体'], 'operation': ['operation'],
     'spend': ['spend', 'cost', '花费', '总花费'],
     'sales': ['sales', '7 day total sales', '14 day total sales', '销售额', '7天总销售额', '七天总销售额'],
     'orders': ['orders', '7 day total orders (#)', '7 day total orders', '14 day total orders', '订单', '订单数', '七天总订单数（#）', '七天总订单数'],
     'clicks': ['clicks', '点击量', '点击次数', '点击'],
     'impressions': ['impressions', '展示量', '曝光量'],
     'placement': ['placement', '广告位', '投放位置'],
+    # Official v2.0 bulksheet template informational-only columns (parsed, then ignored).
+    'record_type': ['record type'], 'num1': ['(num 1)'], 'num2': ['(num 2)'], 'num3': ['(num 3)'],
+    'num4': ['(num 4)'], 'num5': ['(num 5)'], 'num6': ['(num 6)'], 'tot1': ['(tot 1)'], 'tot2': ['(tot 2)'],
+    'tot3': ['(tot 3)'], 'tot4': ['(tot 4)'], 'tot5': ['(tot 5)'], 'tot6': ['(tot 6)'],
+    'currency1': ['(currency 1)'], 'currency2': ['(currency 2)'], 'currency3': ['(currency 3)'],
+    'resolved_targeting': ['resolved targeting expression (informational only)'],
+    'eligibility_status': ['eligibility status'],
+    'reason_ineligibility': ['reason for ineligibility'],
 }
 
 
@@ -129,10 +137,17 @@ def same_window(windows):
     return None
 
 
-def check_context(rows, columns, context, warnings, label):
+def check_context(rows, columns, context, warnings, label, blank_as_unverified=False):
     for key in ('account', 'marketplace', 'currency', 'asin'):
         if key in columns:
             values = {norm(row.get(key)) for row in rows}
+            if blank_as_unverified:
+                # Official bulksheet Create rows leave optional columns (asin/sku) blank;
+                # blank cells mean "not specified", not "a different value".
+                values.discard('')
+                if not values:
+                    warnings.append(f'{label}: {key} 列存在但行值全为空，未由报告验证，采用显式上下文')
+                    continue
             if values != {norm(context[key])}:
                 fail(f'{label}: {key} 含多值、空值或与指定上下文不一致')
         else:
@@ -202,7 +217,7 @@ def parse_bulk(raw, context, warnings):
     if raw is None:
         return {}
     rows, columns, _window = table(raw)
-    check_context(rows, columns, context, warnings, 'bulk')
+    check_context(rows, columns, context, warnings, 'bulk', blank_as_unverified=True)
     if 'entity' not in columns:
         fail('bulk 必须包含 Entity 列且仅 Keyword 实体提供 bid/IDs')
     result, ids = {}, set()
@@ -223,11 +238,12 @@ def parse_bulk(raw, context, warnings):
     parents, campaigns, parent_ids = {}, {}, {}
     for key, row in result.items():
         pair = (row.get('campaign_id', ''), row.get('ad_group_id', ''))
+        # Official v2.0 Create rows use text-based IDs (they become the entity names on upload);
+        # Update/Archive rows must reference real numeric Amazon IDs.
+        creating = norm(row.get('operation')) in ('', 'create')
         for field in ('campaign_id', 'ad_group_id', 'keyword_id'):
-            if row.get(field) and not row[field].isascii():
-                fail('ID 必须为 Amazon 数字标识: ' + field)
-            if row.get(field) and not row[field].isdigit():
-                fail('ID 必须为 Amazon 数字标识: ' + field)
+            if row.get(field) and not creating and not row[field].isdigit():
+                fail('Update/Archive 行 ID 必须为 Amazon 数字标识: ' + field)
         if key[:2] in parents and parents[key[:2]] != pair:
             fail('同广告活动/广告组名称映射多个 IDs，实体歧义')
         if key[0] in campaigns and campaigns[key[0]] != pair[0]:
@@ -592,20 +608,46 @@ def make_action(kind, keyword, campaign, group, match, bid, proposed, reason, pr
             'blocking_reasons': blocked, 'entity_ids': {k: source.get(k) for k in ('campaign_id', 'ad_group_id', 'keyword_id')}}
 
 
+# Official v2.0 Sponsored Products bulksheet header, exact names and order (26 columns).
+OFFICIAL_EXPORT_COLUMNS = ['Product', 'Entity', 'Operation', 'Campaign Id', 'Ad Group Id', 'Portfolio Id',
+                           'Ad Id', 'Keyword Id', 'Product Targeting Id', 'Campaign Name', 'Ad Group Name',
+                           'Start Date', 'End Date', 'Targeting Type', 'State', 'Daily Budget', 'sku', 'asin',
+                           'Ad Group Default Bid', 'Bid', 'Keyword Text', 'Match Type', 'Bidding Strategy',
+                           'Placement', 'Percentage', 'Product Targeting Expression']
+LEGAL_MATCH_TYPES = ('negativeExact', 'negativePhrase', 'exact', 'phrase', 'broad')
+
+
 def render_export(plan):
     approved = [a for a in plan['actions'] if a['status'] == 'approved']
     if not approved:
         fail('没有已批准动作')
     if any(not a['exportable'] or a['blocking_reasons'] for a in approved):
         fail('已批准动作中含未验证行、缺 IDs 或估算 bid；请撤销这些动作')
-    columns = ['Product', 'Entity', 'Operation', 'Campaign ID', 'Ad Group ID', 'Keyword ID', 'Keyword Text', 'Match Type', 'Bid', 'State']
-    output = io.StringIO(newline='')
-    writer = csv.writer(output, delimiter='\t', lineterminator='\n')
-    writer.writerow(columns)
+    rows = []
     for a in approved:
         ids = a['entity_ids']
-        writer.writerow(['Sponsored Products', 'Negative Keyword' if a['kind'] == 'negative' else 'Keyword',
-                         'Update' if a['kind'] in ('bid', 'pause') else 'Create', ids['campaign_id'], ids['ad_group_id'],
-                         ids['keyword_id'] if a['kind'] in ('bid', 'pause') else '', a['keyword'], a['match_type'],
-                         a['proposed_bid'] if a['kind'] in ('bid', 'harvest') else '', 'paused' if a['kind'] == 'pause' else 'enabled'])
+        kind = a['kind']
+        row = {c: '' for c in OFFICIAL_EXPORT_COLUMNS}
+        row['Product'] = 'Sponsored Products'
+        row['Entity'] = 'Negative keyword' if kind == 'negative' else 'Keyword'
+        row['Operation'] = 'Update' if kind in ('bid', 'pause') else 'Create'
+        row['Campaign Id'] = ids['campaign_id']
+        row['Ad Group Id'] = ids['ad_group_id']
+        if kind in ('bid', 'pause'):
+            row['Keyword Id'] = ids['keyword_id']
+        # Informational-only names, same as Amazon's own downloaded sheets.
+        row['Campaign Name'] = a['campaign']
+        row['Ad Group Name'] = a['ad_group']
+        if kind in ('bid', 'harvest'):
+            row['Bid'] = f"{a['proposed_bid']:.2f}" if a.get('proposed_bid') is not None else ''
+        row['Keyword Text'] = a['keyword']
+        if a['match_type'] not in LEGAL_MATCH_TYPES:
+            fail('动作匹配类型不在官方模板合法值内: ' + str(a['match_type']))
+        row['Match Type'] = a['match_type']
+        row['State'] = 'paused' if kind == 'pause' else 'enabled'
+        rows.append([row[c] for c in OFFICIAL_EXPORT_COLUMNS])
+    output = io.StringIO(newline='')
+    writer = csv.writer(output, delimiter='\t', lineterminator='\n')
+    writer.writerow(OFFICIAL_EXPORT_COLUMNS)
+    writer.writerows(rows)
     return output.getvalue(), [a['id'] for a in approved]

@@ -38,8 +38,29 @@ def report(**changes):
     return output.getvalue()
 
 
-BULK = ('Entity,Campaign,Ad Group,Keyword Text,Match Type,Bid,Campaign ID,Ad Group ID,Keyword ID\n'
-        'Keyword,Camp,Group,red shoe,Exact,2.00,11,22,33\n')
+BULK_HEADERS_V2 = ('Product,Entity,Operation,Campaign Id,Ad Group Id,Portfolio Id,Ad Id,Keyword Id,'
+                   'Product Targeting Id,Campaign Name,Ad Group Name,Start Date,End Date,Targeting Type,'
+                   'State,Daily Budget,sku,asin,Ad Group Default Bid,Bid,Keyword Text,Match Type,'
+                   'Bidding Strategy,Placement,Percentage,Product Targeting Expression\n')
+
+# Official v2.0 SP bulksheet keyword row: 26 columns. Update-flow variant downloaded from
+# the console: numeric Amazon IDs filled, keyword id present (required for Update/Archive).
+BULK_ROW_V2 = ','.join(['Sponsored Products', 'Keyword', 'Update', '11', '22', '', '', '33', '',
+                        'Camp', 'Group', '', '', '', '', '', '', '', '', '2.00', 'red shoe', 'Exact',
+                        '', '', '', ''])
+assert BULK_ROW_V2.count(',') == 25
+
+BULK = BULK_HEADERS_V2 + BULK_ROW_V2 + '\n'
+
+# Create flow: text-based IDs become entity names on upload; Keyword Id is blank,
+# so generated bid/pause actions must stay blocked (no real keyword id to update).
+BULK_ROW_V2_CREATE = ','.join(['Sponsored Products', 'Keyword', 'Create', 'Camp', 'Group', '', '', '', '',
+                               'Camp', 'Group', '', '', '', '', '', '', '', '', '2.00', 'red shoe', 'Exact',
+                               '', '', '', ''])
+BULK_V2_CREATE = BULK_HEADERS_V2 + BULK_ROW_V2_CREATE + '\n'
+
+BULK_V1 = ('Entity,Campaign,Ad Group,Keyword Text,Match Type,Bid,Campaign ID,Ad Group ID,Keyword ID\n'
+           'Keyword,Camp,Group,red shoe,Exact,2.00,11,22,33\n')
 
 
 def create(client, text=None, bulk=BULK, products=None, placements=None, **data):
@@ -223,7 +244,7 @@ def test_budget_split_ignores_spend(client):
 
 
 def test_missing_bid_ids_and_boundary_matching(client):
-    for bulk in [None, BULK.replace(',33\n', ',\n'), BULK.replace('red shoe', 'redshoe')]:
+    for bulk in [None, BULK.replace(',33,', ',,'), BULK.replace('red shoe', 'redshoe')]:
         plan = create(client, bulk=bulk).json()
         a = next(a for a in plan['actions'] if a['kind'] == 'bid')
         assert not a['exportable']
@@ -275,8 +296,9 @@ def test_pause_exports_paused_and_bulk_metrics_ignored(client):
     client.patch(url + '/actions/' + action['id'], json={'status': 'approved'})
     response = client.post(url + '/export')
     assert response.status_code == 200
-    assert '\tpaused\n' in response.text
-    with_metrics = BULK.replace('Keyword ID\n', 'Keyword ID,Spend,Sales\n').replace(',33\n', ',33,9999,9999\n')
+    cells = response.text.lstrip('\ufeff').splitlines()[1].split('\t')
+    assert cells[OFFICIAL_SP_COLUMNS.index('State')] == 'paused'
+    with_metrics = BULK_V1.replace('Keyword ID\n', 'Keyword ID,Spend,Sales\n').replace(',33\n', ',33,9999,9999\n')
     assert create(client, bulk=with_metrics).json()['metrics']['spend'] == 60
 
 
@@ -433,3 +455,56 @@ def test_missing_asin_warns_and_negative_protects_good_term(client):
     negatives = [a for a in response.json()['actions'] if a['kind'] == 'negative' and a['keyword'] == 'red shoe']
     assert negatives
     assert all(not a['exportable'] and any('保护' in b for b in a['blocking_reasons']) for a in negatives)
+
+
+OFFICIAL_SP_COLUMNS = ['Product', 'Entity', 'Operation', 'Campaign Id', 'Ad Group Id', 'Portfolio Id',
+                       'Ad Id', 'Keyword Id', 'Product Targeting Id', 'Campaign Name', 'Ad Group Name',
+                       'Start Date', 'End Date', 'Targeting Type', 'State', 'Daily Budget', 'sku', 'asin',
+                       'Ad Group Default Bid', 'Bid', 'Keyword Text', 'Match Type', 'Bidding Strategy',
+                       'Placement', 'Percentage', 'Product Targeting Expression']
+
+
+def export_rows(client):
+    response = create(client)
+    assert response.status_code == 200, response.text
+    plan = response.json()
+    url = '/api/workflow/plans/' + plan['id']
+    action = next(a for a in plan['actions'] if a['exportable'])
+    client.patch(url + '/actions/' + action['id'], json={'status': 'approved'})
+    response = client.post(url + '/export')
+    assert response.status_code == 200, response.text
+    # utf-8-sig decode strips the API-layer BOM before TSV parsing.
+    return list(csv.reader(io.StringIO(response.content.decode('utf-8-sig')), delimiter='\t'))
+
+
+def test_export_matches_official_v2_bulksheet_layout(client):
+    rows = export_rows(client)
+    assert rows[0] == OFFICIAL_SP_COLUMNS, rows[0]
+    data = rows[1]
+    assert data[0] == 'Sponsored Products'
+    entity = data[OFFICIAL_SP_COLUMNS.index('Entity')]
+    assert entity in ('Keyword', 'Negative keyword'), entity
+    operation = data[OFFICIAL_SP_COLUMNS.index('Operation')]
+    assert operation in ('Create', 'Update', 'Archive'), operation
+    assert data[OFFICIAL_SP_COLUMNS.index('Keyword Text')] == 'red shoe'
+    assert data[OFFICIAL_SP_COLUMNS.index('Match Type')] == 'exact'
+    bid = data[OFFICIAL_SP_COLUMNS.index('Bid')]
+    # Engine lowers the real 2.00 bid toward the profit ceiling, floor = 50% of current.
+    assert bid == '1.00' or bid == '2.00' or bid == '', bid
+    assert data[OFFICIAL_SP_COLUMNS.index('State')] == 'enabled'
+    assert data[OFFICIAL_SP_COLUMNS.index('Campaign Id')] == '11'
+    assert data[OFFICIAL_SP_COLUMNS.index('Ad Group Id')] == '22'
+    assert data[OFFICIAL_SP_COLUMNS.index('Keyword Id')] == '33'
+    # Unknown extra columns break Amazon's strict template parsing.
+    assert len(data) == len(OFFICIAL_SP_COLUMNS)
+    # BOM only lives in the API layer; the stored draft must not embed one.
+    assert not data[0].startswith('\ufeff')
+
+
+def test_create_flow_blocks_updates_without_keyword_id(client):
+    response = create(client, bulk=BULK_V2_CREATE)
+    assert response.status_code == 200, response.text
+    actions = [a for a in response.json()['actions'] if a['kind'] in ('bid', 'pause')]
+    assert actions
+    assert all(not a['exportable'] and any('keyword_id' in b for b in a['blocking_reasons'])
+               for a in actions)
